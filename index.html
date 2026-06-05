@@ -2839,6 +2839,55 @@ function buildExportSheet(){
   return {host, sheet};
 }
 
+function canvasToBlob(canvas, type="image/png", quality){
+  return new Promise(resolve=>{
+    canvas.toBlob(blob=>resolve(blob), type, quality);
+  });
+}
+
+function isMobileDevice(){
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || "");
+}
+
+async function saveOrShareCanvasImage(canvas){
+  const blob = await canvasToBlob(canvas, "image/png");
+  if(!blob){
+    throw new Error("PNG画像の生成に失敗しました");
+  }
+
+  const fileName = `ooruricup2026_${new Date().toISOString().slice(0,10)}.png`;
+  const file = new File([blob], fileName, {type:"image/png"});
+  const shareData = {
+    title:"オオルリカップ2026 技構成シート",
+    text:"オオルリカップ2026の技構成シートです。",
+    files:[file]
+  };
+
+  // iPhone / Android では、可能なら共有シートを開く。
+  // そこから「画像を保存」「写真に保存」「Googleフォト」「LINE」などを選べます。
+  if(isMobileDevice() && navigator.share && navigator.canShare && navigator.canShare(shareData)){
+    try{
+      await navigator.share(shareData);
+      showToast("共有メニューを開きました");
+      return;
+    }catch(err){
+      // ユーザーが共有をキャンセルした場合もここに来るため、通常保存へフォールバックします。
+      console.warn("share cancelled or failed", err);
+    }
+  }
+
+  // PCや共有非対応端末では従来通りダウンロード。
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.download = fileName;
+  a.href = url;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  showToast("構成画像を保存しました");
+}
+
 async function saveCompositionImage(){
   if(!window.html2canvas){
     showToast("画像保存ライブラリを読み込めませんでした");
@@ -2853,11 +2902,7 @@ async function saveCompositionImage(){
       backgroundColor: "#ffffff",
       useCORS: true
     });
-    const a = document.createElement("a");
-    a.download = `ooruricup2026_${new Date().toISOString().slice(0,10)}.png`;
-    a.href = canvas.toDataURL("image/png");
-    a.click();
-    showToast("構成画像を保存しました");
+    await saveOrShareCanvasImage(canvas);
   }catch(err){
     console.error("image export error", err);
     showToast("画像保存に失敗しました");
