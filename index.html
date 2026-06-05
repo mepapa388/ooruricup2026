@@ -125,6 +125,21 @@ button{border:none;border-radius:8px;cursor:pointer}
 .tech-controls label{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;border:1px solid #ddd;background:#fafafa}
 .tech-controls input[type=checkbox]{width:18px;height:18px}
 
+/* 決勝スコア画面：スマホでも「技名／動画／1.5倍／使用」を横並びにする */
+.score-tech-item{
+  display:grid;
+  grid-template-columns:minmax(92px,1fr) auto auto auto;
+  align-items:center;
+  gap:8px;
+}
+.score-tech-item .tech-name-cell{min-width:0;}
+.score-tech-item .tech-title{
+  display:block;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.score-tech-item .tech-pt-label{display:block;margin-top:2px;}
+
 /* 動画・判定ボタン */
 .judge-btn{
   font-size:11px;
@@ -136,6 +151,59 @@ button{border:none;border-radius:8px;cursor:pointer}
   white-space:nowrap;
 }
 .judge-btn:hover{background:#bbdefb}
+.score-tech-item .judge-btn{
+  min-height:38px;
+  padding:6px 10px;
+  font-size:12px;
+}
+
+/* チェックボックスを見せず、ボタン自体の色で選択状態を見せる */
+.toggle-btn{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:6px 12px;
+  border-radius:10px;
+  border:1px solid #d6d6d6;
+  background:#fff;
+  color:#222;
+  font-size:14px;
+  font-weight:700;
+  white-space:nowrap;
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.toggle-btn input[type=checkbox]{
+  position:absolute;
+  opacity:0;
+  width:1px;
+  height:1px;
+  pointer-events:none;
+}
+.toggle-btn.selected{
+  color:#fff;
+  border-color:var(--blue);
+  background:var(--blue);
+  box-shadow:0 0 0 2px rgba(10,132,255,.12);
+}
+.toggle-btn.multi-toggle.selected{
+  border-color:#ff8a00;
+  background:#ff8a00;
+}
+
+@media (max-width:430px){
+  .score-tech-item{
+    grid-template-columns:minmax(90px,1fr) auto auto auto;
+    gap:6px;
+    padding:10px 6px;
+  }
+  .score-tech-item .tech-title{font-size:15px;}
+  .score-tech-item .judge-btn{font-size:11px;padding:5px 8px;}
+  .toggle-btn{font-size:13px;padding:5px 9px;}
+}
 
 /* ===== 予選点入力 ===== */
 .pre-box{margin-top:14px;background:#e6f4ff;padding:10px;border-radius:10px;font-size:14px}
@@ -1987,17 +2055,15 @@ const preTechWrap = document.getElementById("pre-tech-list");
 
 function makeScoreItem(pt, name){
   const item = document.createElement('div');
-  item.className = 'tech-item';
+  item.className = 'tech-item score-tech-item';
   item.innerHTML = `
-    <div>
-      <span class="tech-title">${name}</span><br>
+    <div class="tech-name-cell">
+      <span class="tech-title">${name}</span>
       <span class="tech-pt-label">${pt}点技</span>
     </div>
-    <div class="tech-controls">
-      <button type="button" class="judge-btn" data-name="${name}" data-pt="${pt}">動画・判定</button>
-      <label><input type="checkbox" class="multi">1.5倍</label>
-      <label><input type="checkbox" class="chk" data-pt="${pt}" data-name="${name}">使用</label>
-    </div>`;
+    <button type="button" class="judge-btn" data-name="${name}" data-pt="${pt}">動画・判定</button>
+    <label class="toggle-btn multi-toggle"><input type="checkbox" class="multi"><span>1.5倍</span></label>
+    <label class="toggle-btn use-toggle"><input type="checkbox" class="chk" data-pt="${pt}" data-name="${name}"><span>使用</span></label>`;
   return item;
 }
 function makePreItemCheck(pt, name){
@@ -2412,14 +2478,29 @@ function calcTotal(){
   finalSpan.textContent=formatScore(total);
 
   updateBarColor(total);
+  syncToggleButtonStates();
   saveState();
+}
+
+/* ボタン型チェックの見た目同期 */
+function syncToggleButtonStates(){
+  document.querySelectorAll(".toggle-btn").forEach(label=>{
+    const input = label.querySelector('input[type="checkbox"]');
+    if(input){
+      label.classList.toggle("selected", !!input.checked);
+    }
+  });
 }
 
 /* 監視 */
 function bindRecalc(){
   document.querySelectorAll(".chk,.multi,.pre-chk").forEach(el=>{
-    el.addEventListener("change", calcTotal);
+    el.addEventListener("change", ()=>{
+      calcTotal();
+      syncToggleButtonStates();
+    });
   });
+  syncToggleButtonStates();
 }
 bindRecalc();
 preInput.addEventListener("input", calcTotal);
