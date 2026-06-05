@@ -482,10 +482,11 @@ button{border:none;border-radius:8px;cursor:pointer}
   display:block;
   margin:0 auto 6px;
 }
-.export-share-url{
-  word-break:break-all;
-  font-size:11px;
-  color:#666;
+.export-note{
+  font-size:14px;
+  color:#555;
+  font-weight:700;
+  line-height:1.6;
   max-width:620px;
 }
 
@@ -2810,9 +2811,8 @@ function buildExportSheet(){
       </div>
     </div>
     <div class="export-footer">
-      <div>
-        <div style="font-weight:800;margin-bottom:6px;">共有URL</div>
-        <div class="export-share-url">${escapeHtml(shareUrl)}</div>
+      <div class="export-note">
+        このQRコードを読み取ると、同じ技構成を開くことができます。
       </div>
       <div class="export-qr-area">
         <div id="export-qr"></div>
