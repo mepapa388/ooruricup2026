@@ -152,14 +152,34 @@ button{border:none;border-radius:8px;cursor:pointer}
 .order-list{list-style:none;padding:0;margin:0}
 .order-item{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding:6px;border-bottom:1px solid #eee;font-size:14px;touch-action:none
+  padding:7px 6px;border-bottom:1px solid #eee;font-size:14px;touch-action:none;
+  background:#fff;
 }
-.order-name{flex:1}
+.drag-handle{
+  width:28px;
+  min-width:28px;
+  height:28px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#eef6ff;
+  color:#0b4aa6;
+  border:1px solid #cfe3ff;
+  font-weight:800;
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+}
+.drag-handle:active{cursor:grabbing}
+.order-name{flex:1;cursor:grab;touch-action:none}
 .order-controls{display:flex;gap:6px}
 .order-btn{font-size:12px;padding:6px 8px;border-radius:8px;border:1px solid #999;background:#f5f5f5}
 .order-btn-del{border-color:#ff6666;background:#ffdddd;color:#a40000}
 .order-btn-move{border-color:var(--blue);background:#e2f0ff;color:#004a99}
-.order-item.dragging{opacity:.6}
+.order-item.dragging,.sortable-ghost{opacity:.55;background:#eaf3ff}
+.sortable-chosen{background:#f6fbff}
+.sortable-drag{box-shadow:0 8px 24px rgba(0,0,0,.18);border-radius:10px}
 
 /* ===== 下部ミニメニュー ===== */
 .mini-nav{
@@ -575,13 +595,13 @@ button{border:none;border-radius:8px;cursor:pointer}
 
 <!-- 決勝編成 -->
 <div id="mode-finals" class="mode-section">
-  <p style="font-size:13px;">決勝スコアで選んだ最大30技を読み込み、順番を並べ替えます（ドラッグ可・長押しで削除）。</p>
+  <p style="font-size:13px;">決勝スコアで選んだ最大30技を読み込み、順番を並べ替えます（スマホは☰または技名を長押しして移動・長押しで削除）。</p>
   <button id="load-finals-btn" style="background:var(--blue);color:#fff;width:100%;padding:10px;border-radius:10px">決勝技を読み込む</button>
 
   <div class="order-box">
     <div class="order-box-title">決勝編成（<span id="finals-count">0</span>技）</div>
     <ul id="finals-list" class="order-list"></ul>
-    <p style="font-size:11px;opacity:.7;margin-top:4px;">↑（上）／ ↓（下）／ ✕（長押し削除）／ ドラッグで並べ替え</p>
+    <p style="font-size:11px;opacity:.7;margin-top:4px;">☰または技名を指で押して並べ替え ／ ↑↓でも移動 ／ ✕は長押し削除</p>
   </div>
 
   <!-- 決勝プリセット（2枠） -->
@@ -601,7 +621,7 @@ button{border:none;border-radius:8px;cursor:pointer}
 
 <!-- 予選編成 -->
 <div id="mode-prelims" class="mode-section">
-  <p style="font-size:13px;">予選は<strong>12技まで</strong>。第1R6技・第2R6技に分割し、上下移動・ドラッグ・⇔移動ができます。</p>
+  <p style="font-size:13px;">予選は<strong>12技まで</strong>。第1R6技・第2R6技に分割し、スマホでは☰または技名を指で押して並べ替えできます。ラウンド間の移動もできます。</p>
   <div class="warning" id="prelimit-warn">⚠ 予選で選べる技は12個までです。</div>
 
   <details class="section" open>
@@ -698,6 +718,7 @@ button{border:none;border-radius:8px;cursor:pointer}
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
  async function loadTricks(){
 
@@ -2447,6 +2468,7 @@ function orderLiTemplate(pt,name){
   const li=document.createElement('li');
   li.className='order-item'; li.draggable=true;
   li.innerHTML=`
+    <span class="drag-handle" aria-label="並び替え">☰</span>
     <span class="order-name">[${pt}点] ${name}</span>
     <div class="order-controls">
       <button class="order-btn" data-act="up">↑</button>
@@ -2482,18 +2504,41 @@ finalsList.addEventListener("click",e=>{
 });
 
 /* DnD（決勝） */
-let dragEl=null;
-finalsList.addEventListener('dragstart',e=>{ dragEl=e.target; dragEl.classList.add('dragging'); });
-finalsList.addEventListener('dragend',()=>{ if(dragEl){dragEl.classList.remove('dragging'); dragEl=null; rebuildFinalsList(); }});
-finalsList.addEventListener('dragover',e=>{
-  e.preventDefault();
-  const after = [...finalsList.querySelectorAll('.order-item:not(.dragging)')].find(el=>{
-    const rect=el.getBoundingClientRect();
-    return e.clientY < rect.top + rect.height/2;
+function bindFinalsDnd(){
+  if(window.Sortable){
+    new Sortable(finalsList, {
+      animation: 160,
+      handle: ".drag-handle, .order-name",
+      ghostClass: "sortable-ghost",
+      chosenClass: "sortable-chosen",
+      dragClass: "sortable-drag",
+      forceFallback: true,
+      fallbackOnBody: true,
+      delayOnTouchOnly: true,
+      delay: 120,
+      touchStartThreshold: 4,
+      onEnd: ()=>{
+        rebuildFinalsList();
+        showToast("決勝構成の順番を変更しました", 900);
+      }
+    });
+    return;
+  }
+
+  let dragEl=null;
+  finalsList.addEventListener('dragstart',e=>{ dragEl=e.target; dragEl.classList.add('dragging'); });
+  finalsList.addEventListener('dragend',()=>{ if(dragEl){dragEl.classList.remove('dragging'); dragEl=null; rebuildFinalsList(); }});
+  finalsList.addEventListener('dragover',e=>{
+    e.preventDefault();
+    const after = [...finalsList.querySelectorAll('.order-item:not(.dragging)')].find(el=>{
+      const rect=el.getBoundingClientRect();
+      return e.clientY < rect.top + rect.height/2;
+    });
+    if(!dragEl) return;
+    if(after) finalsList.insertBefore(dragEl, after); else finalsList.appendChild(dragEl);
   });
-  if(!dragEl) return;
-  if(after) finalsList.insertBefore(dragEl, after); else finalsList.appendChild(dragEl);
-});
+}
+bindFinalsDnd();
 
 /* =========================================================
    14) 予選 編成
@@ -2522,6 +2567,7 @@ function mkPreOrderItem(pt,name,round){
   li.className='order-item'; li.draggable=true;
   const label=round===1?"2R▶":"◀1R"; const move=round===1?"to2":"to1";
   li.innerHTML=`
+    <span class="drag-handle" aria-label="並び替え">☰</span>
     <span class="order-name">[${pt}点] ${name}</span>
     <div class="order-controls">
       <button class="order-btn" data-act="up">↑</button>
@@ -2571,6 +2617,31 @@ function preListHandler(e){
 
 /* DnD（予選） */
 function bindDnd(list){
+  if(window.Sortable){
+    new Sortable(list, {
+      group: "prelims-rounds",
+      animation: 160,
+      handle: ".drag-handle, .order-name",
+      ghostClass: "sortable-ghost",
+      chosenClass: "sortable-chosen",
+      dragClass: "sortable-drag",
+      forceFallback: true,
+      fallbackOnBody: true,
+      delayOnTouchOnly: true,
+      delay: 120,
+      touchStartThreshold: 4,
+      onEnd: ()=>{
+        updatePreSummary();
+        showToast("予選構成の順番を変更しました", 900);
+      },
+      onAdd: ()=>{
+        updatePreSummary();
+        showToast("ラウンド間で技を移動しました", 900);
+      }
+    });
+    return;
+  }
+
   let dragging=null;
   list.addEventListener('dragstart',e=>{ dragging=e.target; dragging.classList.add('dragging'); });
   list.addEventListener('dragend',()=>{ if(dragging){ dragging.classList.remove('dragging'); dragging=null; updatePreSummary(); }});
