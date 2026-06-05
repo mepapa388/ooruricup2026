@@ -21,33 +21,47 @@
 *{box-sizing:border-box}
 body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
-  font-size:15px; line-height:1.55;
+  font-size:16px; line-height:1.6;
   padding:12px; background:#f6faff;
-  padding-top:100px;   /* 上部バー＋検索バー */
+  padding-top:112px;   /* 上部バー＋検索バー */
   padding-bottom:92px; /* 下部ミニメニュー */
 }
-h1{font-size:20px;margin:4px 0 6px}
+h1{font-size:23px;margin:6px 0 8px;font-weight:800}
 button{border:none;border-radius:8px;cursor:pointer}
 
 /* ===== 上部固定スコアバー ===== */
 .total-bar{
   position:fixed;top:0;left:0;right:0;z-index:200;
-  padding:6px 10px;background:rgba(240,240,240,.96);
+  padding:7px 10px;background:rgba(240,240,240,.96);
   box-shadow:0 2px 6px rgba(0,0,0,.2); transition:background .3s ease,color .3s ease;
 }
 .total-box{display:flex;flex-direction:column;gap:6px}
 .total-top-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .total-chip{
   background:rgba(255,255,255,.9); padding:2px 8px;
-  border-radius:999px; font-size:12px; border:1px solid rgba(0,0,0,.06)
+  border-radius:999px; font-size:13px; border:1px solid rgba(0,0,0,.06)
 }
-.total-main{font-size:16px;font-weight:700}
-.total-buttons{display:flex;gap:6px}
-.total-buttons button{flex:1;padding:6px 8px;font-size:12px}
+.total-main{font-size:18px;font-weight:800}
+.total-buttons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.total-buttons button,
+.total-buttons label{
+  min-width:0;
+  min-height:50px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  line-height:1.15;
+  padding:7px 5px;
+  font-size:14px;
+  font-weight:800;
+  border-radius:10px;
+  white-space:normal;
+}
 
 /* ===== モード ===== */
 .mode-bar{display:flex;gap:6px;margin:8px 0 10px;flex-wrap:wrap}
-.mode-btn{flex:1;min-width:90px;padding:8px 4px;font-size:13px;border-radius:8px;border:1px solid var(--blue);background:#fff;color:var(--blue)}
+.mode-btn{flex:1;min-width:90px;padding:9px 4px;font-size:14px;border-radius:8px;border:1px solid var(--blue);background:#fff;color:var(--blue)}
 .mode-btn.active{background:var(--blue);color:#fff}
 
 /* ===== 検索 ===== */
@@ -60,7 +74,7 @@ button{border:none;border-radius:8px;cursor:pointer}
   margin-top:10px;border-radius:10px;overflow:hidden;border:1px solid #e5efff;background:#fff
 }
 .section summary{
-  list-style:none; cursor:pointer; padding:10px 12px; font-weight:700; font-size:15px;
+  list-style:none; cursor:pointer; padding:10px 12px; font-weight:700; font-size:16px;
   background:#eaf3ff; border-bottom:1px solid #e5efff; user-select:none
 }
 .section[open] summary{background:#dff0ff}
@@ -119,8 +133,8 @@ button{border:none;border-radius:8px;cursor:pointer}
   display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid transparent
 }
 .tech-item.search-hit{background:var(--hit-bg);border-color:var(--hit-bd)}
-.tech-title{font-size:16px}
-.tech-pt-label{font-size:12px;color:#666}
+.tech-title{font-size:17px}
+.tech-pt-label{font-size:13px;color:#666}
 .tech-controls{display:flex;align-items:center;gap:8px;min-width:160px;justify-content:flex-end;flex-wrap:wrap}
 .tech-controls label{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;border:1px solid #ddd;background:#fafafa}
 .tech-controls input[type=checkbox]{width:18px;height:18px}
@@ -206,8 +220,9 @@ button{border:none;border-radius:8px;cursor:pointer}
 }
 
 /* ===== 予選点入力 ===== */
-.pre-box{margin-top:14px;background:#e6f4ff;padding:10px;border-radius:10px;font-size:14px}
-.pre-input{width:90px;padding:6px 8px;font-size:16px;border-radius:8px;border:1px solid #cfcfcf;background:#fff}
+.pre-box{margin-top:14px;background:#e6f4ff;padding:12px;border-radius:10px;font-size:16px}
+.pre-input{width:96px;padding:7px 9px;font-size:17px;border-radius:8px;border:1px solid #cfcfcf;background:#fff}
+.pre-help{font-size:14px;font-weight:700;color:#366;display:inline-block;margin-left:4px}
 
 .warning{color:#d11;font-weight:700;display:none;font-size:12px;margin:6px 0}
 
@@ -578,6 +593,77 @@ button{border:none;border-radius:8px;cursor:pointer}
   max-width:620px;
 }
 
+
+/* ===== 画像保存プレビュー ===== */
+.image-save-modal{
+  position:fixed;
+  inset:0;
+  z-index:420;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.5);
+  padding:14px;
+}
+.image-save-dialog{
+  width:min(680px,96vw);
+  max-height:92vh;
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 14px 40px rgba(0,0,0,.32);
+  display:flex;
+  flex-direction:column;
+}
+.image-save-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  border-bottom:1px solid #e6eefb;
+  font-weight:800;
+}
+.image-save-body{
+  padding:12px;
+  overflow:auto;
+}
+.image-save-body img{
+  display:block;
+  width:100%;
+  height:auto;
+  border:1px solid #dbeafe;
+  border-radius:12px;
+  background:#fff;
+}
+.image-save-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:12px;
+  border-top:1px solid #e6eefb;
+}
+.image-save-actions button,
+.image-save-actions a{
+  flex:1;
+  min-width:130px;
+  text-align:center;
+  text-decoration:none;
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:15px;
+  font-weight:800;
+}
+.image-save-primary{background:var(--blue);color:#fff}
+.image-save-secondary{background:#eef6ff;color:#0b4aa6;border:1px solid #cfe3ff}
+.image-save-close{background:#555;color:#fff}
+.image-save-note{
+  font-size:13px;
+  color:#555;
+  line-height:1.6;
+  padding:0 12px 10px;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -605,12 +691,12 @@ button{border:none;border-radius:8px;cursor:pointer}
     </div>
     <div class="total-main">総合計：<span id="final-total">0</span></div>
     <div class="total-buttons">
-      <button style="background:var(--blue);color:#fff" id="btn-reset">リセット</button>
-      <button style="background:#555;color:#fff" id="btn-print">印刷</button>
-      <button style="background:#00a6d6;color:#fff" id="btn-save-image">画像保存</button>
-      <button style="background:#2f855a;color:#fff" id="btn-share-url">共有URL</button>
-      <button style="background:#888;color:#fff" id="btn-export">CSV出力</button>
-      <label class="order-btn" style="background:#fff" for="csv-import">CSV取込<input id="csv-import" type="file" accept=".csv" style="display:none"></label>
+      <button type="button" style="background:var(--blue);color:#fff" id="btn-reset"><span>リセット</span></button>
+      <button type="button" style="background:#555;color:#fff" id="btn-print"><span>印刷</span></button>
+      <button type="button" style="background:#00a6d6;color:#fff" id="btn-save-image"><span>画像<br>保存</span></button>
+      <button type="button" style="background:#2f855a;color:#fff" id="btn-share-url"><span>共有<br>URL</span></button>
+      <button type="button" style="background:#888;color:#fff" id="btn-export"><span>CSV<br>出力</span></button>
+      <label class="order-btn" style="background:#fff" for="csv-import"><span>CSV<br>取込</span><input id="csv-import" type="file" accept=".csv" style="display:none"></label>
     </div>
   </div>
 </div>
@@ -641,8 +727,9 @@ button{border:none;border-radius:8px;cursor:pointer}
   </details>
 
   <div class="pre-box">
-    予選点（0〜112）：
+    予選点（0〜112点）：
     <input type="number" id="pre-score" class="pre-input" value="0" min="0" max="112" />
+    <span class="pre-help">（予選点数を記入）</span>
     <p class="warning" id="pre-warn">⚠ 予選は0〜112点で入力してください。</p>
   </div>
 
@@ -765,6 +852,27 @@ button{border:none;border-radius:8px;cursor:pointer}
 
 <!-- トースト -->
 <div class="toast" id="toast"></div>
+
+<!-- 画像保存プレビュー -->
+<div class="image-save-modal" id="image-save-modal" aria-hidden="true">
+  <div class="image-save-dialog" role="dialog" aria-modal="true" aria-label="画像保存プレビュー">
+    <div class="image-save-header">
+      <div>構成画像プレビュー</div>
+      <button type="button" class="image-save-close" id="image-save-close">閉じる</button>
+    </div>
+    <div class="image-save-body">
+      <img id="image-save-preview" alt="保存する技構成画像">
+    </div>
+    <div class="image-save-note">
+      スマホで自動保存できない場合は、この画像を長押しして「写真に保存」または「画像を保存」を選んでください。
+    </div>
+    <div class="image-save-actions">
+      <button type="button" class="image-save-primary" id="image-save-share-again">共有・保存メニュー</button>
+      <a class="image-save-secondary" id="image-save-download" download="ooruricup2026.png">ダウンロード</a>
+      <button type="button" class="image-save-close" id="image-save-close-bottom">閉じる</button>
+    </div>
+  </div>
+</div>
 
 <!-- 初回ツアー -->
 <div class="tour" id="tour">
@@ -3001,58 +3109,112 @@ function isMobileDevice(){
   return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || "");
 }
 
+let latestImageBlob = null;
+let latestImageFile = null;
+let latestImageUrl = null;
+
+function makeImageFileName(){
+  return `ooruricup2026_${new Date().toISOString().slice(0,10)}.png`;
+}
+
+function revokeLatestImageUrl(){
+  if(latestImageUrl){
+    URL.revokeObjectURL(latestImageUrl);
+    latestImageUrl = null;
+  }
+}
+
+function showImageSavePreview(blob, fileName){
+  latestImageBlob = blob;
+  latestImageFile = new File([blob], fileName, {type:"image/png"});
+  revokeLatestImageUrl();
+  latestImageUrl = URL.createObjectURL(blob);
+
+  const modal = document.getElementById("image-save-modal");
+  const preview = document.getElementById("image-save-preview");
+  const download = document.getElementById("image-save-download");
+
+  preview.src = latestImageUrl;
+  download.href = latestImageUrl;
+  download.download = fileName;
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeImageSavePreview(){
+  const modal = document.getElementById("image-save-modal");
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden", "true");
+}
+
+async function shareLatestImage(){
+  if(!latestImageFile){
+    showToast("先に画像を作成してください");
+    return false;
+  }
+
+  const shareData = {
+    title:"オオルリカップ2026 技構成シート",
+    text:"オオルリカップ2026の技構成シートです。",
+    files:[latestImageFile]
+  };
+
+  if(navigator.share && navigator.canShare && navigator.canShare(shareData)){
+    try{
+      await navigator.share(shareData);
+      showToast("共有・保存メニューを開きました");
+      return true;
+    }catch(err){
+      console.warn("share cancelled or failed", err);
+      return false;
+    }
+  }
+
+  return false;
+}
+
 async function saveOrShareCanvasImage(canvas){
   const blob = await canvasToBlob(canvas, "image/png");
   if(!blob){
     throw new Error("PNG画像の生成に失敗しました");
   }
 
-  const fileName = `ooruricup2026_${new Date().toISOString().slice(0,10)}.png`;
-  const file = new File([blob], fileName, {type:"image/png"});
-  const shareData = {
-    title:"オオルリカップ2026 技構成シート",
-    text:"オオルリカップ2026の技構成シートです。",
-    files:[file]
-  };
+  const fileName = makeImageFileName();
+  showImageSavePreview(blob, fileName);
 
-  // iPhone / Android では、可能なら共有シートを開く。
-  // そこから「画像を保存」「写真に保存」「Googleフォト」「LINE」などを選べます。
-  if(isMobileDevice() && navigator.share && navigator.canShare && navigator.canShare(shareData)){
-    try{
-      await navigator.share(shareData);
-      showToast("共有メニューを開きました");
-      return;
-    }catch(err){
-      // ユーザーが共有をキャンセルした場合もここに来るため、通常保存へフォールバックします。
-      console.warn("share cancelled or failed", err);
+  // iPhone / Android では、まず共有シートを試します。
+  // うまく開かない端末でも、プレビュー画像を長押し保存できます。
+  if(isMobileDevice()){
+    const shared = await shareLatestImage();
+    if(!shared){
+      showToast("画像を長押しして保存できます", 2600);
     }
+    return;
   }
 
-  // PCや共有非対応端末では従来通りダウンロード。
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.download = fileName;
-  a.href = url;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 1000);
-  showToast("構成画像を保存しました");
+  // PCではプレビューを出しつつ、ダウンロードボタンから保存できます。
+  showToast("画像プレビューを作成しました");
 }
 
 async function saveCompositionImage(){
+  const btn = document.getElementById("btn-save-image");
   if(!window.html2canvas){
     showToast("画像保存ライブラリを読み込めませんでした");
     return;
   }
 
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = "作成<br>中";
+
   const {host, sheet} = buildExportSheet();
   try{
-    await new Promise(resolve=>setTimeout(resolve,120));
+    await new Promise(resolve=>setTimeout(resolve,240));
     const canvas = await html2canvas(sheet, {
       scale: 2,
       backgroundColor: "#ffffff",
-      useCORS: true
+      useCORS: true,
+      logging: false
     });
     await saveOrShareCanvasImage(canvas);
   }catch(err){
@@ -3060,10 +3222,21 @@ async function saveCompositionImage(){
     showToast("画像保存に失敗しました");
   }finally{
     host.remove();
+    btn.disabled = false;
+    btn.innerHTML = originalText;
   }
 }
 
 document.getElementById("btn-save-image").addEventListener("click", saveCompositionImage);
+document.getElementById("image-save-close").addEventListener("click", closeImageSavePreview);
+document.getElementById("image-save-close-bottom").addEventListener("click", closeImageSavePreview);
+document.getElementById("image-save-modal").addEventListener("click", e=>{
+  if(e.target.id === "image-save-modal") closeImageSavePreview();
+});
+document.getElementById("image-save-share-again").addEventListener("click", async()=>{
+  const shared = await shareLatestImage();
+  if(!shared) showToast("この端末では共有メニューを開けません。画像を長押しして保存してください", 2800);
+});
 
 function presetScoreSuffix(pack, kind){
   if(!pack) return "";
