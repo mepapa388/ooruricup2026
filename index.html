@@ -208,15 +208,49 @@ button{border:none;border-radius:8px;cursor:pointer}
   background:#ff8a00;
 }
 
+/* 予選技選択画面：技名／動画／予選を必ず1行に並べる */
+.pre-tech-item{
+  display:grid;
+  grid-template-columns:minmax(110px,1fr) auto auto;
+  align-items:center;
+  gap:8px;
+}
+.pre-tech-item .tech-name-cell{min-width:0;}
+.pre-tech-item .tech-title{
+  display:block;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.pre-tech-item .tech-pt-label{display:block;margin-top:2px;}
+.pre-tech-item .judge-btn{
+  min-height:38px;
+  padding:6px 10px;
+  font-size:12px;
+}
+.pre-toggle.selected{
+  color:#fff;
+  border-color:#0a9f5a;
+  background:#0a9f5a;
+  box-shadow:0 0 0 2px rgba(10,159,90,.14);
+}
+
 @media (max-width:430px){
   .score-tech-item{
-    grid-template-columns:minmax(90px,1fr) auto auto auto;
+    grid-template-columns:minmax(88px,1fr) auto auto auto;
     gap:6px;
     padding:10px 6px;
   }
   .score-tech-item .tech-title{font-size:15px;}
   .score-tech-item .judge-btn{font-size:11px;padding:5px 8px;}
   .toggle-btn{font-size:13px;padding:5px 9px;}
+
+  .pre-tech-item{
+    grid-template-columns:minmax(96px,1fr) auto auto;
+    gap:6px;
+    padding:10px 6px;
+  }
+  .pre-tech-item .tech-title{font-size:15px;}
+  .pre-tech-item .judge-btn{font-size:11px;padding:5px 8px;}
 }
 
 /* ===== 予選点入力 ===== */
@@ -2176,16 +2210,14 @@ function makeScoreItem(pt, name){
 }
 function makePreItemCheck(pt, name){
   const item = document.createElement('div');
-  item.className = 'tech-item';
+  item.className = 'tech-item pre-tech-item';
   item.innerHTML = `
-    <div>
-      <span class="tech-title">${name}</span><br>
+    <div class="tech-name-cell">
+      <span class="tech-title">${name}</span>
       <span class="tech-pt-label">${pt}点技</span>
     </div>
-    <div class="tech-controls">
-      <button type="button" class="judge-btn" data-name="${name}" data-pt="${pt}">動画・判定</button>
-      <label><input type="checkbox" class="pre-chk" data-pt="${pt}" data-name="${name}">予選</label>
-    </div>`;
+    <button type="button" class="judge-btn" data-name="${name}" data-pt="${pt}">動画・判定</button>
+    <label class="toggle-btn pre-toggle"><input type="checkbox" class="pre-chk" data-pt="${pt}" data-name="${name}"><span>予選</span></label>`;
   return item;
 }
 
@@ -2747,6 +2779,7 @@ document.addEventListener('change', e=>{
       e.target.checked=false; preLimitWarn.style.display="block";
       showToast("予選は12技までです");
     }else preLimitWarn.style.display="none";
+    syncToggleButtonStates();
     saveState();
   }
 });
