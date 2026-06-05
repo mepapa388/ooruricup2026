@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ツバメカップ2025 技チェック＆編成</title>
+<title>オオルリカップ2026 技構成システム</title>
 <meta name="theme-color" content="#0a84ff" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕊️</text></svg>">
 <style>
@@ -385,6 +385,110 @@ button{border:none;border-radius:8px;cursor:pointer}
   opacity:.7;
 }
 
+
+/* ===== 構成画像保存用シート ===== */
+.export-sheet-host{
+  position:fixed;
+  left:-99999px;
+  top:0;
+  width:900px;
+  z-index:-1;
+}
+.export-sheet{
+  width:900px;
+  background:#fff;
+  color:#111;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  border:8px solid var(--blue);
+  border-radius:22px;
+  padding:30px;
+  box-shadow:0 8px 26px rgba(0,0,0,.12);
+}
+.export-sheet h1{
+  font-size:34px;
+  margin:0 0 8px;
+  color:#0057a8;
+}
+.export-sheet .export-subtitle{
+  font-size:18px;
+  font-weight:800;
+  margin-bottom:12px;
+}
+.export-sheet .export-meta{
+  font-size:14px;
+  color:#555;
+  border-bottom:2px solid #e6eefb;
+  padding-bottom:12px;
+  margin-bottom:18px;
+}
+.export-score-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:12px 0 18px;
+}
+.export-score-chip{
+  background:#f1f7ff;
+  border:1px solid #cfe3ff;
+  border-radius:999px;
+  padding:8px 14px;
+  font-size:16px;
+  font-weight:800;
+}
+.export-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+.export-block{
+  border:1px solid #dbeafe;
+  border-radius:14px;
+  padding:14px 16px;
+  background:#fbfdff;
+}
+.export-block h2{
+  font-size:20px;
+  margin:0 0 10px;
+  color:#0b4aa6;
+}
+.export-block ol{
+  margin:0;
+  padding-left:24px;
+}
+.export-block li{
+  font-size:16px;
+  margin:5px 0;
+}
+.export-empty{
+  color:#777;
+  font-size:15px;
+}
+.export-footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:18px;
+  margin-top:20px;
+  padding-top:16px;
+  border-top:2px solid #e6eefb;
+}
+.export-qr-area{
+  text-align:center;
+  font-size:12px;
+  color:#555;
+  min-width:132px;
+}
+.export-qr-area canvas, .export-qr-area img{
+  display:block;
+  margin:0 auto 6px;
+}
+.export-share-url{
+  word-break:break-all;
+  font-size:11px;
+  color:#666;
+  max-width:620px;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -414,13 +518,15 @@ button{border:none;border-radius:8px;cursor:pointer}
     <div class="total-buttons">
       <button style="background:var(--blue);color:#fff" id="btn-reset">リセット</button>
       <button style="background:#555;color:#fff" id="btn-print">印刷</button>
+      <button style="background:#00a6d6;color:#fff" id="btn-save-image">画像保存</button>
+      <button style="background:#2f855a;color:#fff" id="btn-share-url">共有URL</button>
       <button style="background:#888;color:#fff" id="btn-export">CSV出力</button>
       <label class="order-btn" style="background:#fff" for="csv-import">CSV取込<input id="csv-import" type="file" accept=".csv" style="display:none"></label>
     </div>
   </div>
 </div>
 
-<h1>ツバメカップ2025 技チェック＆編成</h1>
+<h1>オオルリカップ2026 技構成システム</h1>
 
 <!-- 予選検索 -->
 <div class="search-bar">
@@ -589,6 +695,8 @@ button{border:none;border-radius:8px;cursor:pointer}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
  async function loadTricks(){
 
@@ -2519,6 +2627,297 @@ document.getElementById("btn-recalc").addEventListener("click",()=>{ calcTotal()
 document.getElementById("btn-top").addEventListener("click",()=> window.scrollTo({top:0, behavior:"smooth"}));
 
 /* =========================================================
+   16) 共有URL / 画像保存
+========================================================= */
+function getCurrentPresetLabel(kind){
+  const slotEl = document.getElementById(`${kind}-preset-slot`);
+  const nameEl = document.getElementById(`${kind}-preset-name`);
+  const slot = slotEl?.value || "slot1";
+  const name = nameEl?.value?.trim();
+  if(name) return name;
+  const base = kind === "finals" ? "決勝プリセット" : kind === "prelims" ? "予選プリセット" : "全体プリセット";
+  return `${base}${slot === "slot1" ? "①" : "②"}`;
+}
+
+function getOrderTexts(list){
+  return [...list.querySelectorAll(".order-name")].map(n=>n.textContent);
+}
+
+function parseOrderText(txt){
+  const m = String(txt||"").match(/^\[(.+?)点]\s*(.+)$/);
+  return m ? {pt:Number(m[1]), name:m[2]} : null;
+}
+
+function calcOrderSquareScore(items){
+  return items.map(parseOrderText).filter(Boolean).reduce((sum,item)=>sum + item.pt * item.pt, 0);
+}
+
+function calcOrderBaseScore(items){
+  return items.map(parseOrderText).filter(Boolean).reduce((sum,item)=>sum + item.pt, 0);
+}
+
+function collectCompactState(){
+  return {
+    version: "ooruricup2026-share-v1",
+    createdAt: new Date().toISOString(),
+    pre: +preInput.value || 0,
+    checks: [...document.querySelectorAll(".chk:checked")].map(c=>({
+      n:c.dataset.name,
+      p:+c.dataset.pt,
+      m:c.closest('.tech-item')?.querySelector('.multi')?.checked || false
+    })),
+    prechecks: [...document.querySelectorAll(".pre-chk:checked")].map(c=>({
+      n:c.dataset.name,
+      p:+c.dataset.pt
+    })),
+    finals: getOrderTexts(finalsList),
+    p1: getOrderTexts(list1),
+    p2: getOrderTexts(list2)
+  };
+}
+
+function applyCompactState(data){
+  if(!data || typeof data !== "object") return false;
+
+  document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
+  list1.innerHTML="";
+  list2.innerHTML="";
+  finalsList.innerHTML="";
+  preInput.value = data.pre ?? 0;
+
+  (data.checks||[]).forEach(item=>{
+    const chk=[...document.querySelectorAll(`.chk[data-name="${CSS.escape(item.n)}"][data-pt="${item.p}"]`)][0];
+    if(chk){
+      chk.checked=true;
+      const mul=chk.closest('.tech-item')?.querySelector('.multi');
+      if(mul) mul.checked=!!item.m;
+    }
+  });
+
+  (data.prechecks||[]).forEach(item=>{
+    const chk=[...document.querySelectorAll(`.pre-chk[data-name="${CSS.escape(item.n)}"][data-pt="${item.p}"]`)][0];
+    if(chk) chk.checked=true;
+  });
+
+  (data.finals||[]).forEach(txt=>{
+    const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
+    if(m) finalsList.appendChild(orderLiTemplate(m[1], m[2]));
+  });
+  (data.p1||[]).forEach(txt=>{
+    const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
+    if(m) list1.appendChild(mkPreOrderItem(m[1],m[2],1));
+  });
+  (data.p2||[]).forEach(txt=>{
+    const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
+    if(m) list2.appendChild(mkPreOrderItem(m[1],m[2],2));
+  });
+
+  calcTotal();
+  updatePreSummary();
+  rebuildFinalsList();
+  saveState();
+  return true;
+}
+
+function encodeShareData(data){
+  const json = JSON.stringify(data);
+  return btoa(unescape(encodeURIComponent(json)));
+}
+
+function decodeShareData(encoded){
+  const json = decodeURIComponent(escape(atob(encoded)));
+  return JSON.parse(json);
+}
+
+function createShareUrl(){
+  const data = collectCompactState();
+  const encoded = encodeShareData(data);
+  return `${location.origin}${location.pathname}?share=${encoded}`;
+}
+
+function restoreSharedStateIfNeeded(){
+  const params = new URLSearchParams(location.search);
+  const share = params.get("share");
+  if(!share) return false;
+  try{
+    const data = decodeShareData(share);
+    const ok = applyCompactState(data);
+    if(ok) showToast("共有された構成を読み込みました");
+    return ok;
+  }catch(err){
+    console.error("share restore error", err);
+    showToast("共有URLの読み込みに失敗しました");
+    return false;
+  }
+}
+
+async function copyShareUrl(){
+  const url = createShareUrl();
+  try{
+    await navigator.clipboard.writeText(url);
+    showToast("共有URLをコピーしました");
+  }catch{
+    window.prompt("共有URLをコピーしてください", url);
+  }
+}
+
+document.getElementById("btn-share-url").addEventListener("click", copyShareUrl);
+
+function buildExportSheet(){
+  const finals = getOrderTexts(finalsList);
+  const p1 = getOrderTexts(list1);
+  const p2 = getOrderTexts(list2);
+  const now = new Date().toLocaleString();
+  const shareUrl = createShareUrl();
+  const finalScore = calcOrderSquareScore(finals);
+  const prelimScore = calcOrderBaseScore([...p1, ...p2]);
+
+  const host = document.createElement("div");
+  host.className = "export-sheet-host";
+
+  const sheet = document.createElement("div");
+  sheet.className = "export-sheet";
+
+  const listHtml = (items)=>{
+    if(!items.length) return `<div class="export-empty">未設定</div>`;
+    return `<ol>${items.map(t=>`<li>${escapeHtml(t)}</li>`).join("")}</ol>`;
+  };
+
+  sheet.innerHTML = `
+    <h1>オオルリカップ2026</h1>
+    <div class="export-subtitle">技構成シート</div>
+    <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(getCurrentPresetLabel("overall"))}</div>
+    <div class="export-score-row">
+      <div class="export-score-chip">総合計：${escapeHtml(finalSpan.textContent)}点</div>
+      <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
+      <div class="export-score-chip">予選技：${formatScore(prelimScore)}点</div>
+      <div class="export-score-chip">予選点入力：${escapeHtml(preSpan.textContent)}点</div>
+    </div>
+    <div class="export-grid">
+      <div class="export-block">
+        <h2>決勝編成</h2>
+        ${listHtml(finals)}
+      </div>
+      <div>
+        <div class="export-block" style="margin-bottom:14px;">
+          <h2>予選 第1ラウンド</h2>
+          ${listHtml(p1)}
+        </div>
+        <div class="export-block">
+          <h2>予選 第2ラウンド</h2>
+          ${listHtml(p2)}
+        </div>
+      </div>
+    </div>
+    <div class="export-footer">
+      <div>
+        <div style="font-weight:800;margin-bottom:6px;">共有URL</div>
+        <div class="export-share-url">${escapeHtml(shareUrl)}</div>
+      </div>
+      <div class="export-qr-area">
+        <div id="export-qr"></div>
+        <div>QRで構成を共有</div>
+      </div>
+    </div>
+  `;
+
+  host.appendChild(sheet);
+  document.body.appendChild(host);
+
+  const qrTarget = sheet.querySelector("#export-qr");
+  if(window.QRCode){
+    new QRCode(qrTarget, {
+      text: shareUrl,
+      width: 112,
+      height: 112,
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }else{
+    qrTarget.innerHTML = `<div style="font-size:11px;color:#777;">QR生成ライブラリ未読込</div>`;
+  }
+
+  return {host, sheet};
+}
+
+async function saveCompositionImage(){
+  if(!window.html2canvas){
+    showToast("画像保存ライブラリを読み込めませんでした");
+    return;
+  }
+
+  const {host, sheet} = buildExportSheet();
+  try{
+    await new Promise(resolve=>setTimeout(resolve,120));
+    const canvas = await html2canvas(sheet, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true
+    });
+    const a = document.createElement("a");
+    a.download = `ooruricup2026_${new Date().toISOString().slice(0,10)}.png`;
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+    showToast("構成画像を保存しました");
+  }catch(err){
+    console.error("image export error", err);
+    showToast("画像保存に失敗しました");
+  }finally{
+    host.remove();
+  }
+}
+
+document.getElementById("btn-save-image").addEventListener("click", saveCompositionImage);
+
+function presetScoreSuffix(pack, kind){
+  if(!pack) return "";
+  if(pack.score != null) return `（${formatScore(pack.score)}点）`;
+  if(kind === "finals" && Array.isArray(pack.data) && pack.data.length){
+    const score = pack.data.reduce((sum,d)=>sum + Number(d.pt||0) * Number(d.pt||0), 0);
+    return `（${formatScore(score)}点）`;
+  }
+  if(kind === "prelims" && pack.data){
+    const r1 = pack.data.r1 || [];
+    const r2 = pack.data.r2 || [];
+    const score = [...r1,...r2].reduce((sum,d)=>sum + Number(d.pt||0), 0);
+    return score ? `（${formatScore(score)}点）` : "";
+  }
+  if(kind === "overall" && pack.data){
+    const checks = pack.data.checks || [];
+    const pre = Number(pack.data.pre || 0);
+    let fmd=0, base=0;
+    checks.forEach(c=>{
+      if(c.u){
+        const p=Number(c.p||0);
+        let v=p*p;
+        if(c.m) v*=1.5;
+        fmd+=v;
+        base+=p;
+      }
+    });
+    return `（${formatScore(fmd+base+pre)}点）`;
+  }
+  return "";
+}
+
+function updatePresetOptionLabels(kind){
+  const store = loadPresetStore();
+  const sel = document.getElementById(`${kind}-preset-slot`);
+  if(!sel) return;
+  [...sel.options].forEach(opt=>{
+    const slot = opt.value;
+    const mark = slot === "slot1" ? "①" : "②";
+    const base = kind === "finals" ? "決勝プリセット" : kind === "prelims" ? "予選プリセット" : "全体プリセット";
+    const pack = store[kind]?.[slot];
+    const name = pack?.name?.trim() || `${base}${mark}`;
+    opt.textContent = `${name}${presetScoreSuffix(pack, kind)}`;
+  });
+}
+
+function updateAllPresetOptionLabels(){
+  ["finals","prelims","overall"].forEach(updatePresetOptionLabels);
+}
+
+/* =========================================================
    16) リセット / 印刷
 ========================================================= */
 document.getElementById("btn-reset").addEventListener("click",()=>{
@@ -2548,7 +2947,7 @@ document.getElementById("btn-print").addEventListener("click",()=>{
     li{margin-bottom:4px;font-size:14px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   </style></head><body>
-  <h1>選択技一覧</h1>
+  <h1>オオルリカップ2026 技構成シート</h1>
   <div class="meta">作成日時：${now} ／ 合計：${finalSpan.textContent}点 ／ 予選：${preSpan.textContent}点</div>
   <div class="grid">
     <div><h2>決勝編成</h2>${finals.length? "<ol>"+finals.map(t=>"<li>"+t+"</li>").join("")+"</ol>" : "未設定"}</div>
@@ -2590,7 +2989,7 @@ function exportCSV(){
 
   const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  const a=document.createElement('a'); a.href=url; a.download='tsubame2025_export.csv'; a.click();
+  const a=document.createElement('a'); a.href=url; a.download='ooruricup2026_export.csv'; a.click();
   URL.revokeObjectURL(url);
 }
 document.getElementById("btn-export").addEventListener("click",exportCSV);
@@ -2796,6 +3195,7 @@ function syncPresetNameUI(kind){
   const nameInput = document.getElementById(`${kind}-preset-name`);
   const slot = sel.value;
   nameInput.value = store[kind][slot].name || "";
+  updatePresetOptionLabels(kind);
 }
 ["finals","prelims","overall"].forEach(kind=>{
   document.getElementById(`${kind}-preset-slot`).addEventListener("change",()=>syncPresetNameUI(kind));
@@ -2811,9 +3211,11 @@ document.getElementById("save-finals-preset").addEventListener("click",()=>{
   const slot = document.getElementById("finals-preset-slot").value;
   const nm = document.getElementById("finals-preset-name").value.trim() || (slot==="slot1"?"決勝プリセット①":"決勝プリセット②");
 
-  store.finals[slot] = { name:nm, data:data.slice(0,30) };
+  const score = data.slice(0,30).reduce((sum,d)=>sum + Number(d.pt||0) * Number(d.pt||0), 0);
+  store.finals[slot] = { name:nm, score, data:data.slice(0,30) };
   savePresetStore(store);
-  showToast(`決勝構成を保存しました（${nm}）`);
+  updateAllPresetOptionLabels();
+  showToast(`決勝構成を保存しました（${nm}／${formatScore(score)}点）`);
 });
 
 document.getElementById("load-finals-preset").addEventListener("click",()=>{
@@ -2827,6 +3229,7 @@ document.getElementById("load-finals-preset").addEventListener("click",()=>{
   pack.data.slice(0,30).forEach(d=> finalsList.appendChild(orderLiTemplate(d.pt, d.name)));
   rebuildFinalsList();
   document.getElementById("finals-preset-name").value = pack.name || "";
+  updateAllPresetOptionLabels();
   showToast(`決勝構成を反映しました（${pack.name||"無名"}）`);
 });
 
@@ -2840,12 +3243,15 @@ document.getElementById("save-prelims-preset").addEventListener("click",()=>{
   const slot = document.getElementById("prelims-preset-slot").value;
   const nm = document.getElementById("prelims-preset-name").value.trim() || (slot==="slot1"?"予選プリセット①":"予選プリセット②");
 
+  const score = [...r1.slice(0,6), ...r2.slice(0,6)].reduce((sum,d)=>sum + Number(d.pt||0), 0);
   store.prelims[slot] = {
     name:nm,
+    score,
     data:{ r1:r1.slice(0,6), r2:r2.slice(0,6) }
   };
   savePresetStore(store);
-  showToast(`予選構成を保存しました（${nm}）`);
+  updateAllPresetOptionLabels();
+  showToast(`予選構成を保存しました（${nm}／${formatScore(score)}点）`);
 });
 
 document.getElementById("load-prelims-preset").addEventListener("click",()=>{
@@ -2863,6 +3269,7 @@ document.getElementById("load-prelims-preset").addEventListener("click",()=>{
   r2.slice(0,6).forEach(d=> list2.appendChild(mkPreOrderItem(d.pt, d.name, 2)));
   updatePreSummary();
   document.getElementById("prelims-preset-name").value = pack.name || "";
+  updateAllPresetOptionLabels();
   showToast(`予選構成を反映しました（${pack.name||"無名"}）`);
 });
 
@@ -2877,9 +3284,12 @@ document.getElementById("save-overall-preset").addEventListener("click",()=>{
   const nm = document.getElementById("overall-preset-name").value.trim() || (slot==="slot1"?"全体プリセット①":"全体プリセット②");
 
   try{
-    store.overall[slot] = { name:nm, data: JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    const score = Number(finalSpan.textContent) || 0;
+    store.overall[slot] = { name:nm, score, data: parsed };
     savePresetStore(store);
-    showToast(`全体構成を保存しました（${nm}）`);
+    updateAllPresetOptionLabels();
+    showToast(`全体構成を保存しました（${nm}／${formatScore(score)}点）`);
   }catch{
     showToast("全体プリセットの保存に失敗しました");
   }
@@ -2901,6 +3311,7 @@ document.getElementById("load-overall-preset").addEventListener("click",()=>{
     updatePreSummary();
     rebuildFinalsList();
     document.getElementById("overall-preset-name").value = pack.name || "";
+    updateAllPresetOptionLabels();
     showToast(`全体構成を反映しました（${pack.name||"無名"}）`);
   }catch{
     showToast("全体プリセットの読込に失敗しました");
@@ -2924,8 +3335,8 @@ if(!localStorage.getItem('tsubame2025_tour')){
 ========================================================= */
 (function(){
   const manifest = {
-    name:"ツバメカップ2025 技チェック＆編成",
-    short_name:"Tsubame2025",
+    name:"オオルリカップ2026 技構成システム",
+    short_name:"Ooruri2026",
     start_url:"./",
     display:"standalone",
     background_color:"#f6faff",
@@ -2939,7 +3350,7 @@ if(!localStorage.getItem('tsubame2025_tour')){
 
 if('serviceWorker' in navigator){
   const swCode = `
-  const CACHE='tsubame2025-v2';
+  const CACHE='ooruricup2026-v1-1';
   self.addEventListener('install',e=>{
     e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])));
     self.skipWaiting();
@@ -2965,13 +3376,16 @@ if('serviceWorker' in navigator){
    22) 起動処理
 ========================================================= */
 window.addEventListener("DOMContentLoaded",()=>{
-  loadState();
+  if(!restoreSharedStateIfNeeded()){
+    loadState();
+  }
   calcTotal();
   updatePreSummary();
   rebuildFinalsList();
 
   // プリセット名UI初期同期
   ["finals","prelims","overall"].forEach(kind=>syncPresetNameUI(kind));
+  updateAllPresetOptionLabels();
 });
 </script>
 </body>
