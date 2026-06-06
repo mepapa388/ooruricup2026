@@ -143,16 +143,23 @@ button{border:none;border-radius:8px;cursor:pointer}
 .score-tech-item{
   display:grid;
   grid-template-columns:minmax(92px,1fr) auto auto auto;
+  grid-template-areas:
+    "name judge multi use"
+    "cand cand cand cand";
   align-items:center;
   gap:8px;
 }
-.score-tech-item .tech-name-cell{min-width:0;}
+.score-tech-item .tech-name-cell{min-width:0;grid-area:name;}
 .score-tech-item .tech-title{
   display:block;
   line-height:1.35;
   overflow-wrap:anywhere;
 }
 .score-tech-item .tech-pt-label{display:block;margin-top:2px;}
+.score-tech-item .judge-btn{grid-area:judge;}
+.score-tech-item .multi-toggle{grid-area:multi;}
+.score-tech-item .use-toggle{grid-area:use;}
+.score-tech-item .candidate-add-btn{grid-area:cand;}
 
 /* 動画・判定ボタン */
 .judge-btn{
@@ -212,10 +219,13 @@ button{border:none;border-radius:8px;cursor:pointer}
 .pre-tech-item{
   display:grid;
   grid-template-columns:minmax(110px,1fr) auto auto;
+  grid-template-areas:
+    "name judge pre"
+    "cand cand cand";
   align-items:center;
   gap:8px;
 }
-.pre-tech-item .tech-name-cell{min-width:0;}
+.pre-tech-item .tech-name-cell{min-width:0;grid-area:name;}
 .pre-tech-item .tech-title{
   display:block;
   line-height:1.35;
@@ -226,7 +236,10 @@ button{border:none;border-radius:8px;cursor:pointer}
   min-height:38px;
   padding:6px 10px;
   font-size:12px;
+  grid-area:judge;
 }
+.pre-tech-item .pre-toggle{grid-area:pre;}
+.pre-tech-item .candidate-add-btn{grid-area:cand;}
 .pre-toggle.selected{
   color:#fff;
   border-color:#0a9f5a;
@@ -243,6 +256,10 @@ button{border:none;border-radius:8px;cursor:pointer}
   .score-tech-item .tech-title{font-size:15px;}
   .score-tech-item .judge-btn{font-size:11px;padding:5px 8px;}
   .toggle-btn{font-size:13px;padding:5px 9px;}
+  .score-tech-item .candidate-add-btn{
+    font-size:13px;
+    padding:9px 10px;
+  }
 
   .pre-tech-item{
     grid-template-columns:minmax(96px,1fr) auto auto;
@@ -251,6 +268,10 @@ button{border:none;border-radius:8px;cursor:pointer}
   }
   .pre-tech-item .tech-title{font-size:15px;}
   .pre-tech-item .judge-btn{font-size:11px;padding:5px 8px;}
+  .pre-tech-item .candidate-add-btn{
+    font-size:13px;
+    padding:9px 10px;
+  }
 }
 
 /* ===== 予選点入力 ===== */
@@ -558,13 +579,13 @@ button{border:none;border-radius:8px;cursor:pointer}
   z-index:-1;
 }
 .export-sheet{
-  width:900px;
+  width:980px;
   background:#fff;
   color:#111;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
   border:8px solid var(--blue);
   border-radius:22px;
-  padding:30px;
+  padding:26px;
   box-shadow:0 8px 26px rgba(0,0,0,.12);
 }
 .export-sheet h1{
@@ -622,6 +643,35 @@ button{border:none;border-radius:8px;cursor:pointer}
   font-size:16px;
   margin:5px 0;
 }
+.export-list{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.export-list.is-two-col{
+  grid-template-columns:1fr 1fr;
+  column-gap:34px;
+  row-gap:8px;
+}
+.export-list-row{
+  display:grid;
+  grid-template-columns:2.5em minmax(0,1fr);
+  align-items:start;
+  gap:4px;
+  break-inside:avoid;
+}
+.export-list-num{
+  text-align:right;
+  font-weight:900;
+  line-height:1.45;
+  white-space:nowrap;
+}
+.export-list-text{
+  min-width:0;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
 .export-empty{
   color:#777;
   font-size:15px;
@@ -653,9 +703,9 @@ button{border:none;border-radius:8px;cursor:pointer}
   max-width:620px;
 }
 .export-sheet--a4{
-  width:794px;
+  width:900px;
   min-height:1123px;
-  padding:46px 42px;
+  padding:34px 30px;
 }
 .export-sheet--prelim .export-grid,
 .export-sheet--final .export-grid{
@@ -714,12 +764,12 @@ button{border:none;border-radius:8px;cursor:pointer}
 /* ===== 画像保存高速化・30技対応 ===== */
 .export-sheet--all .export-block:first-child ol,
 .export-sheet--final .export-block ol{
-  columns:2;
-  column-gap:30px;
+  columns:auto;
+  column-gap:0;
 }
 .export-sheet--all .export-block:first-child li,
 .export-sheet--final .export-block li{
-  break-inside:avoid;
+  break-inside:auto;
 }
 .export-sheet--final .export-block li{
   font-size:16px;
@@ -802,6 +852,152 @@ button{border:none;border-radius:8px;cursor:pointer}
   font-size:15px;
   font-weight:800;
   cursor:pointer;
+}
+
+
+
+/* ===== A4全面利用・共有URL短縮対応 ===== */
+.export-sheet--a4 .export-grid{
+  width:100%;
+}
+.export-sheet--final .export-block--main li,
+.export-sheet--prelim .export-block--main li,
+.export-sheet--all .export-block--main li{
+  letter-spacing:.01em;
+}
+
+/* ===== 画像保存レイアウト最適化 ===== */
+.export-sheet .export-footer{
+  margin-top:18px;
+  padding-top:14px;
+  align-items:flex-end;
+  gap:12px;
+}
+.export-sheet .export-note{
+  font-size:13px;
+  line-height:1.55;
+  max-width:560px;
+}
+.export-sheet .export-qr-area{
+  min-width:104px !important;
+  font-size:11px !important;
+  gap:6px;
+}
+.export-sheet .export-qr-area canvas,
+.export-sheet .export-qr-area img{
+  width:92px !important;
+  height:92px !important;
+  padding:6px !important;
+  background:#fff !important;
+  border:1px solid #d7e6ff !important;
+  border-radius:8px !important;
+}
+.export-sheet.export-sheet--final .export-grid,
+.export-sheet.export-sheet--all .export-grid{
+  gap:12px;
+}
+.export-sheet.export-sheet--final .export-block--main,
+.export-sheet.export-sheet--all .export-block--main{
+  padding:20px 22px;
+}
+.export-sheet.export-sheet--final .export-block--main h2,
+.export-sheet.export-sheet--all .export-block--main h2{
+  font-size:30px;
+  margin-bottom:14px;
+}
+.export-sheet.export-sheet--final .export-block--main ol,
+.export-sheet.export-sheet--all .export-block--main ol{
+  padding-left:30px;
+}
+.export-sheet.export-sheet--final .export-block--main li,
+.export-sheet.export-sheet--all .export-block--main li{
+  font-size:19px;
+  line-height:1.55;
+  margin:7px 0;
+}
+.export-sheet.export-sheet--final .export-block--candidate,
+.export-sheet.export-sheet--all .export-block--candidate{
+  padding:14px 16px;
+  background:#fbfcff;
+}
+.export-sheet.export-sheet--final .export-block--candidate h2,
+.export-sheet.export-sheet--all .export-block--candidate h2{
+  font-size:20px;
+  margin-bottom:10px;
+}
+.export-sheet.export-sheet--final .export-block--candidate ol,
+.export-sheet.export-sheet--all .export-block--candidate ol{
+  padding-left:24px;
+}
+.export-sheet.export-sheet--final .export-block--candidate li,
+.export-sheet.export-sheet--all .export-block--candidate li{
+  font-size:15px;
+  line-height:1.4;
+  margin:5px 0;
+}
+.export-sheet.export-sheet--prelim .export-block--candidate{
+  padding:14px 16px;
+  background:#fbfcff;
+}
+.export-sheet.export-sheet--prelim .export-block--candidate h2{
+  font-size:20px;
+}
+.export-sheet.export-sheet--prelim .export-block--candidate li{
+  font-size:15px;
+  line-height:1.4;
+  margin:5px 0;
+}
+
+
+.export-sheet.export-sheet--final .export-block--main .export-list,
+.export-sheet.export-sheet--all .export-block--main .export-list,
+.export-sheet.export-sheet--prelim .export-block--main .export-list{
+  gap:10px;
+}
+.export-sheet.export-sheet--final .export-block--main .export-list.is-two-col,
+.export-sheet.export-sheet--all .export-block--main .export-list.is-two-col{
+  column-gap:42px;
+}
+.export-sheet.export-sheet--final .export-block--main .export-list-row,
+.export-sheet.export-sheet--all .export-block--main .export-list-row,
+.export-sheet.export-sheet--prelim .export-block--main .export-list-row{
+  grid-template-columns:2.8em minmax(0,1fr);
+  gap:6px;
+}
+.export-sheet.export-sheet--final .export-block--main .export-list-text,
+.export-sheet.export-sheet--all .export-block--main .export-list-text,
+.export-sheet.export-sheet--prelim .export-block--main .export-list-text{
+  font-size:19px;
+  line-height:1.5;
+}
+.export-sheet.export-sheet--final .export-block--main .export-list-num,
+.export-sheet.export-sheet--all .export-block--main .export-list-num,
+.export-sheet.export-sheet--prelim .export-block--main .export-list-num{
+  font-size:18px;
+  line-height:1.5;
+}
+.export-sheet.export-sheet--final .export-block--candidate .export-list,
+.export-sheet.export-sheet--all .export-block--candidate .export-list,
+.export-sheet.export-sheet--prelim .export-block--candidate .export-list{
+  gap:6px;
+}
+.export-sheet.export-sheet--final .export-block--candidate .export-list-row,
+.export-sheet.export-sheet--all .export-block--candidate .export-list-row,
+.export-sheet.export-sheet--prelim .export-block--candidate .export-list-row{
+  grid-template-columns:2.2em minmax(0,1fr);
+  gap:4px;
+}
+.export-sheet.export-sheet--final .export-block--candidate .export-list-text,
+.export-sheet.export-sheet--all .export-block--candidate .export-list-text,
+.export-sheet.export-sheet--prelim .export-block--candidate .export-list-text{
+  font-size:15px;
+  line-height:1.35;
+}
+.export-sheet.export-sheet--final .export-block--candidate .export-list-num,
+.export-sheet.export-sheet--all .export-block--candidate .export-list-num,
+.export-sheet.export-sheet--prelim .export-block--candidate .export-list-num{
+  font-size:14px;
+  line-height:1.35;
 }
 
 /* ===== 画像保存プレビュー ===== */
@@ -901,16 +1097,29 @@ button{border:none;border-radius:8px;cursor:pointer}
   margin:10px 0 0;
 }
 .candidate-add-btn{
-  border:none;
+  border:1px solid #90caf9;
   background:#eef6ff;
   color:#0b4aa6;
   padding:10px 12px;
   border-radius:12px;
-  font-weight:800;
+  font-weight:900;
   cursor:pointer;
-  white-space:nowrap;
+  white-space:normal;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  line-height:1.25;
+  text-align:center;
+}
+.candidate-add-btn::before{
+  content:"＋";
+  font-size:15px;
+  font-weight:900;
 }
 .candidate-add-btn:hover{filter:brightness(.98)}
+.candidate-add-btn:active{transform:translateY(1px)}
 .order-btn-cand{
   background:#eef6ff;
   color:#0b4aa6;
@@ -2541,7 +2750,7 @@ function makeScoreItem(pt, name){
     <button type="button" class="judge-btn" data-name="${name}" data-pt="${pt}">動画・判定</button>
     <label class="toggle-btn multi-toggle"><input type="checkbox" class="multi"><span>1.5倍</span></label>
     <label class="toggle-btn use-toggle"><input type="checkbox" class="chk" data-pt="${pt}" data-name="${name}"><span>使用</span></label>
-    <button type="button" class="candidate-add-btn" data-kind="finals" data-pt="${pt}" data-name="${name}">候補</button>`;
+    <button type="button" class="candidate-add-btn" data-kind="finals" data-pt="${pt}" data-name="${name}">この技を候補へ追加</button>`;
   return item;
 }
 function makePreItemCheck(pt, name){
@@ -2554,7 +2763,7 @@ function makePreItemCheck(pt, name){
     </div>
     <button type="button" class="judge-btn" data-name="${name}" data-pt="${pt}">動画・判定</button>
     <label class="toggle-btn pre-toggle"><input type="checkbox" class="pre-chk" data-pt="${pt}" data-name="${name}"><span>予選</span></label>
-    <button type="button" class="candidate-add-btn" data-kind="prelims" data-pt="${pt}" data-name="${name}">候補</button>`;
+    <button type="button" class="candidate-add-btn" data-kind="prelims" data-pt="${pt}" data-name="${name}">この技を候補へ追加</button>`;
   return item;
 }
 
@@ -2990,6 +3199,12 @@ document.addEventListener('change', e=>{
       e.target.checked=false;
       showToast("技は30個までです");
     }
+    if(e.target.checked){
+      const txt = orderText(e.target.dataset.pt, e.target.dataset.name);
+      if(removeOrderTextFromList(finalsCandidateList, txt)){
+        rebuildFinalsList();
+      }
+    }
     calcTotal();
   }
 });
@@ -3030,6 +3245,16 @@ function getItemText(li){
 }
 function listContainsText(list, txt){
   return [...list.querySelectorAll('.order-name')].some(n=>n.textContent===txt);
+}
+function removeOrderTextFromList(list, txt){
+  let removed = false;
+  [...list.querySelectorAll('.order-item')].forEach(li=>{
+    if(getItemText(li) === txt){
+      li.remove();
+      removed = true;
+    }
+  });
+  return removed;
 }
 function moveItem(list, li, dir){
   if(dir==='up' && li.previousElementSibling) li.parentNode.insertBefore(li, li.previousElementSibling);
@@ -3288,6 +3513,12 @@ document.addEventListener('change', e=>{
       e.target.checked=false; preLimitWarn.style.display="block";
       showToast("予選は12技までです");
     }else preLimitWarn.style.display="none";
+    if(e.target.checked){
+      const txt = orderText(e.target.dataset.pt, e.target.dataset.name);
+      if(removeOrderTextFromList(preCandidateList, txt)){
+        updatePreSummary();
+      }
+    }
     syncToggleButtonStates();
     saveState();
   }
@@ -3554,35 +3785,134 @@ function calcOrderBaseScore(items){
   return items.map(parseOrderText).filter(Boolean).reduce((sum,item)=>sum + item.pt, 0);
 }
 
-function collectCompactState(){
+function pointKey(pt){
+  return String(pt);
+}
+
+function trickCodeFromPtName(pt, name){
+  const key = pointKey(pt);
+  const arr = tricks[key] || tricks[Number(key)] || [];
+  const idx = arr.indexOf(name);
+  if(idx >= 0) return [Number(key), idx];
+  return [Number(key), name];
+}
+
+function trickCodeFromOrderText(txt){
+  const parsed = parseOrderText(txt);
+  if(!parsed) return null;
+  return trickCodeFromPtName(parsed.pt, parsed.name);
+}
+
+function trickFromCode(code){
+  if(!Array.isArray(code) || code.length < 2) return null;
+  const pt = code[0];
+  const ref = code[1];
+  if(typeof ref === "number"){
+    const arr = tricks[pointKey(pt)] || tricks[Number(pt)] || [];
+    const name = arr[ref];
+    if(name) return {pt, name};
+    return null;
+  }
+  return {pt, name:String(ref)};
+}
+
+function orderTextsToCodes(list){
+  return getOrderTexts(list).map(trickCodeFromOrderText).filter(Boolean);
+}
+
+function collectShortShareState(){
   return {
-    version: "ooruricup2026-share-v1",
-    createdAt: new Date().toISOString(),
-    pre: +preInput.value || 0,
-    checks: [...document.querySelectorAll(".chk:checked")].map(c=>({
-      n:c.dataset.name,
-      p:+c.dataset.pt,
-      m:c.closest('.tech-item')?.querySelector('.multi')?.checked || false
-    })),
-    prechecks: [...document.querySelectorAll(".pre-chk:checked")].map(c=>({
-      n:c.dataset.name,
-      p:+c.dataset.pt
-    })),
-    finals: getOrderTexts(finalsList),
-    finalsCand: getOrderTexts(finalsCandidateList),
-    p1: getOrderTexts(list1),
-    p2: getOrderTexts(list2),
-    preCand: getOrderTexts(preCandidateList)
+    v:3,
+    p:+preInput.value || 0,
+    c:[...document.querySelectorAll(".chk:checked")].map(c=>{
+      const base = trickCodeFromPtName(c.dataset.pt, c.dataset.name);
+      const multi = c.closest('.tech-item')?.querySelector('.multi')?.checked ? 1 : 0;
+      return [base[0], base[1], multi];
+    }),
+    q:[...document.querySelectorAll(".pre-chk:checked")].map(c=>trickCodeFromPtName(c.dataset.pt, c.dataset.name)),
+    f:orderTextsToCodes(finalsList),
+    fc:orderTextsToCodes(finalsCandidateList),
+    r1:orderTextsToCodes(list1),
+    r2:orderTextsToCodes(list2),
+    pc:orderTextsToCodes(preCandidateList)
   };
+}
+
+function collectCompactState(){
+  // 共有URLを短くするため、技名ではなく「点数＋技リスト内番号」を中心に保存します。
+  return collectShortShareState();
+}
+
+function applyShortShareState(data){
+  if(!data || data.v !== 3) return false;
+
+  document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
+  list1.innerHTML="";
+  list2.innerHTML="";
+  preCandidateList.innerHTML="";
+  finalsList.innerHTML="";
+  finalsCandidateList.innerHTML="";
+  preInput.value = data.p ?? 0;
+
+  (data.c||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(!item) return;
+    const chk=[...document.querySelectorAll(`.chk[data-name="${CSS.escape(item.name)}"][data-pt="${item.pt}"]`)][0];
+    if(chk){
+      chk.checked=true;
+      const mul=chk.closest('.tech-item')?.querySelector('.multi');
+      if(mul) mul.checked=!!code[2];
+    }
+  });
+
+  (data.q||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(!item) return;
+    const chk=[...document.querySelectorAll(`.pre-chk[data-name="${CSS.escape(item.name)}"][data-pt="${item.pt}"]`)][0];
+    if(chk) chk.checked=true;
+  });
+
+  (data.f||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) finalsList.appendChild(orderLiTemplate(item.pt, item.name));
+  });
+  (data.fc||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) finalsCandidateList.appendChild(finalCandidateLiTemplate(item.pt, item.name));
+  });
+  (data.r1||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) list1.appendChild(mkPreOrderItem(item.pt, item.name, 1));
+  });
+  (data.r2||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) list2.appendChild(mkPreOrderItem(item.pt, item.name, 2));
+  });
+  (data.pc||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) preCandidateList.appendChild(preCandidateLiTemplate(item.pt, item.name));
+  });
+
+  calcTotal();
+  updatePreSummary();
+  rebuildFinalsList();
+  saveState();
+  return true;
 }
 
 function applyCompactState(data){
   if(!data || typeof data !== "object") return false;
 
+  // v3は短縮共有URL用
+  if(data.v === 3) return applyShortShareState(data);
+
+  // 旧共有URLとの互換性を維持
   document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
   list1.innerHTML="";
   list2.innerHTML="";
+  preCandidateList.innerHTML="";
   finalsList.innerHTML="";
+  finalsCandidateList.innerHTML="";
   preInput.value = data.pre ?? 0;
 
   (data.checks||[]).forEach(item=>{
@@ -3627,25 +3957,38 @@ function applyCompactState(data){
   return true;
 }
 
+function base64UrlEncode(str){
+  return btoa(unescape(encodeURIComponent(str)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function base64UrlDecode(encoded){
+  let s = String(encoded || "").replace(/-/g, "+").replace(/_/g, "/");
+  while(s.length % 4) s += "=";
+  return decodeURIComponent(escape(atob(s)));
+}
+
 function encodeShareData(data){
-  const json = JSON.stringify(data);
-  return btoa(unescape(encodeURIComponent(json)));
+  return base64UrlEncode(JSON.stringify(data));
 }
 
 function decodeShareData(encoded){
-  const json = decodeURIComponent(escape(atob(encoded)));
-  return JSON.parse(json);
+  return JSON.parse(base64UrlDecode(encoded));
 }
 
 function createShareUrl(){
   const data = collectCompactState();
   const encoded = encodeShareData(data);
-  return `${location.origin}${location.pathname}?share=${encoded}`;
+  return `${location.origin}${location.pathname}?s=${encoded}`;
 }
 
 function restoreSharedStateIfNeeded(){
   const params = new URLSearchParams(location.search);
-  const share = params.get("share");
+  const shortShare = params.get("s");
+  const oldShare = params.get("share");
+  const share = shortShare || oldShare;
   if(!share) return false;
   try{
     const data = decodeShareData(share);
@@ -3663,7 +4006,7 @@ async function copyShareUrl(){
   const url = createShareUrl();
   try{
     await navigator.clipboard.writeText(url);
-    showToast("共有URLをコピーしました");
+    showToast("短縮共有URLをコピーしました");
   }catch{
     window.prompt("共有URLをコピーしてください", url);
   }
@@ -3690,21 +4033,10 @@ function getExportData(){
 }
 
 function getExportQrInfo(){
-  const fullShareUrl = createShareUrl();
   const pageUrl = location.origin + location.pathname;
-
-  // 技を30個選ぶと共有URLが非常に長くなり、QR生成が遅くなることがあります。
-  // 読み込みやすさと生成速度を優先し、長い場合は大会ページURLのQRに切り替えます。
-  if(fullShareUrl.length <= 900){
-    return {
-      url: fullShareUrl,
-      note: "このQRコードを読み取ると、同じ技構成を開くことができます。"
-    };
-  }
-
   return {
     url: pageUrl,
-    note: "QRコードから大会システムを開けます。構成共有は上部の共有URLボタンをご利用ください。"
+    note: "QRコードからオオルリカップ2026自動構成システムを開く事が出来ます。構成共有は上部の共有URLボタンをご利用ください。"
   };
 }
 
@@ -3719,9 +4051,12 @@ function buildExportSheet(kind="all"){
   const sheet = document.createElement("div");
   sheet.className = `export-sheet export-sheet--${kind}${kind !== "all" ? " export-sheet--a4" : ""}`;
 
-  const listHtml = (items)=>{
+  const listHtml = (items, opts={})=>{
     if(!items.length) return `<div class="export-empty">未設定</div>`;
-    return `<ol>${items.map(t=>`<li>${escapeHtml(t)}</li>`).join("")}</ol>`;
+    const cols = opts.cols === 2 ? ' is-two-col' : '';
+    return `<div class="export-list${cols}">` + items.map((t,i)=>
+      `<div class="export-list-row"><div class="export-list-num">${i+1}.</div><div class="export-list-text">${escapeHtml(t)}</div></div>`
+    ).join("") + `</div>`;
   };
 
   if(kind === "prelim"){
@@ -3734,15 +4069,15 @@ function buildExportSheet(kind="all"){
         <div class="export-score-chip">予選点入力：${escapeHtml(preInput)}点</div>
       </div>
       <div class="export-grid">
-        <div class="export-block">
+        <div class="export-block export-block--main">
           <h2>第1ラウンド</h2>
           ${listHtml(p1)}
         </div>
-        <div class="export-block">
+        <div class="export-block export-block--main">
           <h2>第2ラウンド</h2>
           ${listHtml(p2)}
         </div>
-        <div class="export-block">
+        <div class="export-block export-block--candidate">
           <h2>技選択候補</h2>
           ${listHtml(preCand)}
         </div>
@@ -3751,7 +4086,7 @@ function buildExportSheet(kind="all"){
         <div class="export-note">${escapeHtml(qrInfo.note)}</div>
         <div class="export-qr-area">
           <div id="export-qr"></div>
-          <div>QRコード</div>
+          <div>大会システム</div>
         </div>
       </div>
     `;
@@ -3766,20 +4101,20 @@ function buildExportSheet(kind="all"){
         <div class="export-score-chip">予選点入力：${escapeHtml(preInput)}点</div>
       </div>
       <div class="export-grid">
-        <div class="export-block">
+        <div class="export-block export-block--main">
           <h2>決勝構成</h2>
-          ${listHtml(finals)}
+          ${listHtml(finals, {cols:2})}
         </div>
-        <div class="export-block">
+        <div class="export-block export-block--candidate">
           <h2>技選択候補</h2>
-          ${listHtml(finalsCand)}
+          ${listHtml(finalsCand, {cols:2})}
         </div>
       </div>
       <div class="export-footer">
         <div class="export-note">${escapeHtml(qrInfo.note)}</div>
         <div class="export-qr-area">
           <div id="export-qr"></div>
-          <div>QRコード</div>
+          <div>大会システム</div>
         </div>
       </div>
     `;
@@ -3795,36 +4130,36 @@ function buildExportSheet(kind="all"){
         <div class="export-score-chip">予選点入力：${escapeHtml(preInput)}点</div>
       </div>
       <div class="export-grid">
-        <div class="export-block">
+        <div class="export-block export-block--main">
           <h2>決勝編成</h2>
-          ${listHtml(finals)}
+          ${listHtml(finals, {cols:2})}
         </div>
         <div>
-          <div class="export-block" style="margin-bottom:14px;">
+          <div class="export-block export-block--main" style="margin-bottom:14px;">
             <h2>予選 第1ラウンド</h2>
             ${listHtml(p1)}
           </div>
-          <div class="export-block" style="margin-bottom:14px;">
+          <div class="export-block export-block--main" style="margin-bottom:14px;">
             <h2>予選 第2ラウンド</h2>
             ${listHtml(p2)}
           </div>
-          <div class="export-block">
+          <div class="export-block export-block--candidate">
             <h2>予選 技選択候補</h2>
             ${listHtml(preCand)}
           </div>
         </div>
       </div>
       <div class="export-grid" style="margin-top:14px;grid-template-columns:1fr;">
-        <div class="export-block">
+        <div class="export-block export-block--candidate">
           <h2>決勝 技選択候補</h2>
-          ${listHtml(finalsCand)}
+          ${listHtml(finalsCand, {cols:2})}
         </div>
       </div>
       <div class="export-footer">
         <div class="export-note">${escapeHtml(qrInfo.note)}</div>
         <div class="export-qr-area">
           <div id="export-qr"></div>
-          <div>QRコード</div>
+          <div>大会システム</div>
         </div>
       </div>
     `;
@@ -3837,11 +4172,11 @@ function buildExportSheet(kind="all"){
   if(window.QRCode){
     new QRCode(qrTarget, {
       text: qrInfo.url,
-      width: 128,
-      height: 128,
+      width: 92,
+      height: 92,
       colorDark: "#000000",
       colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.L
+      correctLevel: QRCode.CorrectLevel.M
     });
   }else{
     qrTarget.innerHTML = `<div style="font-size:11px;color:#777;">QR生成ライブラリ未読込</div>`;
@@ -3963,10 +4298,10 @@ async function saveOrShareCanvasImage(canvas, kind="all"){
 }
 
 function getImageExportScale(kind){
-  if(isMobileDevice()) return 1.25;
-  if(kind === "final") return 1.4;
+  if(isMobileDevice()) return 1.35;
+  if(kind === "final") return 1.45;
   if(kind === "all") return 1.45;
-  return 1.6;
+  return 1.55;
 }
 
 async function generateCompositionImage(kind="all"){
