@@ -1198,6 +1198,109 @@ button{border:none;border-radius:8px;cursor:pointer}
   }
 }
 
+
+/* ===== v1.27 ボタン配置・決勝編成1.5倍調整 ===== */
+.use-toggle,
+.pre-toggle{
+  background:#eefaf3;
+  border-color:#9bd5b5;
+  color:#075f32;
+}
+.use-toggle.selected,
+.pre-toggle.selected{
+  background:#0a9f5a;
+  border-color:#0a9f5a;
+  color:#fff;
+}
+.multi-toggle{
+  background:#fff7e8;
+  border-color:#ffc56d;
+  color:#8a4b00;
+}
+.multi-toggle.selected{
+  background:#ff8a00;
+  border-color:#ff8a00;
+  color:#fff;
+}
+.final-multi-btn{
+  background:#fff7e8;
+  color:#8a4b00;
+  border:1px solid #ffc56d;
+  font-weight:900;
+}
+.final-multi-btn.selected{
+  background:#ff8a00;
+  color:#fff;
+  border-color:#ff8a00;
+}
+.final-multi-btn::after{
+  content:"";
+}
+#finals-list .order-controls{
+  gap:6px;
+}
+#finals-list .order-btn{
+  min-height:34px;
+}
+@media (max-width:430px){
+  .score-tech-item{
+    grid-template-columns:minmax(95px,1fr) auto auto;
+    grid-template-areas:
+      "name judge use"
+      "cand cand multi";
+  }
+  .score-tech-item .multi-toggle{
+    width:100%;
+    min-height:36px;
+  }
+  .score-tech-item .use-toggle{
+    min-width:58px;
+  }
+  .pre-tech-item{
+    grid-template-columns:minmax(96px,1fr) auto auto;
+    grid-template-areas:
+      "name judge pre"
+      "cand cand cand";
+  }
+}
+
+
+/* ===== v1.28 決勝画面1.5倍は無色、決勝編成側は選択状態を明確化 ===== */
+.score-tech-item .multi-toggle{
+  background:#fff !important;
+  border-color:#d6d6d6 !important;
+  color:#222 !important;
+  box-shadow:none !important;
+}
+.score-tech-item .multi-toggle.selected{
+  background:#fff !important;
+  border-color:#777 !important;
+  color:#222 !important;
+  box-shadow:0 0 0 2px rgba(0,0,0,.08) !important;
+}
+.finals-multi-on{
+  background:#fff4df !important;
+  border-color:#ff9f1a !important;
+}
+.finals-multi-on .final-multi-btn{
+  background:#ff8a00 !important;
+  color:#fff !important;
+  border-color:#ff8a00 !important;
+  box-shadow:0 0 0 2px rgba(255,138,0,.16);
+}
+.finals-multi-on .order-name::after{
+  content:"  1.5倍";
+  display:inline-block;
+  margin-left:6px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:#ff8a00;
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  vertical-align:middle;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -1284,7 +1387,7 @@ button{border:none;border-radius:8px;cursor:pointer}
 
 <!-- 決勝編成 -->
 <div id="mode-finals" class="mode-section">
-  <p style="font-size:13px;">決勝スコアで選んだ最大30技を読み込み、順番を並べ替えます（スマホは☰または技名を長押しして移動・長押しで削除）。</p>
+  <p style="font-size:13px;">決勝スコアで選んだ最大30技を読み込み、順番と1.5倍ボーナスを再検討できます（スマホは☰または技名を長押しして移動）。</p>
   <button id="load-finals-btn" style="background:var(--blue);color:#fff;width:100%;padding:10px;border-radius:10px">決勝技を読み込む</button>
 
   <div class="order-box">
@@ -1313,7 +1416,7 @@ button{border:none;border-radius:8px;cursor:pointer}
       <button id="save-finals-preset">保存</button>
       <button id="load-finals-preset">読込</button>
     </div>
-    <div class="preset-hint">決勝編成リストのみを保存します（最大30技）。</div>
+    <div class="preset-hint">決勝編成リストと1.5倍設定を保存します（最大30技）。</div>
   </div>
 </div>
 
@@ -3266,6 +3369,42 @@ function moveItem(list, li, dir){
   if(dir==='up' && li.previousElementSibling) li.parentNode.insertBefore(li, li.previousElementSibling);
   if(dir==='down' && li.nextElementSibling) li.parentNode.insertBefore(li.nextElementSibling, li);
 }
+
+function findFinalTechItem(pt, name){
+  const ptStr = String(pt);
+  return [...document.querySelectorAll("#mode-score .tech-item")].find(item=>{
+    const chk = item.querySelector(".chk");
+    return chk && chk.dataset.pt == ptStr && chk.dataset.name === String(name);
+  }) || null;
+}
+
+function syncFinalsMultiVisuals(){
+  [...finalsList.querySelectorAll(".order-item")].forEach(li=>{
+    const on = li.dataset.multi === "1";
+    li.classList.toggle("finals-multi-on", on);
+    const btn = li.querySelector('[data-act="multi"]');
+    if(btn) btn.classList.toggle("selected", on);
+  });
+}
+
+function syncScoreChecksFromFinals(){
+  document.querySelectorAll("#mode-score .chk").forEach(chk=>{ chk.checked=false; });
+  document.querySelectorAll("#mode-score .multi").forEach(mul=>{ mul.checked=false; });
+
+  [...finalsList.querySelectorAll(".order-item")].forEach(li=>{
+    const info = parseOrderText(getItemText(li));
+    if(!info) return;
+    const item = findFinalTechItem(info.pt, info.name);
+    if(!item) return;
+    const chk = item.querySelector(".chk");
+    const mul = item.querySelector(".multi");
+    if(chk) chk.checked = true;
+    if(mul) mul.checked = li.dataset.multi === "1";
+  });
+  syncFinalsMultiVisuals();
+  syncToggleButtonStates();
+}
+
 function sortCandidateListByPoint(list, afterSort){
   const items = [...list.querySelectorAll('.order-item')];
   items.sort((a,b)=>{
@@ -3328,6 +3467,7 @@ function rebuildFinalsList(){
   const candCount = finalsCandidateList.querySelectorAll('.order-item').length;
   finalsCountSpan.textContent=count;
   finalsCandidateCountSpan.textContent=candCount;
+  syncFinalsMultiVisuals();
 
   const overFinals = count > 30;
   finalsCountSpan.classList.toggle("limit-over", overFinals);
@@ -3335,25 +3475,38 @@ function rebuildFinalsList(){
   finalsLimitAlert.style.display = overFinals ? 'block' : 'none';
 
   finalsCandidateWarn.style.display = candCount>10 ? 'block' : 'none';
+  if(finalsList.dataset.authoritative === "1" || count > 0){
+    syncScoreChecksFromFinals();
+    calcTotal();
+  }else{
+    syncToggleButtonStates();
+  }
   saveState();
 }
 
-function orderLiTemplate(pt,name){
+function orderLiTemplate(pt,name,multi=false){
   const li=document.createElement('li');
   li.className='order-item'; li.draggable=true;
+  if(multi) li.classList.add("finals-multi-on");
+  li.dataset.pt = String(pt);
+  li.dataset.name = String(name);
+  li.dataset.multi = multi ? "1" : "0";
   li.innerHTML=`
     <span class="drag-handle" aria-label="並び替え">☰</span>
     <span class="order-name">${orderText(pt,name)}</span>
     <div class="order-controls">
-      <button class="order-btn" data-act="up">↑</button>
-      <button class="order-btn" data-act="down">↓</button>
+      <button class="order-btn final-multi-btn ${multi ? 'selected' : ''}" data-act="multi">1.5倍</button>
       <button class="order-btn order-btn-cand" data-act="cand">候補へ</button>
       <button class="order-btn order-btn-del" data-act="del">✕</button>
     </div>`;
   let pressT=null;
   const delBtn = li.querySelector('[data-act="del"]');
 
-  const doDel=()=>{ li.remove(); rebuildFinalsList(); showToast("削除しました"); };
+  const doDel=()=>{
+    li.remove();
+    rebuildFinalsList();
+    showToast("削除しました");
+  };
 
   delBtn.addEventListener('touchstart',()=>{ pressT=setTimeout(doDel,600); },{passive:true});
   delBtn.addEventListener('touchend',()=>{ if(pressT){ clearTimeout(pressT); pressT=null; showToast("長押しで削除",800); }});
@@ -3369,8 +3522,6 @@ function finalCandidateLiTemplate(pt,name){
     <span class="drag-handle" aria-hidden="true">◎</span>
     <span class="order-name">${orderText(pt,name)}</span>
     <div class="order-controls">
-      <button class="order-btn" data-act="up">↑</button>
-      <button class="order-btn" data-act="down">↓</button>
       <button class="order-btn order-btn-main" data-act="main">採用</button>
       <button class="order-btn order-btn-del" data-act="del">✕</button>
     </div>`;
@@ -3408,9 +3559,11 @@ function addFinalCandidate(pt,name){
 }
 
 document.getElementById("load-finals-btn").addEventListener("click",()=>{
+  finalsList.dataset.authoritative = "1";
   finalsList.innerHTML="";
   document.querySelectorAll(".chk:checked").forEach(chk=>{
-    finalsList.appendChild(orderLiTemplate(chk.dataset.pt, chk.dataset.name));
+    const multi = chk.closest('.tech-item')?.querySelector('.multi')?.checked || false;
+    finalsList.appendChild(orderLiTemplate(chk.dataset.pt, chk.dataset.name, multi));
   });
   pruneCandidateDuplicates(finalsList, finalsCandidateList);
   rebuildFinalsList();
@@ -3418,9 +3571,22 @@ document.getElementById("load-finals-btn").addEventListener("click",()=>{
 
 finalsList.addEventListener("click",e=>{
   if(!e.target.classList.contains("order-btn")) return;
+  finalsList.dataset.authoritative = "1";
   const act=e.target.dataset.act; const li=e.target.closest(".order-item");
-  if(act==="up" || act==="down") moveItem(finalsList, li, act);
-  else if(act==="cand"){
+
+  if(act==="multi"){
+    const next = li.dataset.multi !== "1";
+    li.dataset.multi = next ? "1" : "0";
+    e.target.classList.toggle("selected", next);
+    li.classList.toggle("finals-multi-on", next);
+    syncScoreChecksFromFinals();
+    calcTotal();
+    saveState();
+    showToast(next ? "1.5倍を適用しました" : "1.5倍を解除しました", 900);
+    return;
+  }
+
+  if(act==="cand"){
     const info=parseOrderText(getItemText(li));
     if(!info) return;
     if(finalsCandidateList.querySelectorAll('.order-item').length >= 10){
@@ -3442,6 +3608,7 @@ finalsCandidateList.addEventListener('click',e=>{
     const info=parseOrderText(getItemText(li));
     if(!info) return;
     li.remove();
+    finalsList.dataset.authoritative = "1";
     finalsList.appendChild(orderLiTemplate(info.pt, info.name));
     if(finalsList.querySelectorAll('.order-item').length > 30){
       finalsLimitAlert.style.display='block';
@@ -3469,6 +3636,7 @@ function bindFinalsDnd(){
       delay: 120,
       touchStartThreshold: 4,
       onEnd: ()=>{
+        finalsList.dataset.authoritative = "1";
         rebuildFinalsList();
         showToast("決勝構成の順番を変更しました", 900);
       }
@@ -3478,7 +3646,7 @@ function bindFinalsDnd(){
 
   let dragEl=null;
   finalsList.addEventListener('dragstart',e=>{ dragEl=e.target; dragEl.classList.add('dragging'); });
-  finalsList.addEventListener('dragend',()=>{ if(dragEl){dragEl.classList.remove('dragging'); dragEl=null; rebuildFinalsList(); }});
+  finalsList.addEventListener('dragend',()=>{ if(dragEl){dragEl.classList.remove('dragging'); dragEl=null; finalsList.dataset.authoritative = "1"; rebuildFinalsList(); }});
   finalsList.addEventListener('dragover',e=>{
     e.preventDefault();
     const after = [...finalsList.querySelectorAll('.order-item:not(.dragging)')].find(el=>{
@@ -3809,12 +3977,18 @@ function parseOrderText(txt){
   return m ? {pt:Number(m[1]), name:m[2]} : null;
 }
 
+function normalizeScoreItem(item){
+  if(typeof item === "string") return parseOrderText(item);
+  if(item && typeof item === "object") return {pt:Number(item.pt), name:item.name, multi:!!item.multi};
+  return null;
+}
+
 function calcOrderSquareScore(items){
-  return items.map(parseOrderText).filter(Boolean).reduce((sum,item)=>sum + item.pt * item.pt, 0);
+  return items.map(normalizeScoreItem).filter(Boolean).reduce((sum,item)=>sum + item.pt * item.pt * (item.multi ? 1.5 : 1), 0);
 }
 
 function calcOrderBaseScore(items){
-  return items.map(parseOrderText).filter(Boolean).reduce((sum,item)=>sum + item.pt, 0);
+  return items.map(normalizeScoreItem).filter(Boolean).reduce((sum,item)=>sum + item.pt, 0);
 }
 
 function pointKey(pt){
@@ -3852,6 +4026,15 @@ function orderTextsToCodes(list){
   return getOrderTexts(list).map(trickCodeFromOrderText).filter(Boolean);
 }
 
+function orderItemsToCodes(list){
+  return [...list.querySelectorAll(".order-item")].map(li=>{
+    const code = trickCodeFromOrderText(getItemText(li));
+    if(!code) return null;
+    if(li.dataset.multi === "1") code[2] = 1;
+    return code;
+  }).filter(Boolean);
+}
+
 function collectShortShareState(){
   return {
     v:3,
@@ -3862,7 +4045,7 @@ function collectShortShareState(){
       return [base[0], base[1], multi];
     }),
     q:[...document.querySelectorAll(".pre-chk:checked")].map(c=>trickCodeFromPtName(c.dataset.pt, c.dataset.name)),
-    f:orderTextsToCodes(finalsList),
+    f:orderItemsToCodes(finalsList),
     fc:orderTextsToCodes(finalsCandidateList),
     r1:orderTextsToCodes(list1),
     r2:orderTextsToCodes(list2),
@@ -3882,6 +4065,7 @@ function applyShortShareState(data){
   list1.innerHTML="";
   list2.innerHTML="";
   preCandidateList.innerHTML="";
+  finalsList.dataset.authoritative = "1";
   finalsList.innerHTML="";
   finalsCandidateList.innerHTML="";
   preInput.value = data.p ?? 0;
@@ -3904,9 +4088,10 @@ function applyShortShareState(data){
     if(chk) chk.checked=true;
   });
 
+  if((data.f||[]).length) finalsList.dataset.authoritative = "1";
   (data.f||[]).forEach(code=>{
     const item = trickFromCode(code);
-    if(item) finalsList.appendChild(orderLiTemplate(item.pt, item.name));
+    if(item) finalsList.appendChild(orderLiTemplate(item.pt, item.name, !!code[2]));
   });
   (data.fc||[]).forEach(code=>{
     const item = trickFromCode(code);
@@ -3961,6 +4146,7 @@ function applyCompactState(data){
     if(chk) chk.checked=true;
   });
 
+  if((data.finals||[]).length) finalsList.dataset.authoritative = "1";
   (data.finals||[]).forEach(txt=>{
     const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
     if(m) finalsList.appendChild(orderLiTemplate(m[1], m[2]));
@@ -4047,15 +4233,16 @@ async function copyShareUrl(){
 document.getElementById("btn-share-url").addEventListener("click", copyShareUrl);
 
 function getExportData(){
-  const finals = getOrderTexts(finalsList);
+  const finalEntries = serializeOrderList(finalsList);
+  const finals = finalEntries.map(d=>`${orderText(d.pt, d.name)}${d.multi ? "（1.5倍）" : ""}`);
   const finalsCand = getOrderTexts(finalsCandidateList);
   const p1 = getOrderTexts(list1);
   const p2 = getOrderTexts(list2);
   const preCand = getOrderTexts(preCandidateList);
   const now = new Date().toLocaleString();
   const shareUrl = createShareUrl();
-  const finalScore = calcOrderSquareScore(finals);
-  const baseScore = calcOrderBaseScore(finals);
+  const finalScore = calcOrderSquareScore(finalEntries);
+  const baseScore = calcOrderBaseScore(finalEntries);
   const prelimScore = calcOrderBaseScore([...p1, ...p2]);
   return {
     finals, finalsCand, p1, p2, preCand, now, shareUrl, finalScore, baseScore, prelimScore,
@@ -4409,7 +4596,7 @@ function presetScoreSuffix(pack, kind){
   if(kind === "finals"){
     const data = Array.isArray(pack.data) ? pack.data : (pack.data?.main || []);
     if(data.length){
-      const score = data.reduce((sum,d)=>sum + Number(d.pt||0) * Number(d.pt||0), 0);
+      const score = data.reduce((sum,d)=>sum + Number(d.pt||0) * Number(d.pt||0) * (d.multi ? 1.5 : 1), 0);
       return `（${formatScore(score)}点）`;
     }
   }
@@ -4461,7 +4648,7 @@ function updateAllPresetOptionLabels(){
 document.getElementById("btn-reset").addEventListener("click",()=>{
   document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
   preInput.value=0; warn.style.display="none"; preWarn.style.display="none"; preLimitWarn.style.display="none";
-  list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsCandidateList.innerHTML="";
+  list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsList.dataset.authoritative=""; finalsCandidateList.innerHTML="";
   searchInput.value=""; applySearch();
   localStorage.removeItem("tsubame2025");
   calcTotal(); updatePreSummary(); rebuildFinalsList();
@@ -4469,7 +4656,10 @@ document.getElementById("btn-reset").addEventListener("click",()=>{
 });
 
 document.getElementById("btn-print").addEventListener("click",()=>{
-  const finals=[...finalsList.querySelectorAll(".order-name")].map(n=>n.textContent);
+  const finals=[...finalsList.querySelectorAll(".order-item")].map(li=>{
+    const txt = li.querySelector(".order-name")?.textContent || "";
+    return txt + (li.dataset.multi==="1" ? "（1.5倍）" : "");
+  });
   const finalCands=[...finalsCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent);
   const p1=[...list1.querySelectorAll(".order-name")].map(n=>n.textContent);
   const p2=[...list2.querySelectorAll(".order-name")].map(n=>n.textContent);
@@ -4513,9 +4703,10 @@ document.getElementById("btn-print").addEventListener("click",()=>{
 function exportCSV(){
   const rows=[["type","name","point","mult15","round","order"]];
 
-  [...finalsList.querySelectorAll(".order-item .order-name")].forEach((n,i)=>{
+  [...finalsList.querySelectorAll(".order-item")].forEach((li,i)=>{
+    const n=li.querySelector(".order-name");
     const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
-    rows.push(["final", m[2], m[1], "", "", i+1]);
+    rows.push(["final", m[2], m[1], li.dataset.multi==="1" ? 1.5 : "", "", i+1]);
   });
   [...finalsCandidateList.querySelectorAll(".order-item .order-name")].forEach((n,i)=>{
     const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
@@ -4565,7 +4756,9 @@ document.getElementById("csv-import").addEventListener("change",async(e)=>{
     const type=cols[idx("type")]; const name=cols[idx("name")]; const point=cols[idx("point")];
 
     if(type==="final"){
-      finalsList.appendChild(orderLiTemplate(point,name));
+      finalsList.dataset.authoritative = "1";
+      const mul = cols[idx("mult15")];
+      finalsList.appendChild(orderLiTemplate(point,name, !!mul));
     }else if(type==="final_candidate"){
       finalsCandidateList.appendChild(finalCandidateLiTemplate(point,name));
     }else if(type==="prelim"){
@@ -4603,7 +4796,7 @@ function saveState(){
       p:+c.dataset.pt,
       u:c.checked
     })),
-    finals: [...finalsList.querySelectorAll(".order-name")].map(n=>n.textContent),
+    finals: serializeOrderList(finalsList),
     finalCands: [...finalsCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent),
     p1: [...list1.querySelectorAll(".order-name")].map(n=>n.textContent),
     p2: [...list2.querySelectorAll(".order-name")].map(n=>n.textContent),
@@ -4634,10 +4827,15 @@ function loadState(){
 
     finalsList.innerHTML="";
     finalsCandidateList.innerHTML="";
-    (s.finals||[]).forEach(txt=>{
-      const m=txt.match(/^\[(.+?)点]\s*(.+)$/);
-      if(m) finalsList.appendChild(orderLiTemplate(m[1], m[2]));
+    (s.finals||[]).forEach(entry=>{
+      if(typeof entry === "string"){
+        const m=entry.match(/^\[(.+?)点]\s*(.+)$/);
+        if(m) finalsList.appendChild(orderLiTemplate(m[1], m[2]));
+      }else if(entry && entry.name){
+        finalsList.appendChild(orderLiTemplate(entry.pt, entry.name, !!entry.multi));
+      }
     });
+    if((s.finals||[]).length) finalsList.dataset.authoritative = "1";
     (s.finalCands||[]).forEach(txt=>{
       const m=txt.match(/^\[(.+?)点]\s*(.+)$/);
       if(m) finalsCandidateList.appendChild(finalCandidateLiTemplate(m[1], m[2]));
@@ -4754,9 +4952,10 @@ migrateOldPresetsIfNeeded();
 
 /* 決勝/予選の保存用シリアライズ */
 function serializeOrderList(list){
-  return [...list.querySelectorAll('.order-name')].map(n=>{
-    const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/);
-    return m ? {pt:Number(m[1]), name:m[2]} : null;
+  return [...list.querySelectorAll('.order-item')].map(li=>{
+    const n = li.querySelector('.order-name');
+    const m=n?.textContent.match(/^\[(.+?)点]\s*(.+)$/);
+    return m ? {pt:Number(m[1]), name:m[2], multi: li.dataset.multi === "1"} : null;
   }).filter(Boolean);
 }
 
@@ -4784,7 +4983,7 @@ document.getElementById("save-finals-preset").addEventListener("click",()=>{
   const slot = document.getElementById("finals-preset-slot").value;
   const nm = document.getElementById("finals-preset-name").value.trim() || (slot==="slot1"?"決勝プリセット①":"決勝プリセット②");
 
-  const score = main.slice(0,30).reduce((sum,d)=>sum + Number(d.pt||0) * Number(d.pt||0), 0);
+  const score = main.slice(0,30).reduce((sum,d)=>sum + (Number(d.pt||0) * Number(d.pt||0) * (d.multi ? 1.5 : 1)), 0);
   store.finals[slot] = { name:nm, score, data:{ main:main.slice(0,30), cand:cand.slice(0,10) } };
   savePresetStore(store);
   updateAllPresetOptionLabels();
@@ -4803,7 +5002,7 @@ document.getElementById("load-finals-preset").addEventListener("click",()=>{
 
   finalsList.innerHTML="";
   finalsCandidateList.innerHTML="";
-  main.slice(0,30).forEach(d=> finalsList.appendChild(orderLiTemplate(d.pt, d.name)));
+  main.slice(0,30).forEach(d=> finalsList.appendChild(orderLiTemplate(d.pt, d.name, !!d.multi)));
   cand.slice(0,10).forEach(d=> finalsCandidateList.appendChild(finalCandidateLiTemplate(d.pt, d.name)));
   rebuildFinalsList();
   document.getElementById("finals-preset-name").value = pack.name || "";
