@@ -4055,9 +4055,10 @@ function getExportData(){
   const now = new Date().toLocaleString();
   const shareUrl = createShareUrl();
   const finalScore = calcOrderSquareScore(finals);
+  const baseScore = calcOrderBaseScore(finals);
   const prelimScore = calcOrderBaseScore([...p1, ...p2]);
   return {
-    finals, finalsCand, p1, p2, preCand, now, shareUrl, finalScore, prelimScore,
+    finals, finalsCand, p1, p2, preCand, now, shareUrl, finalScore, baseScore, prelimScore,
     overallTotal: finalSpan.textContent,
     preInput: preSpan.textContent,
     presetLabel: getCurrentPresetLabel("overall")
@@ -4074,7 +4075,7 @@ function getExportQrInfo(){
 
 function buildExportSheet(kind="all"){
   const data = getExportData();
-  const {finals, finalsCand, p1, p2, preCand, now, finalScore, prelimScore, overallTotal, preInput, presetLabel} = data;
+  const {finals, finalsCand, p1, p2, preCand, now, finalScore, baseScore, prelimScore, overallTotal, preInput, presetLabel} = data;
   const qrInfo = getExportQrInfo();
 
   const host = document.createElement("div");
@@ -4104,7 +4105,7 @@ function buildExportSheet(kind="all"){
       <div class="export-score-row">
         <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
-        <div class="export-score-chip">基礎点：${formatScore(prelimScore)}点</div>
+        <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
         <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
       </div>
       <div class="export-grid">
@@ -4137,7 +4138,7 @@ function buildExportSheet(kind="all"){
       <div class="export-score-row">
         <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
-        <div class="export-score-chip">基礎点：${formatScore(prelimScore)}点</div>
+        <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
         <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
       </div>
       <div class="export-grid">
@@ -4166,7 +4167,7 @@ function buildExportSheet(kind="all"){
       <div class="export-score-row">
         <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
-        <div class="export-score-chip">基礎点：${formatScore(prelimScore)}点</div>
+        <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
         <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
       </div>
       <div class="export-grid">
