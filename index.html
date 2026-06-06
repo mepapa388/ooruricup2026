@@ -1542,6 +1542,86 @@ button{border:none;border-radius:8px;cursor:pointer}
   }
 }
 
+
+/* ===== v1.33 プリセット導線・重要表示 ===== */
+.preset-important{
+  margin-top:18px;
+  padding:14px;
+  border-width:2px;
+  border-radius:16px;
+  box-shadow:0 5px 16px rgba(0,0,0,.08);
+  scroll-margin-top:118px;
+}
+.preset-finals-important{
+  background:#f4f0ff;
+  border-color:#9b7cff;
+}
+.preset-prelims-important{
+  background:#eefaf3;
+  border-color:#79d79f;
+}
+.preset-heading{
+  font-size:20px;
+  font-weight:1000;
+  line-height:1.2;
+  margin:0 0 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.preset-finals-important .preset-heading{color:#4b2dcc;}
+.preset-prelims-important .preset-heading{color:#075f32;}
+.preset-heading::before{
+  content:"重要";
+  font-size:12px;
+  font-weight:1000;
+  color:#fff;
+  padding:3px 8px;
+  border-radius:999px;
+}
+.preset-finals-important .preset-heading::before{background:#6b4eff;}
+.preset-prelims-important .preset-heading::before{background:#0a9f5a;}
+.preset-important .preset-row select,
+.preset-important .preset-row input{
+  font-size:15px;
+  padding:9px 10px;
+}
+.preset-important .preset-row button{
+  font-size:15px;
+  font-weight:900;
+  padding:10px 13px;
+  border-radius:10px;
+}
+.preset-important .preset-hint{
+  font-size:13px;
+  opacity:.9;
+  font-weight:700;
+  margin-top:8px;
+}
+@media (max-width:430px){
+  .preset-important{
+    padding:13px;
+    border-radius:14px;
+  }
+  .preset-heading{
+    font-size:19px;
+  }
+  .preset-important .preset-row{
+    gap:8px;
+  }
+  .preset-important .preset-row select,
+  .preset-important .preset-row input{
+    font-size:15px;
+    padding:10px;
+  }
+  .preset-important .preset-row button{
+    flex:1;
+    min-width:82px;
+    font-size:16px;
+    padding:11px 12px;
+  }
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -1573,8 +1653,9 @@ button{border:none;border-radius:8px;cursor:pointer}
       <button type="button" style="background:#555;color:#fff" id="btn-print"><span>印刷</span></button>
       <button type="button" style="background:#00a6d6;color:#fff" id="btn-save-image"><span>画像<br>保存</span></button>
       <button type="button" style="background:#2f855a;color:#fff" id="btn-share-url"><span>共有<br>URL</span></button>
-      <button type="button" style="background:#888;color:#fff" id="btn-export"><span>CSV<br>出力</span></button>
-      <label class="order-btn" style="background:#fff" for="csv-import"><span>CSV<br>取込</span><input id="csv-import" type="file" accept=".csv" style="display:none"></label>
+      <button type="button" style="background:#6b4eff;color:#fff" id="btn-export"><span>決勝<br>プリセット</span></button>
+      <button type="button" style="background:#0a9f5a;color:#fff" id="btn-prelims-preset-jump"><span>予選<br>プリセット</span></button>
+      <input id="csv-import" type="file" accept=".csv" style="display:none">
     </div>
   </div>
 </div>
@@ -1647,7 +1728,8 @@ button{border:none;border-radius:8px;cursor:pointer}
   </div>
 
   <!-- 決勝プリセット（2枠） -->
-  <div class="preset-box">
+  <div class="preset-box preset-important preset-finals-important" id="finals-preset-anchor">
+    <div class="preset-heading">決勝プリセット</div>
     <div class="preset-row">
       <select id="finals-preset-slot">
         <option value="slot1">決勝プリセット①</option>
@@ -1694,7 +1776,8 @@ button{border:none;border-radius:8px;cursor:pointer}
   <p class="pre-sum">予選技 基礎点合計：<span id="pre-tech-total">0</span> 点</p>
 
   <!-- 予選プリセット（2枠） -->
-  <div class="preset-box">
+  <div class="preset-box preset-important preset-prelims-important" id="prelims-preset-anchor">
+    <div class="preset-heading">予選プリセット</div>
     <div class="preset-row">
       <select id="prelims-preset-slot">
         <option value="slot1">予選プリセット①</option>
@@ -4979,7 +5062,22 @@ function exportCSV(){
   const a=document.createElement('a'); a.href=url; a.download='ooruricup2026_export.csv'; a.click();
   URL.revokeObjectURL(url);
 }
-document.getElementById("btn-export").addEventListener("click",exportCSV);
+function jumpToPresetAnchor(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.scrollIntoView({behavior:"smooth", block:"center"});
+  el.classList.add("pop");
+  setTimeout(()=>el.classList.remove("pop"), 450);
+}
+
+document.getElementById("btn-export").addEventListener("click",()=>{
+  showMode("finals");
+  setTimeout(()=>jumpToPresetAnchor("finals-preset-anchor"), 80);
+});
+document.getElementById("btn-prelims-preset-jump").addEventListener("click",()=>{
+  showMode("prelims");
+  setTimeout(()=>jumpToPresetAnchor("prelims-preset-anchor"), 80);
+});
 
 document.getElementById("csv-import").addEventListener("change",async(e)=>{
   const f=e.target.files?.[0]; if(!f) return;
