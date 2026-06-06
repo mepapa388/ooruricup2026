@@ -5070,13 +5070,23 @@ function jumpToPresetAnchor(id){
   setTimeout(()=>el.classList.remove("pop"), 450);
 }
 
+function switchModeAndJump(mode, anchorId){
+  const modeButton = document.querySelector(`.mode-btn[data-mode="${mode}"]`);
+  if(modeButton){
+    modeButton.click();
+  }else{
+    document.querySelectorAll(".mode-section").forEach(sec=>sec.classList.remove("active"));
+    document.getElementById(`mode-${mode}`)?.classList.add("active");
+  }
+
+  setTimeout(()=>jumpToPresetAnchor(anchorId), 160);
+}
+
 document.getElementById("btn-export").addEventListener("click",()=>{
-  showMode("finals");
-  setTimeout(()=>jumpToPresetAnchor("finals-preset-anchor"), 80);
+  switchModeAndJump("finals", "finals-preset-anchor");
 });
 document.getElementById("btn-prelims-preset-jump").addEventListener("click",()=>{
-  showMode("prelims");
-  setTimeout(()=>jumpToPresetAnchor("prelims-preset-anchor"), 80);
+  switchModeAndJump("prelims", "prelims-preset-anchor");
 });
 
 document.getElementById("csv-import").addEventListener("change",async(e)=>{
