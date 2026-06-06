@@ -1395,7 +1395,7 @@ button{border:none;border-radius:8px;cursor:pointer}
 <div class="mini-nav">
   <button class="mini-btn active" data-mode="score"><span>決勝</span></button>
   <button class="mini-btn" data-mode="finals"><span>決勝編成</span></button>
-  <button class="mini-btn" data-mode="prelims"><span>予選</span></button>
+  <button class="mini-btn" data-mode="prelims"><span>使用</span></button>
   <button class="mini-btn" id="btn-recalc"><span>再計算</span></button>
   <button class="mini-btn" data-link="judge"><span>成功基準</span></button>
   <button class="mini-btn" data-link="official"><span>公式HP</span></button>
@@ -2762,7 +2762,7 @@ function makePreItemCheck(pt, name){
       <span class="tech-pt-label">${pt}点技</span>
     </div>
     <button type="button" class="judge-btn" data-name="${name}" data-pt="${pt}">動画・判定</button>
-    <label class="toggle-btn pre-toggle"><input type="checkbox" class="pre-chk" data-pt="${pt}" data-name="${name}"><span>予選</span></label>
+    <label class="toggle-btn pre-toggle"><input type="checkbox" class="pre-chk" data-pt="${pt}" data-name="${name}"><span>使用</span></label>
     <button type="button" class="candidate-add-btn" data-kind="prelims" data-pt="${pt}" data-name="${name}">この技を候補へ追加</button>`;
   return item;
 }
@@ -3256,6 +3256,12 @@ function removeOrderTextFromList(list, txt){
   });
   return removed;
 }
+function isFinalUseChecked(pt, name){
+  return !!document.querySelector(`.chk[data-name="${CSS.escape(String(name))}"][data-pt="${pt}"]:checked`);
+}
+function isPreUseChecked(pt, name){
+  return !!document.querySelector(`.pre-chk[data-name="${CSS.escape(String(name))}"][data-pt="${pt}"]:checked`);
+}
 function moveItem(list, li, dir){
   if(dir==='up' && li.previousElementSibling) li.parentNode.insertBefore(li, li.previousElementSibling);
   if(dir==='down' && li.nextElementSibling) li.parentNode.insertBefore(li.nextElementSibling, li);
@@ -3380,7 +3386,13 @@ function finalCandidateLiTemplate(pt,name){
 
 function addFinalCandidate(pt,name){
   const txt = orderText(pt,name);
-  if(listContainsText(finalsList, txt) || listContainsText(finalsCandidateList, txt)){
+  if(isFinalUseChecked(pt, name) || listContainsText(finalsList, txt)){
+    removeOrderTextFromList(finalsCandidateList, txt);
+    rebuildFinalsList();
+    showToast("使用中の技は候補に追加できません。使用を取り消してから候補に入れてください");
+    return false;
+  }
+  if(listContainsText(finalsCandidateList, txt)){
     showToast("同じ技はすでに登録されています");
     return false;
   }
@@ -3486,6 +3498,13 @@ document.getElementById("finals-candidate-sort").addEventListener("click",()=>{
 document.addEventListener('click',e=>{
   const btn = e.target.closest('.candidate-add-btn[data-kind="finals"]');
   if(!btn) return;
+  if(isFinalUseChecked(btn.dataset.pt, btn.dataset.name)){
+    const txt = orderText(btn.dataset.pt, btn.dataset.name);
+    removeOrderTextFromList(finalsCandidateList, txt);
+    rebuildFinalsList();
+    showToast("使用中の技は候補に追加できません。使用を取り消してから候補に入れてください");
+    return;
+  }
   addFinalCandidate(btn.dataset.pt, btn.dataset.name);
 });
 
@@ -3571,7 +3590,13 @@ function preCandidateLiTemplate(pt,name){
 
 function addPreCandidate(pt,name){
   const txt = orderText(pt,name);
-  if(listContainsText(list1, txt) || listContainsText(list2, txt) || listContainsText(preCandidateList, txt)){
+  if(isPreUseChecked(pt, name) || listContainsText(list1, txt) || listContainsText(list2, txt)){
+    removeOrderTextFromList(preCandidateList, txt);
+    updatePreSummary();
+    showToast("予選で使用中の技は候補に追加できません。予選を取り消してから候補に入れてください");
+    return false;
+  }
+  if(listContainsText(preCandidateList, txt)){
     showToast("同じ技はすでに登録されています");
     return false;
   }
@@ -3701,6 +3726,13 @@ list2.addEventListener("click",preListHandler);
 document.addEventListener('click',e=>{
   const btn = e.target.closest('.candidate-add-btn[data-kind="prelims"]');
   if(!btn) return;
+  if(isPreUseChecked(btn.dataset.pt, btn.dataset.name)){
+    const txt = orderText(btn.dataset.pt, btn.dataset.name);
+    removeOrderTextFromList(preCandidateList, txt);
+    updatePreSummary();
+    showToast("予選で使用中の技は候補に追加できません。予選を取り消してから候補に入れてください");
+    return;
+  }
   addPreCandidate(btn.dataset.pt, btn.dataset.name);
 });
 
@@ -4051,11 +4083,16 @@ function buildExportSheet(kind="all"){
   const sheet = document.createElement("div");
   sheet.className = `export-sheet export-sheet--${kind}${kind !== "all" ? " export-sheet--a4" : ""}`;
 
+  const formatExportTechniqueText = (t)=>{
+    const s = String(t || "");
+    return s.replace(/^(\[[^\]]+\])(\S)/, "$1 $2");
+  };
+
   const listHtml = (items, opts={})=>{
     if(!items.length) return `<div class="export-empty">未設定</div>`;
     const cols = opts.cols === 2 ? ' is-two-col' : '';
     return `<div class="export-list${cols}">` + items.map((t,i)=>
-      `<div class="export-list-row"><div class="export-list-num">${i+1}.</div><div class="export-list-text">${escapeHtml(t)}</div></div>`
+      `<div class="export-list-row"><div class="export-list-num">${i+1}.</div><div class="export-list-text">${escapeHtml(formatExportTechniqueText(t))}</div></div>`
     ).join("") + `</div>`;
   };
 
@@ -4065,8 +4102,10 @@ function buildExportSheet(kind="all"){
       <div class="export-subtitle">予選構成シート</div>
       <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(presetLabel)}</div>
       <div class="export-score-row">
-        <div class="export-score-chip">予選技基礎点合計：${formatScore(prelimScore)}点</div>
-        <div class="export-score-chip">予選点入力：${escapeHtml(preInput)}点</div>
+        <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
+        <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
+        <div class="export-score-chip">基礎点：${formatScore(prelimScore)}点</div>
+        <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
       </div>
       <div class="export-grid">
         <div class="export-block export-block--main">
@@ -4098,7 +4137,8 @@ function buildExportSheet(kind="all"){
       <div class="export-score-row">
         <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
-        <div class="export-score-chip">予選点入力：${escapeHtml(preInput)}点</div>
+        <div class="export-score-chip">基礎点：${formatScore(prelimScore)}点</div>
+        <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
       </div>
       <div class="export-grid">
         <div class="export-block export-block--main">
@@ -4126,8 +4166,8 @@ function buildExportSheet(kind="all"){
       <div class="export-score-row">
         <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
-        <div class="export-score-chip">予選技：${formatScore(prelimScore)}点</div>
-        <div class="export-score-chip">予選点入力：${escapeHtml(preInput)}点</div>
+        <div class="export-score-chip">基礎点：${formatScore(prelimScore)}点</div>
+        <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
       </div>
       <div class="export-grid">
         <div class="export-block export-block--main">
