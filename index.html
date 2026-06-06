@@ -652,7 +652,157 @@ button{border:none;border-radius:8px;cursor:pointer}
   line-height:1.6;
   max-width:620px;
 }
+.export-sheet--a4{
+  width:794px;
+  min-height:1123px;
+  padding:46px 42px;
+}
+.export-sheet--prelim .export-grid,
+.export-sheet--final .export-grid{
+  grid-template-columns:1fr;
+}
+.export-sheet--prelim .export-block,
+.export-sheet--final .export-block{
+  padding:18px 20px;
+}
+.export-sheet--prelim .export-block h2,
+.export-sheet--final .export-block h2{
+  font-size:24px;
+  margin-bottom:12px;
+}
+.export-sheet--prelim .export-block li,
+.export-sheet--final .export-block li{
+  font-size:18px;
+  margin:8px 0;
+}
+.export-sheet--prelim .export-empty,
+.export-sheet--final .export-empty{
+  font-size:18px;
+}
+.export-sheet--prelim .export-footer,
+.export-sheet--final .export-footer{
+  margin-top:28px;
+  align-items:center;
+}
+.export-sheet--prelim .export-note,
+.export-sheet--final .export-note{
+  font-size:16px;
+}
+.export-sheet--prelim .export-score-chip,
+.export-sheet--final .export-score-chip{
+  font-size:18px;
+  padding:10px 16px;
+}
+.export-sheet--prelim .export-qr-area,
+.export-sheet--final .export-qr-area,
+.export-sheet--all .export-qr-area{
+  min-width:160px;
+  font-size:13px;
+}
+.export-sheet--prelim .export-qr-area canvas,
+.export-sheet--prelim .export-qr-area img,
+.export-sheet--final .export-qr-area canvas,
+.export-sheet--final .export-qr-area img,
+.export-sheet--all .export-qr-area canvas,
+.export-sheet--all .export-qr-area img{
+  padding:8px;
+  background:#fff;
+  border:1px solid #d7e6ff;
+  border-radius:10px;
+}
 
+/* ===== 画像保存高速化・30技対応 ===== */
+.export-sheet--all .export-block:first-child ol,
+.export-sheet--final .export-block ol{
+  columns:2;
+  column-gap:30px;
+}
+.export-sheet--all .export-block:first-child li,
+.export-sheet--final .export-block li{
+  break-inside:avoid;
+}
+.export-sheet--final .export-block li{
+  font-size:16px;
+  margin:6px 0;
+}
+.export-sheet--final .export-score-row{
+  margin-bottom:14px;
+}
+.export-sheet--final .export-footer{
+  margin-top:22px;
+}
+
+/* ===== 画像書き出し種別選択 ===== */
+.export-choice-modal{
+  position:fixed;
+  inset:0;
+  z-index:430;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.48);
+  padding:14px;
+}
+.export-choice-dialog{
+  width:min(520px,96vw);
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 16px 40px rgba(0,0,0,.28);
+  overflow:hidden;
+}
+.export-choice-header{
+  padding:14px 16px;
+  border-bottom:1px solid #e6eefb;
+}
+.export-choice-header h3{
+  margin:0 0 4px;
+  font-size:20px;
+}
+.export-choice-header p{
+  margin:0;
+  color:#555;
+  font-size:14px;
+}
+.export-choice-body{
+  padding:14px;
+  display:grid;
+  gap:10px;
+}
+.export-choice-btn{
+  width:100%;
+  text-align:left;
+  border:1px solid #cfe3ff;
+  background:#f7fbff;
+  border-radius:14px;
+  padding:14px 16px;
+  cursor:pointer;
+}
+.export-choice-btn strong{
+  display:block;
+  font-size:17px;
+  margin-bottom:4px;
+  color:#0b4aa6;
+}
+.export-choice-btn span{
+  display:block;
+  font-size:13px;
+  color:#555;
+  line-height:1.6;
+}
+.export-choice-actions{
+  padding:0 14px 14px;
+}
+.export-choice-close{
+  width:100%;
+  border:none;
+  background:#555;
+  color:#fff;
+  border-radius:12px;
+  padding:12px 14px;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+}
 
 /* ===== 画像保存プレビュー ===== */
 .image-save-modal{
@@ -912,6 +1062,33 @@ button{border:none;border-radius:8px;cursor:pointer}
 
 <!-- トースト -->
 <div class="toast" id="toast"></div>
+
+<!-- 画像書き出し種別選択 -->
+<div class="export-choice-modal" id="export-choice-modal" aria-hidden="true">
+  <div class="export-choice-dialog" role="dialog" aria-modal="true" aria-label="画像保存の種類を選択">
+    <div class="export-choice-header">
+      <h3>画像保存の種類を選択</h3>
+      <p>保存したい画像を1つ選んでください。</p>
+    </div>
+    <div class="export-choice-body">
+      <button type="button" class="export-choice-btn" data-export-kind="all">
+        <strong>① 現在の画像内容</strong>
+        <span>今までの画像内容をそのまま保存します。予選・決勝・合計・QRをまとめて1枚で出力します。</span>
+      </button>
+      <button type="button" class="export-choice-btn" data-export-kind="prelim">
+        <strong>② 予選専用画像</strong>
+        <span>第1ラウンドと第2ラウンドを、1枚のA4縦サイズに見やすく大きくまとめます。</span>
+      </button>
+      <button type="button" class="export-choice-btn" data-export-kind="final">
+        <strong>③ 決勝構成専用画像</strong>
+        <span>決勝構成を、1枚のA4縦サイズに見やすく大きくまとめます。</span>
+      </button>
+    </div>
+    <div class="export-choice-actions">
+      <button type="button" class="export-choice-close" id="export-choice-close">閉じる</button>
+    </div>
+  </div>
+</div>
 
 <!-- 画像保存プレビュー -->
 <div class="image-save-modal" id="image-save-modal" aria-hidden="true">
@@ -3083,7 +3260,7 @@ async function copyShareUrl(){
 
 document.getElementById("btn-share-url").addEventListener("click", copyShareUrl);
 
-function buildExportSheet(){
+function getExportData(){
   const finals = getOrderTexts(finalsList);
   const p1 = getOrderTexts(list1);
   const p2 = getOrderTexts(list2);
@@ -3091,54 +3268,136 @@ function buildExportSheet(){
   const shareUrl = createShareUrl();
   const finalScore = calcOrderSquareScore(finals);
   const prelimScore = calcOrderBaseScore([...p1, ...p2]);
+  return {
+    finals, p1, p2, now, shareUrl, finalScore, prelimScore,
+    overallTotal: finalSpan.textContent,
+    preInput: preSpan.textContent,
+    presetLabel: getCurrentPresetLabel("overall")
+  };
+}
+
+function getExportQrInfo(){
+  const fullShareUrl = createShareUrl();
+  const pageUrl = location.origin + location.pathname;
+
+  // 技を30個選ぶと共有URLが非常に長くなり、QR生成が遅くなることがあります。
+  // 読み込みやすさと生成速度を優先し、長い場合は大会ページURLのQRに切り替えます。
+  if(fullShareUrl.length <= 900){
+    return {
+      url: fullShareUrl,
+      note: "このQRコードを読み取ると、同じ技構成を開くことができます。"
+    };
+  }
+
+  return {
+    url: pageUrl,
+    note: "QRコードから大会システムを開けます。構成共有は上部の共有URLボタンをご利用ください。"
+  };
+}
+
+function buildExportSheet(kind="all"){
+  const data = getExportData();
+  const {finals, p1, p2, now, finalScore, prelimScore, overallTotal, preInput, presetLabel} = data;
+  const qrInfo = getExportQrInfo();
 
   const host = document.createElement("div");
   host.className = "export-sheet-host";
 
   const sheet = document.createElement("div");
-  sheet.className = "export-sheet";
+  sheet.className = `export-sheet export-sheet--${kind}${kind !== "all" ? " export-sheet--a4" : ""}`;
 
   const listHtml = (items)=>{
     if(!items.length) return `<div class="export-empty">未設定</div>`;
     return `<ol>${items.map(t=>`<li>${escapeHtml(t)}</li>`).join("")}</ol>`;
   };
 
-  sheet.innerHTML = `
-    <h1>オオルリカップ2026</h1>
-    <div class="export-subtitle">技構成シート</div>
-    <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(getCurrentPresetLabel("overall"))}</div>
-    <div class="export-score-row">
-      <div class="export-score-chip">総合計：${escapeHtml(finalSpan.textContent)}点</div>
-      <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
-      <div class="export-score-chip">予選技：${formatScore(prelimScore)}点</div>
-      <div class="export-score-chip">予選点入力：${escapeHtml(preSpan.textContent)}点</div>
-    </div>
-    <div class="export-grid">
-      <div class="export-block">
-        <h2>決勝編成</h2>
-        ${listHtml(finals)}
+  if(kind === "prelim"){
+    sheet.innerHTML = `
+      <h1>オオルリカップ2026</h1>
+      <div class="export-subtitle">予選構成シート</div>
+      <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(presetLabel)}</div>
+      <div class="export-score-row">
+        <div class="export-score-chip">予選技基礎点合計：${formatScore(prelimScore)}点</div>
+        <div class="export-score-chip">予選点入力：${escapeHtml(preInput)}点</div>
       </div>
-      <div>
-        <div class="export-block" style="margin-bottom:14px;">
-          <h2>予選 第1ラウンド</h2>
+      <div class="export-grid">
+        <div class="export-block">
+          <h2>第1ラウンド</h2>
           ${listHtml(p1)}
         </div>
         <div class="export-block">
-          <h2>予選 第2ラウンド</h2>
+          <h2>第2ラウンド</h2>
           ${listHtml(p2)}
         </div>
       </div>
-    </div>
-    <div class="export-footer">
-      <div class="export-note">
-        このQRコードを読み取ると、同じ技構成を開くことができます。
+      <div class="export-footer">
+        <div class="export-note">${escapeHtml(qrInfo.note)}</div>
+        <div class="export-qr-area">
+          <div id="export-qr"></div>
+          <div>QRコード</div>
+        </div>
       </div>
-      <div class="export-qr-area">
-        <div id="export-qr"></div>
-        <div>QRで構成を共有</div>
+    `;
+  }else if(kind === "final"){
+    sheet.innerHTML = `
+      <h1>オオルリカップ2026</h1>
+      <div class="export-subtitle">決勝構成シート</div>
+      <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(presetLabel)}</div>
+      <div class="export-score-row">
+        <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
+        <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
+        <div class="export-score-chip">予選点入力：${escapeHtml(preInput)}点</div>
       </div>
-    </div>
-  `;
+      <div class="export-grid">
+        <div class="export-block">
+          <h2>決勝構成</h2>
+          ${listHtml(finals)}
+        </div>
+      </div>
+      <div class="export-footer">
+        <div class="export-note">${escapeHtml(qrInfo.note)}</div>
+        <div class="export-qr-area">
+          <div id="export-qr"></div>
+          <div>QRコード</div>
+        </div>
+      </div>
+    `;
+  }else{
+    sheet.innerHTML = `
+      <h1>オオルリカップ2026</h1>
+      <div class="export-subtitle">技構成シート</div>
+      <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(presetLabel)}</div>
+      <div class="export-score-row">
+        <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
+        <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
+        <div class="export-score-chip">予選技：${formatScore(prelimScore)}点</div>
+        <div class="export-score-chip">予選点入力：${escapeHtml(preInput)}点</div>
+      </div>
+      <div class="export-grid">
+        <div class="export-block">
+          <h2>決勝編成</h2>
+          ${listHtml(finals)}
+        </div>
+        <div>
+          <div class="export-block" style="margin-bottom:14px;">
+            <h2>予選 第1ラウンド</h2>
+            ${listHtml(p1)}
+          </div>
+          <div class="export-block">
+            <h2>予選 第2ラウンド</h2>
+            ${listHtml(p2)}
+          </div>
+        </div>
+      </div>
+      <div class="export-footer">
+        <div class="export-note">${escapeHtml(qrInfo.note)}</div>
+        <div class="export-qr-area">
+          <div id="export-qr"></div>
+          <div>QRコード</div>
+        </div>
+      </div>
+    `;
+  }
 
   host.appendChild(sheet);
   document.body.appendChild(host);
@@ -3146,10 +3405,12 @@ function buildExportSheet(){
   const qrTarget = sheet.querySelector("#export-qr");
   if(window.QRCode){
     new QRCode(qrTarget, {
-      text: shareUrl,
-      width: 112,
-      height: 112,
-      correctLevel: QRCode.CorrectLevel.M
+      text: qrInfo.url,
+      width: 128,
+      height: 128,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.L
     });
   }else{
     qrTarget.innerHTML = `<div style="font-size:11px;color:#777;">QR生成ライブラリ未読込</div>`;
@@ -3172,8 +3433,14 @@ let latestImageBlob = null;
 let latestImageFile = null;
 let latestImageUrl = null;
 
-function makeImageFileName(){
-  return `ooruricup2026_${new Date().toISOString().slice(0,10)}.png`;
+function makeImageFileName(kind="all"){
+  const date = new Date().toISOString().slice(0,10);
+  const suffixMap = {
+    all: "all",
+    prelim: "prelim",
+    final: "final"
+  };
+  return `ooruricup2026_${suffixMap[kind] || kind}_${date}.png`;
 }
 
 function revokeLatestImageUrl(){
@@ -3206,6 +3473,18 @@ function closeImageSavePreview(){
   modal.setAttribute("aria-hidden", "true");
 }
 
+function openExportChoiceModal(){
+  const modal = document.getElementById("export-choice-modal");
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeExportChoiceModal(){
+  const modal = document.getElementById("export-choice-modal");
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden", "true");
+}
+
 async function shareLatestImage(){
   if(!latestImageFile){
     showToast("先に画像を作成してください");
@@ -3232,17 +3511,15 @@ async function shareLatestImage(){
   return false;
 }
 
-async function saveOrShareCanvasImage(canvas){
+async function saveOrShareCanvasImage(canvas, kind="all"){
   const blob = await canvasToBlob(canvas, "image/png");
   if(!blob){
     throw new Error("PNG画像の生成に失敗しました");
   }
 
-  const fileName = makeImageFileName();
+  const fileName = makeImageFileName(kind);
   showImageSavePreview(blob, fileName);
 
-  // iPhone / Android では、まず共有シートを試します。
-  // うまく開かない端末でも、プレビュー画像を長押し保存できます。
   if(isMobileDevice()){
     const shared = await shareLatestImage();
     if(!shared){
@@ -3251,31 +3528,42 @@ async function saveOrShareCanvasImage(canvas){
     return;
   }
 
-  // PCではプレビューを出しつつ、ダウンロードボタンから保存できます。
   showToast("画像プレビューを作成しました");
 }
 
-async function saveCompositionImage(){
+function getImageExportScale(kind){
+  if(isMobileDevice()) return 1.25;
+  if(kind === "final") return 1.4;
+  if(kind === "all") return 1.45;
+  return 1.6;
+}
+
+async function generateCompositionImage(kind="all"){
   const btn = document.getElementById("btn-save-image");
   if(!window.html2canvas){
     showToast("画像保存ライブラリを読み込めませんでした");
     return;
   }
 
+  closeExportChoiceModal();
   const originalText = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = "作成<br>中";
+  showToast("画像を作成しています。30技の場合は少し時間がかかります", 2400);
 
-  const {host, sheet} = buildExportSheet();
+  const {host, sheet} = buildExportSheet(kind);
   try{
     await new Promise(resolve=>setTimeout(resolve,240));
     const canvas = await html2canvas(sheet, {
-      scale: 2,
+      scale: getImageExportScale(kind),
       backgroundColor: "#ffffff",
       useCORS: true,
-      logging: false
+      logging: false,
+      removeContainer: true,
+      windowWidth: sheet.scrollWidth,
+      windowHeight: sheet.scrollHeight
     });
-    await saveOrShareCanvasImage(canvas);
+    await saveOrShareCanvasImage(canvas, kind);
   }catch(err){
     console.error("image export error", err);
     showToast("画像保存に失敗しました");
@@ -3286,7 +3574,18 @@ async function saveCompositionImage(){
   }
 }
 
+function saveCompositionImage(){
+  openExportChoiceModal();
+}
+
 document.getElementById("btn-save-image").addEventListener("click", saveCompositionImage);
+document.getElementById("export-choice-close").addEventListener("click", closeExportChoiceModal);
+document.getElementById("export-choice-modal").addEventListener("click", e=>{
+  if(e.target.id === "export-choice-modal") closeExportChoiceModal();
+});
+document.querySelectorAll("[data-export-kind]").forEach(btn=>{
+  btn.addEventListener("click", ()=>generateCompositionImage(btn.dataset.exportKind));
+});
 document.getElementById("image-save-close").addEventListener("click", closeImageSavePreview);
 document.getElementById("image-save-close-bottom").addEventListener("click", closeImageSavePreview);
 document.getElementById("image-save-modal").addEventListener("click", e=>{
