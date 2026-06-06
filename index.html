@@ -941,6 +941,18 @@ button{border:none;border-radius:8px;cursor:pointer}
 }
 
 
+
+/* ===== 規定技数超過アラート ===== */
+.limit-over{
+  color:#d60000 !important;
+  font-weight:900 !important;
+  background:#fff1f1;
+  border:1px solid #ffb3b3;
+  border-radius:999px;
+  padding:2px 8px;
+  display:inline-block;
+}
+
 /* ===== 下部メニュー：アイコン削除後の見やすさ調整 ===== */
 .mini-nav{
   gap:8px;
@@ -1067,7 +1079,7 @@ button{border:none;border-radius:8px;cursor:pointer}
   <button id="load-finals-btn" style="background:var(--blue);color:#fff;width:100%;padding:10px;border-radius:10px">決勝技を読み込む</button>
 
   <div class="order-box">
-    <div class="order-box-title">決勝編成（<span id="finals-count">0</span>技 / 30技）</div>
+    <div class="order-box-title">決勝編成（<span id="finals-count">0</span>技 / <span id="finals-limit-num">30</span>技）</div>
     <ul id="finals-list" class="order-list"></ul>
     <p style="font-size:11px;opacity:.7;margin-top:4px;">☰または技名を指で押して並べ替え ／ ↑↓でも移動 ／ 候補へで別枠保管 ／ ✕は長押し削除</p>
     <p class="warning inline-warning" id="finals-limit-alert">⚠ 決勝編成が30技を超えています。技選択候補へ移動して30技以内にしてください。</p>
@@ -1109,14 +1121,14 @@ button{border:none;border-radius:8px;cursor:pointer}
   <button id="apply-prelims-btn" style="background:var(--blue);color:#fff;width:100%;padding:10px;border-radius:10px">選択技を予選へ反映</button>
 
   <div class="order-box">
-    <div class="order-box-title">第1ラウンド（<span id="prelims1-count">0</span>技）</div>
+    <div class="order-box-title">第1ラウンド（<span id="prelims1-count">0</span>技 / <span id="prelims1-limit-num">6</span>技）</div>
     <ul id="prelims1-list" class="order-list"></ul>
   </div>
   <div class="order-box">
-    <div class="order-box-title">第2ラウンド（<span id="prelims2-count">0</span>技）</div>
+    <div class="order-box-title">第2ラウンド（<span id="prelims2-count">0</span>技 / <span id="prelims2-limit-num">6</span>技）</div>
     <ul id="prelims2-list" class="order-list"></ul>
   </div>
-  <p class="warning inline-warning" id="pre-main-limit-alert">⚠ 予選編成が12技を超えています。技選択候補へ移動して12技以内にしてください。</p>
+  <p class="warning inline-warning" id="pre-main-limit-alert">⚠ 予選編成が規定数を超えています。各ラウンド6技、合計12技以内になるよう候補へ移動してください。</p>
 
   <div class="order-box candidate-box">
     <div class="order-box-title">技選択候補（<span id="pre-candidate-count">0</span>/6技）</div>
@@ -3008,6 +3020,7 @@ const finalsLimitAlert=document.getElementById("finals-limit-alert");
 const finalsCandidateList=document.getElementById("finals-candidate-list");
 const finalsCandidateCountSpan=document.getElementById("finals-candidate-count");
 const finalsCandidateWarn=document.getElementById("finals-candidate-warn");
+const finalsLimitNum=document.getElementById("finals-limit-num");
 
 function orderText(pt,name){
   return `[${pt}点] ${name}`;
@@ -3084,8 +3097,13 @@ function rebuildFinalsList(){
   const candCount = finalsCandidateList.querySelectorAll('.order-item').length;
   finalsCountSpan.textContent=count;
   finalsCandidateCountSpan.textContent=candCount;
-  finalsLimitAlert.style.display = count>30 ? 'block' : 'none';
-  finalsCandidateWarn.style.display = candCount>4 ? 'block' : 'none';
+
+  const overFinals = count > 30;
+  finalsCountSpan.classList.toggle("limit-over", overFinals);
+  if(finalsLimitNum) finalsLimitNum.classList.toggle("limit-over", overFinals);
+  finalsLimitAlert.style.display = overFinals ? 'block' : 'none';
+
+  finalsCandidateWarn.style.display = candCount>10 ? 'block' : 'none';
   saveState();
 }
 
@@ -3259,6 +3277,8 @@ const preCandidateWarn=document.getElementById("pre-candidate-warn");
 const preMainLimitAlert=document.getElementById("pre-main-limit-alert");
 const c1=document.getElementById("prelims1-count");
 const c2=document.getElementById("prelims2-count");
+const pre1LimitNum=document.getElementById("prelims1-limit-num");
+const pre2LimitNum=document.getElementById("prelims2-limit-num");
 const preSum=document.getElementById("pre-tech-total");
 
 document.addEventListener('change', e=>{
@@ -3462,9 +3482,19 @@ function updatePreSummary(){
   const n2=list2.querySelectorAll(".order-name");
   const totalMain = n1.length + n2.length;
   c1.textContent=n1.length; c2.textContent=n2.length;
+
+  const overR1 = n1.length > 6;
+  const overR2 = n2.length > 6;
+  const overTotal = totalMain > 12;
+
+  c1.classList.toggle("limit-over", overR1);
+  c2.classList.toggle("limit-over", overR2);
+  if(pre1LimitNum) pre1LimitNum.classList.toggle("limit-over", overR1);
+  if(pre2LimitNum) pre2LimitNum.classList.toggle("limit-over", overR2);
+
   preSum.textContent=sumNode(n1)+sumNode(n2);
   preCandidateCountSpan.textContent = preCandidateList.querySelectorAll('.order-item').length;
-  preMainLimitAlert.style.display = totalMain>12 ? 'block' : 'none';
+  preMainLimitAlert.style.display = (overR1 || overR2 || overTotal) ? 'block' : 'none';
   preCandidateWarn.style.display = preCandidateList.querySelectorAll('.order-item').length>6 ? 'block' : 'none';
   saveState();
 }
