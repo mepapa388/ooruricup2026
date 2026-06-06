@@ -876,11 +876,20 @@ button{border:none;border-radius:8px;cursor:pointer}
 
 
 .candidate-box{
-  border:1px dashed #9ec5fe;
-  background:#f8fbff;
+  border:2px solid #f2b84b;
+  background:#fff7e6;
+  box-shadow:0 2px 10px rgba(242,184,75,.18);
 }
 .candidate-box .order-box-title{
-  color:#0b4aa6;
+  color:#9a5a00;
+}
+.candidate-box .order-list{
+  background:#fffdf7;
+  border-radius:12px;
+}
+.candidate-box .order-item{
+  background:#fffaf0;
+  border-color:#f4d28a;
 }
 .candidate-note{
   font-size:12px;
@@ -929,6 +938,43 @@ button{border:none;border-radius:8px;cursor:pointer}
 .candidate-sort-btn:hover{background:#eef6ff}
 @media (max-width:640px){
   .candidate-add-btn{padding:9px 10px;font-size:13px}
+}
+
+
+/* ===== 下部メニュー：アイコン削除後の見やすさ調整 ===== */
+.mini-nav{
+  gap:8px;
+  padding:9px 10px calc(9px + env(safe-area-inset-bottom));
+  justify-content:space-between;
+  align-items:center;
+}
+.mini-btn{
+  min-height:46px;
+  padding:10px 8px;
+  font-size:16px;
+  font-weight:900;
+  line-height:1.15;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.mini-btn span{
+  display:block;
+  width:100%;
+}
+@media (max-width:420px){
+  .mini-nav{
+    gap:6px;
+    padding-left:6px;
+    padding-right:6px;
+  }
+  .mini-btn{
+    font-size:15px;
+    padding:10px 6px;
+    min-height:44px;
+  }
 }
 
 /* ===== 印刷 ===== */
@@ -1126,13 +1172,12 @@ button{border:none;border-radius:8px;cursor:pointer}
 
 <!-- ミニメニュー -->
 <div class="mini-nav">
-  <button class="mini-btn active" data-mode="score"><span class="mini-btn-icon">🧮</span><span>決勝</span></button>
-  <button class="mini-btn" data-mode="finals"><span class="mini-btn-icon">🎯</span><span>編成</span></button>
-  <button class="mini-btn" data-mode="prelims"><span class="mini-btn-icon">🏁</span><span>予選</span></button>
-  <button class="mini-btn" id="btn-recalc"><span class="mini-btn-icon">⟳</span><span>再計算</span></button>
-  <button class="mini-btn" id="btn-top"><span class="mini-btn-icon">⬆️</span><span>TOP</span></button>
-  <button class="mini-btn" data-link="judge"><span class="mini-btn-icon">📘</span><span>成功基準</span></button>
-  <button class="mini-btn" data-link="official"><span class="mini-btn-icon">🌐</span><span>公式HP</span></button>
+  <button class="mini-btn active" data-mode="score"><span>決勝</span></button>
+  <button class="mini-btn" data-mode="finals"><span>決勝編成</span></button>
+  <button class="mini-btn" data-mode="prelims"><span>予選</span></button>
+  <button class="mini-btn" id="btn-recalc"><span>再計算</span></button>
+  <button class="mini-btn" data-link="judge"><span>成功基準</span></button>
+  <button class="mini-btn" data-link="official"><span>公式HP</span></button>
 </div>
 
 <!-- トースト -->
@@ -3448,7 +3493,6 @@ miniButtons.forEach(btn=>{
   if(link==="official") btn.addEventListener("click",()=>window.open("https://spingear.jp/index.php?dispatch=pages.view&page_id=140","_blank"));
 });
 document.getElementById("btn-recalc").addEventListener("click",()=>{ calcTotal(); showToast("再計算しました"); });
-document.getElementById("btn-top").addEventListener("click",()=> window.scrollTo({top:0, behavior:"smooth"}));
 
 /* =========================================================
    16) 共有URL / 画像保存
