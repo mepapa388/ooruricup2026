@@ -2407,7 +2407,7 @@ h1{
     <p class="warning inline-warning" id="pre-candidate-warn">⚠ 予選の技選択候補は6技までです。</p>
   </div>
 
-  <p class="pre-sum">予選技 基礎点合計：<span id="pre-tech-total">0</span> 点</p>
+  <p class="pre-sum">予選技合計：<span id="pre-tech-total">0</span> 点</p>
 
   <!-- 予選プリセット（2枠） -->
   <div class="preset-box preset-important preset-prelims-important" id="prelims-preset-anchor">
@@ -4230,13 +4230,20 @@ function updateBarColor(total){
 }
 
 function calcTotal(){
-  let sel=0,fmd=0,base=0;
+  let fmd=0,base=0;
 
-  const useFinalsList = finalsList?.dataset?.authoritative === "1" && finalsList.querySelectorAll(".order-item").length > 0;
+  const checkedCount = document.querySelectorAll(".chk:checked").length;
+  const finalsCount = finalsList?.querySelectorAll(".order-item").length || 0;
+  const useFinalsList = finalsList?.dataset?.authoritative === "1" && finalsCount > 0;
+
+  // 技数表示の基準：
+  // ・決勝編成へ追加更新する前は、決勝画面で選択中の技数
+  // ・一度追加更新した後は、決勝編成リスト内の実際の技数
+  // これにより、追加更新ボタンを押した後は必ず決勝編成の技数と一致する。
+  const displayCount = useFinalsList ? finalsCount : checkedCount;
 
   if(useFinalsList){
     const entries = serializeOrderList(finalsList);
-    sel = entries.length;
     fmd = calcOrderSquareScore(entries);
     base = calcOrderBaseScore(entries);
   }else{
@@ -4245,7 +4252,6 @@ function calcTotal(){
       const chk=it.querySelector(".chk");
       const multi=it.querySelector(".multi");
       if(chk && chk.checked){
-        sel++;
         const b=Number(chk.dataset.pt);
         let val=b*b;
         if(multi && multi.checked) val*=1.5;
@@ -4254,12 +4260,12 @@ function calcTotal(){
     });
   }
 
-  warn.style.display = sel>30 ? "block" : "none";
+  warn.style.display = displayCount>30 ? "block" : "none";
 
   const pre=getPreScore();
   const total=fmd+base+pre;
 
-  selectedSpan.textContent=sel;
+  selectedSpan.textContent=displayCount;
   fmdSpan.textContent=formatScore(fmd);
   baseSpan.textContent=formatScore(base);
   preSpan.textContent=formatScore(pre);
@@ -4268,7 +4274,6 @@ function calcTotal(){
   updateBarColor(total);
   syncToggleButtonStates();
   const loadBtn = document.getElementById("load-finals-btn");
-  const checkedCount = document.querySelectorAll(".chk:checked").length;
   if(loadBtn && checkedCount>0) loadBtn.classList.add("is-attention");
   saveState();
 }
@@ -4366,6 +4371,29 @@ function isFinalUseChecked(pt, name){
 function isPreUseChecked(pt, name){
   return !!document.querySelector(`.pre-chk[data-name="${CSS.escape(String(name))}"][data-pt="${pt}"]:checked`);
 }
+
+function findPreTechCheck(pt, name){
+  return [...document.querySelectorAll(".pre-chk")].find(chk=>
+    chk.dataset.pt == String(pt) && chk.dataset.name === String(name)
+  ) || null;
+}
+
+function setPreTechChecked(pt, name, checked){
+  const chk = findPreTechCheck(pt, name);
+  if(!chk) return;
+  chk.checked = !!checked;
+  syncToggleButtonStates();
+}
+
+function syncPreChecksFromLists(){
+  document.querySelectorAll(".pre-chk").forEach(chk=>{ chk.checked=false; });
+  [...list1.querySelectorAll(".order-name"), ...list2.querySelectorAll(".order-name")].forEach(n=>{
+    const info = parseOrderText(n.textContent);
+    if(info) setPreTechChecked(info.pt, info.name, true);
+  });
+  syncToggleButtonStates();
+}
+
 function moveItem(list, li, dir){
   if(dir==='up' && li.previousElementSibling) li.parentNode.insertBefore(li, li.previousElementSibling);
   if(dir==='down' && li.nextElementSibling) li.parentNode.insertBefore(li.nextElementSibling, li);
@@ -4827,10 +4855,9 @@ document.addEventListener('change', e=>{
     }else preLimitWarn.style.display="none";
     if(e.target.checked){
       const txt = orderText(e.target.dataset.pt, e.target.dataset.name);
-      if(removeOrderTextFromList(preCandidateList, txt)){
-        updatePreSummary();
-      }
+      removeOrderTextFromList(preCandidateList, txt);
     }
+    updatePreSummary();
     syncToggleButtonStates();
     saveState();
   }
@@ -4851,7 +4878,13 @@ function mkPreOrderItem(pt,name,round){
       <button class="order-btn order-btn-del" data-act="del">✕</button>
     </div>`;
   let t=null, delBtn=li.querySelector('[data-act="del"]');
-  const doDel=()=>{ li.remove(); updatePreSummary(); showToast("削除しました"); };
+  const doDel=()=>{
+    const info=parseOrderText(getItemText(li));
+    if(info) setPreTechChecked(info.pt, info.name, false);
+    li.remove();
+    updatePreSummary();
+    showToast("削除しました");
+  };
   delBtn.addEventListener('touchstart',()=>{ t=setTimeout(doDel,600); },{passive:true});
   delBtn.addEventListener('touchend',()=>{ if(t){clearTimeout(t); t=null; showToast("長押しで削除",800);} });
   delBtn.addEventListener('mousedown',()=>{ t=setTimeout(doDel,600); });
@@ -4915,7 +4948,8 @@ applyPreBtn.addEventListener("click",()=>{
   pruneCandidateDuplicates(list1, preCandidateList);
   pruneCandidateDuplicates(list2, preCandidateList);
   updatePreSummary();
-  showToast("予選へ反映しました");
+  calcTotal();
+  showToast(`予選へ反映しました（第1R ${list1.querySelectorAll('.order-item').length}技 / 第2R ${list2.querySelectorAll('.order-item').length}技）`);
 });
 
 function swapMove(li, to2){
@@ -4939,6 +4973,7 @@ function preListHandler(e){
       showToast("予選の技選択候補は6技までです");
       return;
     }
+    setPreTechChecked(info.pt, info.name, false);
     li.remove();
     preCandidateList.appendChild(preCandidateLiTemplate(info.pt, info.name));
   }
@@ -4954,6 +4989,7 @@ preCandidateList.addEventListener('click',e=>{
     if(!info) return;
     li.remove();
     const target = act==='r1' ? list1 : list2;
+    setPreTechChecked(info.pt, info.name, true);
     target.appendChild(mkPreOrderItem(info.pt, info.name, act==='r1' ? 1 : 2));
     const totalMain = list1.querySelectorAll('.order-item').length + list2.querySelectorAll('.order-item').length;
     if(totalMain > 12){
@@ -5034,6 +5070,12 @@ function updatePreSummary(){
     let s=0; nodes.forEach(n=>{ const m=n.textContent.match(/^\[(.+?)点]/); if(m) s+=Number(m[1]); });
     return s;
   };
+  const sumChecked = ()=>{
+    let s=0;
+    document.querySelectorAll(".pre-chk:checked").forEach(chk=>{ s += Number(chk.dataset.pt || 0); });
+    return s;
+  };
+
   const n1=list1.querySelectorAll(".order-name");
   const n2=list2.querySelectorAll(".order-name");
   const totalMain = n1.length + n2.length;
@@ -5048,7 +5090,11 @@ function updatePreSummary(){
   if(pre1LimitNum) pre1LimitNum.classList.toggle("limit-over", overR1);
   if(pre2LimitNum) pre2LimitNum.classList.toggle("limit-over", overR2);
 
-  preSum.textContent=sumNode(n1)+sumNode(n2);
+  // 予選技合計は、使用ボタンで選択した瞬間にリアルタイム増減。
+  // プリセット読込などでチェックがまだ無い場合は、編成リストから補完する。
+  const checkedCount = document.querySelectorAll(".pre-chk:checked").length;
+  preSum.textContent = checkedCount ? formatScore(sumChecked()) : formatScore(sumNode(n1)+sumNode(n2));
+
   preCandidateCountSpan.textContent = preCandidateList.querySelectorAll('.order-item').length;
   preMainLimitAlert.style.display = (overR1 || overR2 || overTotal) ? 'block' : 'none';
   preCandidateWarn.style.display = preCandidateList.querySelectorAll('.order-item').length>6 ? 'block' : 'none';
@@ -5255,6 +5301,7 @@ function applyShortShareState(data){
   });
 
   calcTotal();
+  syncPreChecksFromLists();
   updatePreSummary();
   updatePredictCount();
   rebuildFinalsList();
@@ -5319,6 +5366,7 @@ function applyCompactState(data){
   });
 
   calcTotal();
+  syncPreChecksFromLists();
   updatePreSummary();
   rebuildFinalsList();
   saveState();
@@ -6080,7 +6128,8 @@ function loadState(){
       if(m) preCandidateList.appendChild(preCandidateLiTemplate(m[1], m[2]));
     });
 
-    rebuildFinalsList(); updatePreSummary();
+    rebuildFinalsList(); syncPreChecksFromLists();
+  updatePreSummary();
     presetDirty = false;
     updateSaveStatus();
   }catch{} finally{
@@ -6281,6 +6330,7 @@ document.getElementById("load-prelims-preset").addEventListener("click",()=>{
   r1.slice(0,6).forEach(d=> list1.appendChild(mkPreOrderItem(d.pt, d.name, 1)));
   r2.slice(0,6).forEach(d=> list2.appendChild(mkPreOrderItem(d.pt, d.name, 2)));
   cand.slice(0,10).forEach(d=> preCandidateList.appendChild(preCandidateLiTemplate(d.pt, d.name)));
+  syncPreChecksFromLists();
   updatePreSummary();
   document.getElementById("prelims-preset-name").value = pack.name || "";
   updateAllPresetOptionLabels();
