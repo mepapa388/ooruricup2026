@@ -2607,7 +2607,7 @@ h1{
   <div class="export-choice-dialog" role="dialog" aria-modal="true" aria-label="画像保存の種類を選択">
     <div class="export-choice-header">
       <h3>画像保存の種類を選択</h3>
-      <p>必要な画像だけを選んで保存できます。スマホでは保存後に画像を長押しできます。</p>
+      <p>画像作成後、画面上にプレビューを表示します。表示された画像を保存してください。</p>
     </div>
     <div class="export-choice-body">
       <button type="button" class="export-choice-btn" data-export-kind="all">
@@ -5920,20 +5920,6 @@ function buildExportSheet(kind="all"){
   host.appendChild(sheet);
   document.body.appendChild(host);
 
-  const qrTarget = sheet.querySelector("#export-qr");
-  if(window.QRCode){
-    new QRCode(qrTarget, {
-      text: qrInfo.url,
-      width: 92,
-      height: 92,
-      colorDark: "#000000",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.M
-    });
-  }else{
-    qrTarget.innerHTML = `<div style="font-size:11px;color:#777;">QR生成ライブラリ未読込</div>`;
-  }
-
   return {host, sheet};
 }
 
@@ -6036,21 +6022,17 @@ async function saveOrShareCanvasImage(canvas, kind="all"){
   }
 
   const fileName = makeImageFileName(kind);
+
+  // v1.63:
+  // 画像が生成されたら、まず必ず画面上にプレビューを表示する。
+  // スマホの共有メニューを自動で先に開くと、端末によっては
+  // 「画像が出てこない」ように見えるため、共有はプレビュー内ボタンから行う。
   showImageSavePreview(blob, fileName);
-
-  if(isMobileDevice()){
-    const shared = await shareLatestImage();
-    if(!shared){
-      showToast("画像を長押しして保存できます", 2600);
-    }
-    return;
-  }
-
   showToast("画像プレビューを作成しました");
 }
 
 
-/* ===== v1.60 高速画像保存：html2canvasではなくCanvas直描画 ===== */
+/* ===== v1.63 画像保存：安定版フォールバック用Canvas直描画 ===== */
 async function createQrCanvasFast(url, size=92){
   if(!window.QRCode) return null;
   const holder = document.createElement("div");
@@ -6340,35 +6322,53 @@ async function generateCompositionImage(kind="all"){
   const originalText = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = "作成<br>中";
-  showToast("保存画像を作成しています", 900);
+  showToast("画像を作成しています", 1200);
+
+  let host = null;
 
   try{
-    const canvas = await generateCompositionImageFast(kind);
+    if(!window.html2canvas){
+      throw new Error("html2canvas not loaded");
+    }
+
+    // v1.63:
+    // v50台で安定していた DOM → html2canvas 方式を主軸に戻す。
+    // QR・候補技・予想技は描画しないため、以前より軽い構成。
+    const built = buildExportSheet(kind);
+    host = built.host;
+    const sheet = built.sheet;
+
+    // レイアウト確定を少し待つ。これにより空画像・未表示を防ぐ。
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+
+    const canvas = await html2canvas(sheet, {
+      scale: isMobileDevice() ? 1 : 1.15,
+      backgroundColor: "#ffffff",
+      useCORS: true,
+      logging: false,
+      removeContainer: false,
+      windowWidth: Math.max(sheet.scrollWidth, 900),
+      windowHeight: Math.max(sheet.scrollHeight, 1200)
+    });
+
+    if(!canvas || !canvas.width || !canvas.height){
+      throw new Error("canvas empty");
+    }
+
     await saveOrShareCanvasImage(canvas, kind);
   }catch(err){
-    console.error("fast image export error", err);
+    console.error("image export error", err);
 
-    // 万一Canvas直描画に失敗した場合だけ、従来方式に戻す
-    if(window.html2canvas){
-      const {host, sheet} = buildExportSheet(kind);
-      try{
-        const canvas = await html2canvas(sheet, {
-          scale: 1,
-          backgroundColor: "#ffffff",
-          useCORS: true,
-          logging: false,
-          removeContainer: true,
-          windowWidth: sheet.scrollWidth,
-          windowHeight: sheet.scrollHeight
-        });
-        await saveOrShareCanvasImage(canvas, kind);
-      }finally{
-        host.remove();
-      }
-    }else{
-      showToast("画像保存に失敗しました");
+    // 最後の保険として、Canvas直描画も試す。
+    try{
+      const canvas = await generateCompositionImageFast(kind);
+      await saveOrShareCanvasImage(canvas, kind);
+    }catch(err2){
+      console.error("fallback image export error", err2);
+      showToast("画像保存に失敗しました。少し待って再度お試しください", 3200);
     }
   }finally{
+    if(host) host.remove();
     btn.disabled = false;
     btn.innerHTML = originalText;
   }
