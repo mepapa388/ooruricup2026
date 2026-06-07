@@ -2025,6 +2025,17 @@ html{
   color:#fff;
 }
 
+
+/* ===== v1.40 決勝編成欄は全技一覧表示 ===== */
+#finals-list.order-list{
+  max-height:none !important;
+  overflow-y:visible !important;
+  scrollbar-width:auto !important;
+}
+#finals-list.order-list::-webkit-scrollbar{
+  display:none;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -2124,7 +2135,7 @@ html{
       <span>5. 保存・画像出力</span>
     </div>
   </div>
-  <button id="load-finals-btn" class="primary-flow-btn">選択した技を決勝編成へ追加・反映</button>
+  <button id="load-finals-btn" class="primary-flow-btn">選択した技を決勝編成へ追加・更新</button>
 
   <div class="predict-box">
     <div class="predict-title">予想技を作成</div>
@@ -2153,7 +2164,7 @@ html{
   <div class="order-box">
     <div class="order-box-title">決勝編成（<span id="finals-count">0</span>技 / <span id="finals-limit-num">30</span>技）</div>
     <ul id="finals-list" class="order-list"></ul>
-    <p style="font-size:11px;opacity:.7;margin-top:4px;">☰または技名を指で押して並べ替え ／ ↑↓でも移動 ／ 候補へで別枠保管 ／ ✕は長押し削除</p>
+    <p style="font-size:11px;opacity:.7;margin-top:4px;">選んだ技を一覧表示します ／ ☰または技名を指で押して並べ替え ／ 候補へで別枠保管 ／ ✕は長押し削除</p>
     <p class="warning inline-warning" id="finals-limit-alert">⚠ 決勝編成が30技を超えています。技選択候補へ移動して30技以内にしてください。</p>
   </div>
 
@@ -2263,7 +2274,6 @@ html{
   <button class="mini-btn active" data-mode="score"><span>決勝</span></button>
   <button class="mini-btn" data-mode="finals"><span>決勝編成</span></button>
   <button class="mini-btn" data-mode="prelims"><span>予選</span></button>
-  <button class="mini-btn" id="btn-recalc"><span>再計算</span></button>
   <button class="mini-btn" data-link="judge"><span>成功基準</span></button>
   <button class="mini-btn" data-link="official"><span>公式HP</span></button>
 </div>
@@ -4191,6 +4201,16 @@ function findFinalTechItem(pt, name){
   }) || null;
 }
 
+function uncheckFinalTech(pt, name){
+  const item = findFinalTechItem(pt, name);
+  if(!item) return;
+  const chk = item.querySelector(".chk");
+  const mul = item.querySelector(".multi");
+  if(chk) chk.checked = false;
+  if(mul) mul.checked = false;
+  syncToggleButtonStates();
+}
+
 function syncFinalsMultiVisuals(){
   [...finalsList.querySelectorAll(".order-item")].forEach(li=>{
     const on = li.dataset.multi === "1";
@@ -4288,12 +4308,12 @@ function rebuildFinalsList(){
   finalsLimitAlert.style.display = overFinals ? 'block' : 'none';
 
   finalsCandidateWarn.style.display = candCount>10 ? 'block' : 'none';
-  if(finalsList.dataset.authoritative === "1" || count > 0){
-    syncScoreChecksFromFinals();
-    calcTotal();
-  }else{
-    syncToggleButtonStates();
-  }
+
+  // 決勝編成リストを編集しても、決勝画面で新たに選んだチェック状態は保持する。
+  // ここでチェック状態を編成リストに同期してしまうと、新規追加した技が反映前に消えるため。
+  syncFinalsMultiVisuals();
+  syncToggleButtonStates();
+  calcTotal();
   saveState();
 }
 
@@ -4318,6 +4338,10 @@ function orderLiTemplate(pt,name,multi=false,predicted=false){
   const delBtn = li.querySelector('[data-act="del"]');
 
   const doDel=()=>{
+    if(li.dataset.predicted !== "1"){
+      const info = parseOrderText(getItemText(li));
+      if(info) uncheckFinalTech(info.pt, info.name);
+    }
     li.remove();
     rebuildFinalsList();
     showToast("削除しました");
@@ -4513,6 +4537,9 @@ finalsList.addEventListener("click",e=>{
       finalsCandidateWarn.style.display='block';
       showToast("決勝の技選択候補は10技までです");
       return;
+    }
+    if(li.dataset.predicted !== "1"){
+      uncheckFinalTech(info.pt, info.name);
     }
     li.remove();
     finalsCandidateList.appendChild(finalCandidateLiTemplate(info.pt, info.name));
@@ -4885,7 +4912,6 @@ miniButtons.forEach(btn=>{
   if(link==="judge") btn.addEventListener("click",()=>window.open("https://drive.google.com/file/d/107A2MhR43epd7evpE5uHPbtyjd0BvZiS/view","_blank"));
   if(link==="official") btn.addEventListener("click",()=>window.open("https://spingear.jp/index.php?dispatch=pages.view&page_id=140","_blank"));
 });
-document.getElementById("btn-recalc").addEventListener("click",()=>{ calcTotal(); showToast("再計算しました"); });
 
 /* =========================================================
    16) 共有URL / 画像保存
