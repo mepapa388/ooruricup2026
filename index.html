@@ -2383,6 +2383,20 @@ h1{
   flex:0 0 auto;
 }
 
+
+/* ===== v1.61 QR削除で画像保存高速化 ===== */
+.export-footer{
+  min-height:auto !important;
+}
+.export-note{
+  width:100% !important;
+  max-width:none !important;
+}
+.export-qr-area,
+#export-qr{
+  display:none !important;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -5822,10 +5836,10 @@ function getExportData(){
 }
 
 function getExportQrInfo(){
-  const pageUrl = location.origin + location.pathname;
+  // v1.61: 画像保存高速化のためQRコードは生成しない
   return {
-    url: pageUrl,
-    note: "QRコードからオオルリカップ2026自動構成システムを開く事が出来ます。構成共有は上部の共有URLボタンをご利用ください。"
+    url: "",
+    note: "オオルリカップ2026 自動構成システム"
   };
 }
 
@@ -5901,10 +5915,6 @@ function buildExportSheet(kind="all"){
       </div>` : ``}
       <div class="export-footer">
         <div class="export-note">${escapeHtml(qrInfo.note)}</div>
-        <div class="export-qr-area">
-          <div id="export-qr"></div>
-          <div>大会システム</div>
-        </div>
       </div>
     `;
   }else if(kind === "final"){
@@ -5939,10 +5949,6 @@ function buildExportSheet(kind="all"){
       </div>` : ``}
       <div class="export-footer">
         <div class="export-note">${escapeHtml(qrInfo.note)}</div>
-        <div class="export-qr-area">
-          <div id="export-qr"></div>
-          <div>大会システム</div>
-        </div>
       </div>
     `;
   }else{
@@ -5989,10 +5995,6 @@ function buildExportSheet(kind="all"){
       </div>
       <div class="export-footer">
         <div class="export-note">${escapeHtml(qrInfo.note)}</div>
-        <div class="export-qr-area">
-          <div id="export-qr"></div>
-          <div>大会システム</div>
-        </div>
       </div>
     `;
   }
@@ -6129,44 +6131,348 @@ async function saveOrShareCanvasImage(canvas, kind="all"){
   showToast("画像プレビューを作成しました");
 }
 
+
+/* ===== v1.60 高速画像保存：html2canvasではなくCanvas直描画 ===== */
+async function createQrCanvasFast(url, size=92){
+  if(!window.QRCode) return null;
+  const holder = document.createElement("div");
+  holder.style.position = "fixed";
+  holder.style.left = "-9999px";
+  holder.style.top = "-9999px";
+  holder.style.width = `${size}px`;
+  holder.style.height = `${size}px`;
+  document.body.appendChild(holder);
+  try{
+    new QRCode(holder, {
+      text:url,
+      width:size,
+      height:size,
+      colorDark:"#000000",
+      colorLight:"#ffffff",
+      correctLevel:QRCode.CorrectLevel.M
+    });
+    await new Promise(resolve=>setTimeout(resolve,30));
+    const node = holder.querySelector("canvas,img");
+    if(!node) return null;
+    return node;
+  }catch(err){
+    console.warn("fast QR failed", err);
+    return null;
+  }finally{
+    setTimeout(()=>holder.remove(),0);
+  }
+}
+
+function makeFastImageCanvas(kind="all", qrNode=null){
+  const data = getExportData();
+  const {
+    finals, finalsCand, p1, p2, preCand, predicted,
+    now, finalScore, baseScore, overallTotal, preInput, presetLabel
+  } = data;
+
+  const includePreCandidate = !!document.getElementById("export-include-pre-candidate")?.checked;
+  const includeFinalCandidate = !!document.getElementById("export-include-final-candidate")?.checked;
+  const includePredicted = !!document.getElementById("export-include-predicted")?.checked;
+  const qrInfo = getExportQrInfo();
+
+  const W = 1280;
+  const margin = 54;
+  const gap = 24;
+  const bodyW = W - margin * 2;
+
+  function newCanvas(h){
+    const c = document.createElement("canvas");
+    c.width = W;
+    c.height = h;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,W,h);
+    ctx.textBaseline = "top";
+    ctx.lineJoin = "round";
+    return {c, ctx};
+  }
+
+  function setFont(ctx, size, weight=500){
+    ctx.font = `${weight} ${size}px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic","Yu Gothic UI",Meiryo,sans-serif`;
+  }
+
+  function wrapLines(ctx, text, maxWidth){
+    const source = String(text || "");
+    const chars = [...source];
+    const lines = [];
+    let line = "";
+    chars.forEach(ch=>{
+      const next = line + ch;
+      if(line && ctx.measureText(next).width > maxWidth){
+        lines.push(line);
+        line = ch;
+      }else{
+        line = next;
+      }
+    });
+    if(line) lines.push(line);
+    return lines.length ? lines : [""];
+  }
+
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.lineTo(x+w-r,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+  }
+
+  function drawText(ctx, text, x, y, maxWidth, size, weight=500, color="#111", lineH=null){
+    setFont(ctx,size,weight);
+    ctx.fillStyle = color;
+    const lh = lineH || Math.round(size * 1.45);
+    const lines = wrapLines(ctx, text, maxWidth);
+    lines.forEach((line,i)=>ctx.fillText(line,x,y+i*lh));
+    return y + lines.length * lh;
+  }
+
+  function drawChip(ctx, text, x, y, w){
+    const h = 42;
+    ctx.fillStyle = "#eef6ff";
+    roundRect(ctx,x,y,w,h,14);
+    ctx.fill();
+    ctx.strokeStyle = "#cfe3ff";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    drawText(ctx,text,x+16,y+10,w-32,17,700,"#073b7a",22);
+    return h;
+  }
+
+  function drawHeader(ctx, y, subtitle){
+    drawText(ctx, "オオルリカップ2026", margin, y, bodyW, 38, 700, "#073b7a", 48);
+    y += 50;
+    drawText(ctx, subtitle, margin, y, bodyW, 24, 600, "#333", 34);
+    y += 34;
+    drawText(ctx, `作成日時：${now} ／ 構成名：${presetLabel}`, margin, y, bodyW, 17, 500, "#555", 26);
+    y += 36;
+
+    const chipGap = 12;
+    const chipW = (bodyW - chipGap * 3) / 4;
+    drawChip(ctx, `総合計：${overallTotal}点`, margin, y, chipW);
+    drawChip(ctx, `決勝構成：${formatScore(finalScore)}点`, margin + (chipW+chipGap), y, chipW);
+    drawChip(ctx, `基礎点：${formatScore(baseScore)}点`, margin + (chipW+chipGap)*2, y, chipW);
+    drawChip(ctx, `予選点数入力：${preInput}点`, margin + (chipW+chipGap)*3, y, chipW);
+    return y + 62;
+  }
+
+  function formatExportTechniqueTextFast(t){
+    return String(t || "").replace(/^(\[[^\]]+\])(\S)/, "$1 $2");
+  }
+
+  function measureListHeight(ctx, items, w, opts={}){
+    const fontSize = opts.fontSize || 21;
+    const lineH = opts.lineH || Math.round(fontSize * 1.45);
+    const numW = opts.numW || 50;
+    setFont(ctx,fontSize,opts.weight || 500);
+    if(!items.length) return lineH + 8;
+    let h = 0;
+    items.forEach((t,i)=>{
+      const text = formatExportTechniqueTextFast(t);
+      const lines = wrapLines(ctx, text, w - numW - 8);
+      h += Math.max(lineH, lines.length * lineH) + 6;
+    });
+    return h;
+  }
+
+  function drawList(ctx, items, x, y, w, opts={}){
+    const fontSize = opts.fontSize || 21;
+    const lineH = opts.lineH || Math.round(fontSize * 1.45);
+    const numW = opts.numW || 50;
+    const color = opts.color || "#111";
+    const weight = opts.weight || 500;
+    const emptySize = Math.max(16, fontSize-2);
+
+    if(!items.length){
+      return drawText(ctx, "未設定", x, y, w, emptySize, 500, "#777", Math.round(emptySize*1.45)) + 4;
+    }
+
+    let cy = y;
+    items.forEach((t,i)=>{
+      const text = formatExportTechniqueTextFast(t);
+      const isPredicted = String(t).includes("（予想技）");
+      setFont(ctx,fontSize,700);
+      ctx.fillStyle = isPredicted ? "#d60000" : "#333";
+      ctx.fillText(`${i+1}.`, x, cy);
+
+      setFont(ctx,fontSize,isPredicted ? 600 : weight);
+      ctx.fillStyle = isPredicted ? "#d60000" : color;
+      const lines = wrapLines(ctx, text, w - numW - 8);
+      lines.forEach((line,li)=>ctx.fillText(line, x + numW, cy + li * lineH));
+      cy += Math.max(lineH, lines.length * lineH) + 6;
+    });
+    return cy;
+  }
+
+  function drawBlock(ctx, title, items, x, y, w, opts={}){
+    const titleSize = opts.titleSize || 25;
+    const pad = opts.pad || 18;
+    const listFontSize = opts.fontSize || 21;
+    const candidate = !!opts.candidate;
+    const cols = opts.cols || 1;
+
+    const innerW = w - pad * 2;
+    let contentH = titleSize * 1.45 + 10;
+
+    if(cols === 2){
+      const cut = Math.ceil(items.length / 2);
+      const left = items.slice(0, cut);
+      const right = items.slice(cut);
+      const colW = (innerW - 28) / 2;
+      const temp = ctx;
+      contentH += Math.max(
+        measureListHeight(temp,left,colW,{fontSize:listFontSize,lineH:Math.round(listFontSize*1.5),numW:48}),
+        measureListHeight(temp,right,colW,{fontSize:listFontSize,lineH:Math.round(listFontSize*1.5),numW:48})
+      );
+    }else{
+      contentH += measureListHeight(ctx,items,innerW,{fontSize:listFontSize,lineH:Math.round(listFontSize*1.5),numW:candidate?42:50});
+    }
+
+    const h = Math.ceil(contentH + pad * 2);
+    ctx.fillStyle = "#ffffff";
+    roundRect(ctx,x,y,w,h,18);
+    ctx.fill();
+    ctx.strokeStyle = candidate ? "#d7e6ff" : "#bfd9ff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    let cy = y + pad;
+    cy = drawText(ctx,title,x+pad,cy,innerW,titleSize,700,candidate ? "#0b4aa6" : "#073b7a",Math.round(titleSize*1.35)) + 8;
+
+    if(cols === 2){
+      const cut = Math.ceil(items.length / 2);
+      const left = items.slice(0, cut);
+      const right = items.slice(cut);
+      const colW = (innerW - 28) / 2;
+      const leftY = drawList(ctx,left,x+pad,cy,colW,{fontSize:listFontSize,lineH:Math.round(listFontSize*1.5),numW:48});
+      const rightY = drawList(ctx,right,x+pad+colW+28,cy,colW,{fontSize:listFontSize,lineH:Math.round(listFontSize*1.5),numW:48});
+      cy = Math.max(leftY,rightY);
+    }else{
+      cy = drawList(ctx,items,x+pad,cy,innerW,{fontSize:listFontSize,lineH:Math.round(listFontSize*1.5),numW:candidate?42:50});
+    }
+
+    return y + h + gap;
+  }
+
+  function drawFooter(ctx, y){
+    y += 8;
+    ctx.strokeStyle = "#e6eefb";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(margin,y);
+    ctx.lineTo(W-margin,y);
+    ctx.stroke();
+    y += 16;
+    drawText(ctx, qrInfo.note, margin, y, bodyW, 15, 500, "#666", 22);
+    return y + 34;
+  }
+
+  function draw(kind, canvasHeight){
+    const {c, ctx} = newCanvas(canvasHeight);
+    let y = drawHeader(ctx, margin, kind === "final" ? "決勝構成シート" : kind === "prelim" ? "予選構成シート" : "技構成シート");
+
+    if(kind === "final"){
+      y = drawBlock(ctx, "決勝構成", finals, margin, y, bodyW, {cols:2, fontSize:22, titleSize:27});
+      const optBlocks = [];
+      if(includeFinalCandidate) optBlocks.push(["決勝 候補技", finalsCand]);
+      if(includePredicted) optBlocks.push(["予想技", predicted]);
+      if(optBlocks.length){
+        const colW = optBlocks.length === 2 ? (bodyW - gap) / 2 : bodyW;
+        let maxY = y;
+        optBlocks.forEach((b,i)=>{
+          maxY = Math.max(maxY, drawBlock(ctx, b[0], b[1], margin + i*(colW+gap), y, colW, {candidate:true,fontSize:17,titleSize:21,pad:15}));
+        });
+        y = maxY;
+      }
+    }else if(kind === "prelim"){
+      const colW = (bodyW - gap) / 2;
+      const y1 = drawBlock(ctx, "第1ラウンド", p1, margin, y, colW, {fontSize:22,titleSize:27});
+      const y2 = drawBlock(ctx, "第2ラウンド", p2, margin+colW+gap, y, colW, {fontSize:22,titleSize:27});
+      y = Math.max(y1,y2);
+      if(includePreCandidate){
+        y = drawBlock(ctx, "予選 候補技", preCand, margin, y, bodyW, {candidate:true,fontSize:17,titleSize:21,pad:15});
+      }
+    }else{
+      y = drawBlock(ctx, "決勝編成", finals, margin, y, bodyW, {cols:2, fontSize:21, titleSize:27});
+      const colW = (bodyW - gap) / 2;
+      const y1 = drawBlock(ctx, "予選 第1ラウンド", p1, margin, y, colW, {fontSize:20,titleSize:24});
+      const y2 = drawBlock(ctx, "予選 第2ラウンド", p2, margin+colW+gap, y, colW, {fontSize:20,titleSize:24});
+      y = Math.max(y1,y2);
+      const optional = [];
+      if(includePreCandidate) optional.push(["予選 候補技", preCand]);
+      if(includeFinalCandidate) optional.push(["決勝 候補技", finalsCand]);
+      if(includePredicted) optional.push(["予想技", predicted]);
+      optional.forEach((b,idx)=>{
+        y = drawBlock(ctx, b[0], b[1], margin, y, bodyW, {candidate:true,fontSize:16,titleSize:20,pad:14});
+      });
+    }
+
+    y = drawFooter(ctx, y);
+    return {canvas:c, neededHeight:y + margin};
+  }
+
+  const first = draw(kind, 3600);
+  const finalHeight = Math.max(1100, Math.min(4600, Math.ceil(first.neededHeight)));
+  const final = draw(kind, finalHeight);
+  return final.canvas;
+}
+
+async function generateCompositionImageFast(kind="all"){
+  return makeFastImageCanvas(kind, null);
+}
+
 function getImageExportScale(kind){
-  if(isMobileDevice()) return 1.35;
-  if(kind === "final") return 1.45;
-  if(kind === "all") return 1.45;
-  return 1.55;
+  // v1.60以降は通常Canvas直描画を使うため、これはフォールバック用。
+  if(isMobileDevice()) return 1;
+  return 1;
 }
 
 async function generateCompositionImage(kind="all"){
   const btn = document.getElementById("btn-save-image");
-  if(!window.html2canvas){
-    showToast("画像保存ライブラリを読み込めませんでした");
-    return;
-  }
 
   closeExportChoiceModal();
   const originalText = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = "作成<br>中";
-  showToast("画像を作成しています。30技の場合は少し時間がかかります", 2400);
+  showToast("画像を作成しています", 900);
 
-  const {host, sheet} = buildExportSheet(kind);
   try{
-    await new Promise(resolve=>setTimeout(resolve,240));
-    const canvas = await html2canvas(sheet, {
-      scale: getImageExportScale(kind),
-      backgroundColor: "#ffffff",
-      useCORS: true,
-      logging: false,
-      removeContainer: true,
-      windowWidth: sheet.scrollWidth,
-      windowHeight: sheet.scrollHeight
-    });
+    const canvas = await generateCompositionImageFast(kind);
     await saveOrShareCanvasImage(canvas, kind);
   }catch(err){
-    console.error("image export error", err);
-    showToast("画像保存に失敗しました");
+    console.error("fast image export error", err);
+
+    // 万一Canvas直描画に失敗した場合だけ、従来方式に戻す
+    if(window.html2canvas){
+      const {host, sheet} = buildExportSheet(kind);
+      try{
+        const canvas = await html2canvas(sheet, {
+          scale: 1,
+          backgroundColor: "#ffffff",
+          useCORS: true,
+          logging: false,
+          removeContainer: true,
+          windowWidth: sheet.scrollWidth,
+          windowHeight: sheet.scrollHeight
+        });
+        await saveOrShareCanvasImage(canvas, kind);
+      }finally{
+        host.remove();
+      }
+    }else{
+      showToast("画像保存に失敗しました");
+    }
   }finally{
-    host.remove();
     btn.disabled = false;
     btn.innerHTML = originalText;
   }
