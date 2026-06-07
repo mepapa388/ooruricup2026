@@ -2272,6 +2272,59 @@ h1{
   box-shadow:0 0 0 2px rgba(124,77,255,.14) !important;
 }
 
+
+/* ===== v1.56 画像保存フォントをやや細く・見やすく調整 ===== */
+.export-sheet{
+  font-weight:500 !important;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+.export-sheet h1,
+.export-sheet h2,
+.export-sheet h3,
+.export-sheet .export-title,
+.export-sheet .export-head,
+.export-sheet .export-block h2{
+  font-weight:700 !important;
+  letter-spacing:.01em;
+}
+.export-sheet .export-meta,
+.export-sheet .export-summary,
+.export-sheet .export-note,
+.export-sheet .export-footer,
+.export-sheet .export-label{
+  font-weight:500 !important;
+}
+.export-sheet .export-value,
+.export-sheet .export-score,
+.export-sheet .export-total{
+  font-weight:700 !important;
+}
+.export-list-row{
+  align-items:start;
+}
+.export-list-num{
+  font-weight:700 !important;
+}
+.export-list-text{
+  font-weight:500 !important;
+  line-height:1.48 !important;
+  letter-spacing:.01em;
+}
+.export-sheet--final .export-list--finals-two-col .export-list-num,
+.export-sheet--all .export-list--finals-two-col .export-list-num{
+  font-weight:700 !important;
+}
+.export-sheet--final .export-list--finals-two-col .export-list-text,
+.export-sheet--all .export-list--finals-two-col .export-list-text{
+  font-weight:500 !important;
+  line-height:1.5 !important;
+}
+.export-list-row.is-predicted .export-list-text{
+  font-weight:600 !important;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
