@@ -1840,6 +1840,191 @@ button{border:none;border-radius:8px;cursor:pointer}
   }
 }
 
+
+/* ===== v1.37 決勝編成スクロール・予想技 ===== */
+html{
+  scroll-behavior:smooth;
+}
+#mode-finals .order-list,
+#mode-prelims .order-list{
+  max-height:58vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scroll-behavior:smooth;
+}
+#mode-finals .order-list::-webkit-scrollbar,
+#mode-prelims .order-list::-webkit-scrollbar{
+  width:8px;
+}
+#mode-finals .order-list::-webkit-scrollbar-thumb,
+#mode-prelims .order-list::-webkit-scrollbar-thumb{
+  background:#b9d8ff;
+  border-radius:999px;
+}
+.predict-box{
+  margin:12px 0;
+  padding:12px;
+  border-radius:14px;
+  background:#fffdf4;
+  border:2px solid #f4d28a;
+  box-shadow:0 3px 10px rgba(154,90,0,.08);
+}
+.predict-title{
+  font-size:17px;
+  font-weight:1000;
+  color:#9a5a00;
+  margin-bottom:4px;
+}
+.predict-note{
+  margin:0 0 8px;
+  font-size:12px;
+  line-height:1.5;
+  color:#6c4a00;
+  font-weight:700;
+}
+.predict-form{
+  display:grid;
+  grid-template-columns:86px 1fr auto;
+  gap:7px;
+  align-items:center;
+}
+.predict-form select,
+.predict-form input{
+  min-height:38px;
+  border:1px solid #d8c38a;
+  border-radius:10px;
+  padding:7px 9px;
+  font-size:14px;
+  background:#fff;
+}
+.predict-form button{
+  min-height:38px;
+  padding:7px 12px;
+  border-radius:10px;
+  background:#9a5a00;
+  color:#fff;
+  font-weight:1000;
+}
+.predict-count{
+  margin-top:8px;
+  font-size:12px;
+  font-weight:900;
+  color:#6c4a00;
+}
+.predict-list{
+  list-style:none;
+  padding:0;
+  margin:8px 0 0;
+  display:grid;
+  gap:6px;
+  max-height:210px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.predict-item{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:6px;
+  align-items:center;
+  padding:7px 8px;
+  border-radius:10px;
+  background:#fffaf0;
+  border:1px solid #f4d28a;
+}
+.predict-name{
+  font-size:13px;
+  font-weight:900;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.predict-actions{
+  display:flex;
+  gap:5px;
+}
+.predict-actions button{
+  padding:5px 8px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:900;
+}
+.predict-add-final{
+  background:#0a84ff;
+  color:#fff;
+}
+.predict-del{
+  background:#fff;
+  color:#a00000;
+  border:1px solid #ffc2c2;
+}
+@media (max-width:430px){
+  #mode-finals .order-list,
+  #mode-prelims .order-list{
+    max-height:54vh;
+  }
+  .predict-form{
+    grid-template-columns:74px 1fr auto;
+    gap:5px;
+  }
+  .predict-form select,
+  .predict-form input{
+    font-size:13px;
+    padding:6px 7px;
+  }
+  .predict-form button{
+    padding:6px 9px;
+    font-size:13px;
+  }
+}
+
+
+/* ===== v1.38 予想技の視認性強化 ===== */
+.order-item.is-predicted{
+  background:#fff5f5 !important;
+  border:1px solid #ffb3b3 !important;
+}
+.order-item.is-predicted .order-name{
+  color:#d60000 !important;
+  font-weight:1000;
+}
+.order-item.is-predicted .order-name::after{
+  content:"  予想技";
+  display:inline-block;
+  margin-left:6px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:#d60000;
+  color:#fff;
+  font-size:11px;
+  font-weight:1000;
+  vertical-align:middle;
+}
+.predict-item .predict-name{
+  color:#d60000;
+}
+.export-list-row.is-predicted .export-list-text{
+  color:#d60000;
+  font-weight:900;
+}
+.export-list-row.is-predicted .export-list-text::after{
+  content:"　予想技";
+  display:inline-block;
+  margin-left:6px;
+  padding:1px 6px;
+  border-radius:999px;
+  background:#d60000;
+  color:#fff;
+  font-size:11px;
+  font-weight:900;
+}
+
+
+.order-item.is-predicted.finals-multi-on .order-name::after{
+  content:"  予想技 / 1.5倍";
+  background:#d60000;
+  color:#fff;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -1939,7 +2124,31 @@ button{border:none;border-radius:8px;cursor:pointer}
       <span>5. 保存・画像出力</span>
     </div>
   </div>
-  <button id="load-finals-btn" class="primary-flow-btn">選択した技を決勝編成へ反映</button>
+  <button id="load-finals-btn" class="primary-flow-btn">選択した技を決勝編成へ追加・反映</button>
+
+  <div class="predict-box">
+    <div class="predict-title">予想技を作成</div>
+    <p class="predict-note">9月1日以降に追加されそうな技を仮登録できます。最大10個まで作成し、決勝編成へ追加できます。</p>
+    <div class="predict-form">
+      <select id="predict-pt">
+        <option value="0.5">0.5点</option>
+        <option value="1">1点</option>
+        <option value="2">2点</option>
+        <option value="3">3点</option>
+        <option value="4">4点</option>
+        <option value="5">5点</option>
+        <option value="6">6点</option>
+        <option value="7">7点</option>
+        <option value="8">8点</option>
+        <option value="9">9点</option>
+        <option value="10">10点</option>
+      </select>
+      <input id="predict-name" type="text" placeholder="予想技名を入力">
+      <button type="button" id="add-predict-tech">作成</button>
+    </div>
+    <div class="predict-count">予想技リスト：<span id="predict-count">0</span>/10</div>
+    <ul id="predict-list" class="predict-list"></ul>
+  </div>
 
   <div class="order-box">
     <div class="order-box-title">決勝編成（<span id="finals-count">0</span>技 / <span id="finals-limit-num">30</span>技）</div>
@@ -3828,19 +4037,30 @@ function updateBarColor(total){
 }
 
 function calcTotal(){
-  const items=document.querySelectorAll("#mode-score .tech-item");
   let sel=0,fmd=0,base=0;
-  items.forEach(it=>{
-    const chk=it.querySelector(".chk");
-    const multi=it.querySelector(".multi");
-    if(chk && chk.checked){
-      sel++;
-      const b=Number(chk.dataset.pt);
-      let val=b*b;
-      if(multi && multi.checked) val*=1.5;
-      fmd+=val; base+=b;
-    }
-  });
+
+  const useFinalsList = finalsList?.dataset?.authoritative === "1" && finalsList.querySelectorAll(".order-item").length > 0;
+
+  if(useFinalsList){
+    const entries = serializeOrderList(finalsList);
+    sel = entries.length;
+    fmd = calcOrderSquareScore(entries);
+    base = calcOrderBaseScore(entries);
+  }else{
+    const items=document.querySelectorAll("#mode-score .tech-item");
+    items.forEach(it=>{
+      const chk=it.querySelector(".chk");
+      const multi=it.querySelector(".multi");
+      if(chk && chk.checked){
+        sel++;
+        const b=Number(chk.dataset.pt);
+        let val=b*b;
+        if(multi && multi.checked) val*=1.5;
+        fmd+=val; base+=b;
+      }
+    });
+  }
+
   warn.style.display = sel>30 ? "block" : "none";
 
   const pre=getPreScore();
@@ -3855,7 +4075,8 @@ function calcTotal(){
   updateBarColor(total);
   syncToggleButtonStates();
   const loadBtn = document.getElementById("load-finals-btn");
-  if(loadBtn && sel>0) loadBtn.classList.add("is-attention");
+  const checkedCount = document.querySelectorAll(".chk:checked").length;
+  if(loadBtn && checkedCount>0) loadBtn.classList.add("is-attention");
   saveState();
 }
 
@@ -3927,6 +4148,10 @@ const finalsCandidateList=document.getElementById("finals-candidate-list");
 const finalsCandidateCountSpan=document.getElementById("finals-candidate-count");
 const finalsCandidateWarn=document.getElementById("finals-candidate-warn");
 const finalsLimitNum=document.getElementById("finals-limit-num");
+const predictPt=document.getElementById("predict-pt");
+const predictName=document.getElementById("predict-name");
+const predictList=document.getElementById("predict-list");
+const predictCount=document.getElementById("predict-count");
 
 function orderText(pt,name){
   return `[${pt}点] ${name}`;
@@ -4072,13 +4297,15 @@ function rebuildFinalsList(){
   saveState();
 }
 
-function orderLiTemplate(pt,name,multi=false){
+function orderLiTemplate(pt,name,multi=false,predicted=false){
   const li=document.createElement('li');
   li.className='order-item'; li.draggable=true;
   if(multi) li.classList.add("finals-multi-on");
+  if(predicted) li.classList.add("is-predicted");
   li.dataset.pt = String(pt);
   li.dataset.name = String(name);
   li.dataset.multi = multi ? "1" : "0";
+  li.dataset.predicted = predicted ? "1" : "0";
   li.innerHTML=`
     <span class="drag-handle" aria-label="並び替え">☰</span>
     <span class="order-name">${orderText(pt,name)}</span>
@@ -4123,6 +4350,93 @@ function finalCandidateLiTemplate(pt,name){
   return li;
 }
 
+function serializePredictedList(){
+  return [...predictList.querySelectorAll(".predict-item")].map(li=>({
+    pt:Number(li.dataset.pt),
+    name:li.dataset.name
+  }));
+}
+
+function updatePredictCount(){
+  if(predictCount) predictCount.textContent = predictList.querySelectorAll(".predict-item").length;
+}
+
+function predictedLiTemplate(pt,name){
+  const li=document.createElement("li");
+  li.className="predict-item";
+  li.dataset.pt=String(pt);
+  li.dataset.name=String(name);
+  li.innerHTML=`
+    <div class="predict-name">${orderText(pt,name)}</div>
+    <div class="predict-actions">
+      <button type="button" class="predict-add-final">追加</button>
+      <button type="button" class="predict-del">削除</button>
+    </div>`;
+  return li;
+}
+
+function addPredictedTech(pt,name){
+  const cleanName = String(name||"").trim();
+  if(!cleanName){ showToast("予想技名を入力してください"); return false; }
+  if(predictList.querySelectorAll(".predict-item").length >= 10){
+    showToast("予想技リストは10個までです");
+    return false;
+  }
+  const txt = orderText(pt, cleanName);
+  const exists = [...predictList.querySelectorAll(".predict-item")].some(li=>orderText(li.dataset.pt, li.dataset.name) === txt);
+  if(exists){ showToast("同じ予想技はすでにあります"); return false; }
+  predictList.appendChild(predictedLiTemplate(pt, cleanName));
+  updatePredictCount();
+  saveState();
+  showToast("予想技を作成しました");
+  return true;
+}
+
+function addPredictedToFinals(pt,name){
+  const txt = orderText(pt,name);
+  if(listContainsText(finalsList, txt)){
+    showToast("この予想技はすでに決勝編成にあります");
+    return false;
+  }
+  if(finalsList.querySelectorAll(".order-item").length >= 30){
+    finalsLimitAlert.style.display='block';
+    showToast("決勝編成は30技までです");
+    return false;
+  }
+  finalsList.dataset.authoritative = "1";
+  finalsList.appendChild(orderLiTemplate(pt,name,false,true));
+  rebuildFinalsList();
+  showToast("予想技を決勝編成に追加しました");
+  return true;
+}
+
+document.getElementById("add-predict-tech").addEventListener("click",()=>{
+  if(addPredictedTech(predictPt.value, predictName.value)){
+    predictName.value="";
+  }
+});
+predictName.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    e.preventDefault();
+    document.getElementById("add-predict-tech").click();
+  }
+});
+predictList.addEventListener("click",e=>{
+  const li=e.target.closest(".predict-item");
+  if(!li) return;
+  if(e.target.classList.contains("predict-add-final")){
+    addPredictedToFinals(li.dataset.pt, li.dataset.name);
+  }
+  if(e.target.classList.contains("predict-del")){
+    if(confirm("この予想技を削除しますか？")){
+      li.remove();
+      updatePredictCount();
+      saveState();
+      showToast("予想技を削除しました");
+    }
+  }
+});
+
 function addFinalCandidate(pt,name){
   const txt = orderText(pt,name);
   if(isFinalUseChecked(pt, name) || listContainsText(finalsList, txt)){
@@ -4149,13 +4463,30 @@ function addFinalCandidate(pt,name){
 document.getElementById("load-finals-btn").addEventListener("click",()=>{
   document.getElementById("load-finals-btn")?.classList.remove("is-attention");
   finalsList.dataset.authoritative = "1";
-  finalsList.innerHTML="";
+
+  let added = 0;
+  let updated = 0;
+
   document.querySelectorAll(".chk:checked").forEach(chk=>{
     const multi = chk.closest('.tech-item')?.querySelector('.multi')?.checked || false;
-    finalsList.appendChild(orderLiTemplate(chk.dataset.pt, chk.dataset.name, multi));
+    const txt = orderText(chk.dataset.pt, chk.dataset.name);
+    const existing = [...finalsList.querySelectorAll(".order-item")].find(li=>getItemText(li) === txt);
+
+    if(existing){
+      const before = existing.dataset.multi === "1";
+      existing.dataset.multi = multi ? "1" : "0";
+      existing.classList.toggle("finals-multi-on", multi);
+      existing.querySelector('[data-act="multi"]')?.classList.toggle("selected", multi);
+      if(before !== multi) updated++;
+    }else{
+      finalsList.appendChild(orderLiTemplate(chk.dataset.pt, chk.dataset.name, multi));
+      added++;
+    }
   });
+
   pruneCandidateDuplicates(finalsList, finalsCandidateList);
   rebuildFinalsList();
+  showToast(`決勝編成へ反映しました（追加${added}技・更新${updated}技）`);
 });
 
 finalsList.addEventListener("click",e=>{
@@ -4632,6 +4963,7 @@ function orderItemsToCodes(list){
     const code = trickCodeFromOrderText(getItemText(li));
     if(!code) return null;
     if(li.dataset.multi === "1") code[2] = 1;
+    if(li.dataset.predicted === "1") code[3] = 1;
     return code;
   }).filter(Boolean);
 }
@@ -4648,6 +4980,7 @@ function collectShortShareState(){
     q:[...document.querySelectorAll(".pre-chk:checked")].map(c=>trickCodeFromPtName(c.dataset.pt, c.dataset.name)),
     f:orderItemsToCodes(finalsList),
     fc:orderTextsToCodes(finalsCandidateList),
+    y:serializePredictedList().map(d=>trickCodeFromPtName(d.pt, d.name)),
     r1:orderTextsToCodes(list1),
     r2:orderTextsToCodes(list2),
     pc:orderTextsToCodes(preCandidateList)
@@ -4692,12 +5025,18 @@ function applyShortShareState(data){
   if((data.f||[]).length) finalsList.dataset.authoritative = "1";
   (data.f||[]).forEach(code=>{
     const item = trickFromCode(code);
-    if(item) finalsList.appendChild(orderLiTemplate(item.pt, item.name, !!code[2]));
+    if(item) finalsList.appendChild(orderLiTemplate(item.pt, item.name, !!code[2], !!code[3]));
   });
   (data.fc||[]).forEach(code=>{
     const item = trickFromCode(code);
     if(item) finalsCandidateList.appendChild(finalCandidateLiTemplate(item.pt, item.name));
   });
+  predictList.innerHTML="";
+  (data.y||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) predictList.appendChild(predictedLiTemplate(item.pt, item.name));
+  });
+  updatePredictCount();
   (data.r1||[]).forEach(code=>{
     const item = trickFromCode(code);
     if(item) list1.appendChild(mkPreOrderItem(item.pt, item.name, 1));
@@ -4713,6 +5052,7 @@ function applyShortShareState(data){
 
   calcTotal();
   updatePreSummary();
+  updatePredictCount();
   rebuildFinalsList();
   saveState();
   return true;
@@ -4731,6 +5071,7 @@ function applyCompactState(data){
   preCandidateList.innerHTML="";
   finalsList.innerHTML="";
   finalsCandidateList.innerHTML="";
+  predictList.innerHTML="";
   preInput.value = data.pre ?? 0;
 
   (data.checks||[]).forEach(item=>{
@@ -4752,6 +5093,10 @@ function applyCompactState(data){
     const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
     if(m) finalsList.appendChild(orderLiTemplate(m[1], m[2]));
   });
+  (data.predicted||[]).forEach(d=>{
+    if(d && d.name) predictList.appendChild(predictedLiTemplate(d.pt, d.name));
+  });
+  updatePredictCount();
   (data.finalsCand||[]).forEach(txt=>{
     const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
     if(m) finalsCandidateList.appendChild(finalCandidateLiTemplate(m[1], m[2]));
@@ -4835,7 +5180,7 @@ document.getElementById("btn-share-url").addEventListener("click", copyShareUrl)
 
 function getExportData(){
   const finalEntries = serializeOrderList(finalsList);
-  const finals = finalEntries.map(d=>`${orderText(d.pt, d.name)}${d.multi ? "（1.5倍）" : ""}`);
+  const finals = finalEntries.map(d=>`${orderText(d.pt, d.name)}${d.predicted ? "（予想技）" : ""}${d.multi ? "（1.5倍）" : ""}`);
   const finalsCand = getOrderTexts(finalsCandidateList);
   const p1 = getOrderTexts(list1);
   const p2 = getOrderTexts(list2);
@@ -4880,9 +5225,10 @@ function buildExportSheet(kind="all"){
   const listHtml = (items, opts={})=>{
     if(!items.length) return `<div class="export-empty">未設定</div>`;
     const cols = opts.cols === 2 ? ' is-two-col' : '';
-    return `<div class="export-list${cols}">` + items.map((t,i)=>
-      `<div class="export-list-row"><div class="export-list-num">${i+1}.</div><div class="export-list-text">${escapeHtml(formatExportTechniqueText(t))}</div></div>`
-    ).join("") + `</div>`;
+    return `<div class="export-list${cols}">` + items.map((t,i)=>{
+      const predictedClass = String(t).includes("（予想技）") ? " is-predicted" : "";
+      return `<div class="export-list-row${predictedClass}"><div class="export-list-num">${i+1}.</div><div class="export-list-text">${escapeHtml(formatExportTechniqueText(t))}</div></div>`;
+    }).join("") + `</div>`;
   };
 
   if(kind === "prelim"){
@@ -5283,9 +5629,10 @@ document.getElementById("btn-reset").addEventListener("click",()=>{
   if(!confirm("すべての選択・編成・候補をリセットします。よろしいですか？")) return;
   document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
   preInput.value=0; warn.style.display="none"; preWarn.style.display="none"; preLimitWarn.style.display="none";
-  list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsList.dataset.authoritative=""; finalsCandidateList.innerHTML="";
+  list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsList.dataset.authoritative=""; finalsCandidateList.innerHTML=""; predictList.innerHTML=""; updatePredictCount();
   searchInput.value=""; applySearch();
   localStorage.removeItem("tsubame2025");
+  updatePredictCount();
   calcTotal(); updatePreSummary(); rebuildFinalsList();
   presetDirty = false;
   updateSaveStatus("初期化しました");
@@ -5295,7 +5642,7 @@ document.getElementById("btn-reset").addEventListener("click",()=>{
 document.getElementById("btn-print").addEventListener("click",()=>{
   const finals=[...finalsList.querySelectorAll(".order-item")].map(li=>{
     const txt = li.querySelector(".order-name")?.textContent || "";
-    return txt + (li.dataset.multi==="1" ? "（1.5倍）" : "");
+    return txt + (li.dataset.predicted==="1" ? "（予想技）" : "") + (li.dataset.multi==="1" ? "（1.5倍）" : "");
   });
   const finalCands=[...finalsCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent);
   const p1=[...list1.querySelectorAll(".order-name")].map(n=>n.textContent);
@@ -5343,11 +5690,14 @@ function exportCSV(){
   [...finalsList.querySelectorAll(".order-item")].forEach((li,i)=>{
     const n=li.querySelector(".order-name");
     const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
-    rows.push(["final", m[2], m[1], li.dataset.multi==="1" ? 1.5 : "", "", i+1]);
+    rows.push(["final", m[2], m[1], li.dataset.multi==="1" ? 1.5 : "", li.dataset.predicted==="1" ? "predicted" : "", i+1]);
   });
   [...finalsCandidateList.querySelectorAll(".order-item .order-name")].forEach((n,i)=>{
     const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
     rows.push(["final_candidate", m[2], m[1], "", "", i+1]);
+  });
+  serializePredictedList().forEach((d,i)=>{
+    rows.push(["predicted_final", d.name, d.pt, "", "", i+1]);
   });
   [...list1.querySelectorAll(".order-name")].forEach((n,i)=>{
     const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
@@ -5420,9 +5770,11 @@ document.getElementById("csv-import").addEventListener("change",async(e)=>{
     if(type==="final"){
       finalsList.dataset.authoritative = "1";
       const mul = cols[idx("mult15")];
-      finalsList.appendChild(orderLiTemplate(point,name, !!mul));
+      finalsList.appendChild(orderLiTemplate(point,name, !!mul, cols[idx("round")] === "predicted"));
     }else if(type==="final_candidate"){
       finalsCandidateList.appendChild(finalCandidateLiTemplate(point,name));
+    }else if(type==="predicted_final"){
+      predictList.appendChild(predictedLiTemplate(point,name));
     }else if(type==="prelim"){
       const rnd = Number(cols[idx("round")])===2;
       (rnd?list2:list1).appendChild(mkPreOrderItem(point,name, rnd?2:1));
@@ -5460,6 +5812,7 @@ function saveState(){
     })),
     finals: serializeOrderList(finalsList),
     finalCands: [...finalsCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent),
+    predicted: serializePredictedList(),
     p1: [...list1.querySelectorAll(".order-name")].map(n=>n.textContent),
     p2: [...list2.querySelectorAll(".order-name")].map(n=>n.textContent),
     preCands: [...preCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent),
@@ -5491,15 +5844,20 @@ function loadState(){
 
     finalsList.innerHTML="";
     finalsCandidateList.innerHTML="";
+    predictList.innerHTML="";
     (s.finals||[]).forEach(entry=>{
       if(typeof entry === "string"){
         const m=entry.match(/^\[(.+?)点]\s*(.+)$/);
         if(m) finalsList.appendChild(orderLiTemplate(m[1], m[2]));
       }else if(entry && entry.name){
-        finalsList.appendChild(orderLiTemplate(entry.pt, entry.name, !!entry.multi));
+        finalsList.appendChild(orderLiTemplate(entry.pt, entry.name, !!entry.multi, !!entry.predicted));
       }
     });
     if((s.finals||[]).length) finalsList.dataset.authoritative = "1";
+    (s.predicted||[]).forEach(d=>{
+      if(d && d.name) predictList.appendChild(predictedLiTemplate(d.pt, d.name));
+    });
+    updatePredictCount();
     (s.finalCands||[]).forEach(txt=>{
       const m=txt.match(/^\[(.+?)点]\s*(.+)$/);
       if(m) finalsCandidateList.appendChild(finalCandidateLiTemplate(m[1], m[2]));
@@ -5623,7 +5981,7 @@ function serializeOrderList(list){
   return [...list.querySelectorAll('.order-item')].map(li=>{
     const n = li.querySelector('.order-name');
     const m=n?.textContent.match(/^\[(.+?)点]\s*(.+)$/);
-    return m ? {pt:Number(m[1]), name:m[2], multi: li.dataset.multi === "1"} : null;
+    return m ? {pt:Number(m[1]), name:m[2], multi: li.dataset.multi === "1", predicted: li.dataset.predicted === "1"} : null;
   }).filter(Boolean);
 }
 
@@ -5652,7 +6010,7 @@ document.getElementById("save-finals-preset").addEventListener("click",()=>{
   const nm = document.getElementById("finals-preset-name").value.trim() || (slot==="slot1"?"決勝プリセット①":"決勝プリセット②");
 
   const score = main.slice(0,30).reduce((sum,d)=>sum + (Number(d.pt||0) * Number(d.pt||0) * (d.multi ? 1.5 : 1)), 0);
-  store.finals[slot] = { name:nm, score, data:{ main:main.slice(0,30), cand:cand.slice(0,10) } };
+  store.finals[slot] = { name:nm, score, data:{ main:main.slice(0,30), cand:cand.slice(0,10), predicted: serializePredictedList().slice(0,10) } };
   savePresetStore(store);
   updateAllPresetOptionLabels();
   markPresetSaved("決勝プリセット");
@@ -5667,12 +6025,16 @@ document.getElementById("load-finals-preset").addEventListener("click",()=>{
   if(!pack?.data){ showToast("保存済みの決勝構成がありません"); return; }
   const main = Array.isArray(pack.data) ? pack.data : (pack.data.main || []);
   const cand = Array.isArray(pack.data) ? [] : (pack.data.cand || []);
+  const predicted = Array.isArray(pack.data) ? [] : (pack.data.predicted || []);
   if(!main.length && !cand.length){ showToast("保存済みの決勝構成がありません"); return; }
 
   finalsList.innerHTML="";
   finalsCandidateList.innerHTML="";
-  main.slice(0,30).forEach(d=> finalsList.appendChild(orderLiTemplate(d.pt, d.name, !!d.multi)));
+  predictList.innerHTML="";
+  main.slice(0,30).forEach(d=> finalsList.appendChild(orderLiTemplate(d.pt, d.name, !!d.multi, !!d.predicted)));
   cand.slice(0,10).forEach(d=> finalsCandidateList.appendChild(finalCandidateLiTemplate(d.pt, d.name)));
+  predicted.slice(0,10).forEach(d=> predictList.appendChild(predictedLiTemplate(d.pt, d.name)));
+  updatePredictCount();
   rebuildFinalsList();
   document.getElementById("finals-preset-name").value = pack.name || "";
   updateAllPresetOptionLabels();
