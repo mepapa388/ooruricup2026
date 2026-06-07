@@ -2353,35 +2353,7 @@ h1{
 }
 
 
-/* ===== v1.59 画像保存オプション ===== */
-.export-option-panel{
-  margin-top:14px;
-  padding:12px;
-  border:1px solid #d7e6ff;
-  border-radius:14px;
-  background:#f7fbff;
-}
-.export-option-title{
-  font-size:14px;
-  font-weight:900;
-  color:#0b4aa6;
-  margin-bottom:8px;
-}
-.export-option-check{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin:8px 0;
-  font-size:14px;
-  color:#234;
-  font-weight:700;
-}
-.export-option-check input{
-  width:18px;
-  height:18px;
-  accent-color:#0b72e7;
-  flex:0 0 auto;
-}
+/* ===== v1.62 画像保存はシンプル構成固定 ===== */
 
 
 /* ===== v1.61 QR削除で画像保存高速化 ===== */
@@ -2640,32 +2612,16 @@ h1{
     <div class="export-choice-body">
       <button type="button" class="export-choice-btn" data-export-kind="all">
         <strong>① 現在の画像内容</strong>
-        <span>決勝・予選をまとめて1枚で保存します。候補技・予想技は下の設定で追加できます。</span>
+        <span>決勝編成と予選構成を、まとめて1枚で保存します。</span>
       </button>
       <button type="button" class="export-choice-btn" data-export-kind="prelim">
         <strong>② 予選専用画像</strong>
-        <span>第1ラウンド・第2ラウンドをA4縦で保存します。候補技は下の設定で追加できます。</span>
+        <span>第1ラウンド・第2ラウンドのみを、A4縦で保存します。</span>
       </button>
       <button type="button" class="export-choice-btn" data-export-kind="final">
         <strong>③ 決勝構成専用画像</strong>
-        <span>決勝構成をA4縦で保存します。候補技・予想技は下の設定で追加できます。</span>
+        <span>決勝構成のみを、A4縦で保存します。</span>
       </button>
-
-      <div class="export-option-panel">
-        <div class="export-option-title">画像保存に追加する内容</div>
-        <label class="export-option-check">
-          <input type="checkbox" id="export-include-pre-candidate">
-          <span>予選画像に候補技を含める</span>
-        </label>
-        <label class="export-option-check">
-          <input type="checkbox" id="export-include-final-candidate">
-          <span>決勝画像に候補技を含める</span>
-        </label>
-        <label class="export-option-check">
-          <input type="checkbox" id="export-include-predicted">
-          <span>決勝画像に予想技リストを含める</span>
-        </label>
-      </div>
     </div>
     <div class="export-choice-actions">
       <button type="button" class="export-choice-close" id="export-choice-close">閉じる</button>
@@ -5847,9 +5803,6 @@ function buildExportSheet(kind="all"){
   const data = getExportData();
   const {finals, finalsCand, p1, p2, preCand, predicted, now, finalScore, baseScore, prelimScore, overallTotal, preInput, presetLabel} = data;
   const qrInfo = getExportQrInfo();
-  const includePreCandidate = !!document.getElementById("export-include-pre-candidate")?.checked;
-  const includeFinalCandidate = !!document.getElementById("export-include-final-candidate")?.checked;
-  const includePredicted = !!document.getElementById("export-include-predicted")?.checked;
 
   const host = document.createElement("div");
   host.className = "export-sheet-host";
@@ -5906,13 +5859,6 @@ function buildExportSheet(kind="all"){
           ${listHtml(p2)}
         </div>
       </div>
-      ${includePreCandidate ? `
-      <div class="export-grid" style="margin-top:12px;grid-template-columns:1fr;">
-        <div class="export-block export-block--candidate">
-          <h2>予選 候補技</h2>
-          ${listHtml(preCand)}
-        </div>
-      </div>` : ``}
       <div class="export-footer">
         <div class="export-note">${escapeHtml(qrInfo.note)}</div>
       </div>
@@ -5934,19 +5880,6 @@ function buildExportSheet(kind="all"){
           ${listHtml(finals, {cols:2, className:" export-list--finals-two-col"})}
         </div>
       </div>
-      ${(includeFinalCandidate || includePredicted) ? `
-      <div class="export-grid" style="margin-top:12px;grid-template-columns:${includeFinalCandidate && includePredicted ? "1fr 1fr" : "1fr"};">
-        ${includeFinalCandidate ? `
-        <div class="export-block export-block--candidate">
-          <h2>決勝 候補技</h2>
-          ${listHtml(finalsCand)}
-        </div>` : ``}
-        ${includePredicted ? `
-        <div class="export-block export-block--candidate">
-          <h2>予想技</h2>
-          ${listHtml(predicted)}
-        </div>` : ``}
-      </div>` : ``}
       <div class="export-footer">
         <div class="export-note">${escapeHtml(qrInfo.note)}</div>
       </div>
@@ -5976,21 +5909,6 @@ function buildExportSheet(kind="all"){
             <h2>予選 第2ラウンド</h2>
             ${listHtml(p2)}
           </div>
-          ${includePreCandidate ? `
-          <div class="export-block export-block--candidate" style="margin-bottom:14px;">
-            <h2>予選 候補技</h2>
-            ${listHtml(preCand)}
-          </div>` : ``}
-          ${includeFinalCandidate ? `
-          <div class="export-block export-block--candidate" style="margin-bottom:14px;">
-            <h2>決勝 候補技</h2>
-            ${listHtml(finalsCand)}
-          </div>` : ``}
-          ${includePredicted ? `
-          <div class="export-block export-block--candidate" style="margin-bottom:0;">
-            <h2>予想技</h2>
-            ${listHtml(predicted)}
-          </div>` : ``}
         </div>
       </div>
       <div class="export-footer">
@@ -6170,12 +6088,11 @@ function makeFastImageCanvas(kind="all", qrNode=null){
     now, finalScore, baseScore, overallTotal, preInput, presetLabel
   } = data;
 
-  const includePreCandidate = !!document.getElementById("export-include-pre-candidate")?.checked;
-  const includeFinalCandidate = !!document.getElementById("export-include-final-candidate")?.checked;
-  const includePredicted = !!document.getElementById("export-include-predicted")?.checked;
   const qrInfo = getExportQrInfo();
 
-  const W = 1280;
+  // v1.62: 候補技・予想技は画像保存の対象から外し、
+  // 必須情報だけを描画して速度と確実性を最優先にする。
+  const W = 1200;
   const margin = 54;
   const gap = 24;
   const bodyW = W - margin * 2;
@@ -6383,38 +6300,17 @@ function makeFastImageCanvas(kind="all", qrNode=null){
 
     if(kind === "final"){
       y = drawBlock(ctx, "決勝構成", finals, margin, y, bodyW, {cols:2, fontSize:22, titleSize:27});
-      const optBlocks = [];
-      if(includeFinalCandidate) optBlocks.push(["決勝 候補技", finalsCand]);
-      if(includePredicted) optBlocks.push(["予想技", predicted]);
-      if(optBlocks.length){
-        const colW = optBlocks.length === 2 ? (bodyW - gap) / 2 : bodyW;
-        let maxY = y;
-        optBlocks.forEach((b,i)=>{
-          maxY = Math.max(maxY, drawBlock(ctx, b[0], b[1], margin + i*(colW+gap), y, colW, {candidate:true,fontSize:17,titleSize:21,pad:15}));
-        });
-        y = maxY;
-      }
     }else if(kind === "prelim"){
       const colW = (bodyW - gap) / 2;
       const y1 = drawBlock(ctx, "第1ラウンド", p1, margin, y, colW, {fontSize:22,titleSize:27});
       const y2 = drawBlock(ctx, "第2ラウンド", p2, margin+colW+gap, y, colW, {fontSize:22,titleSize:27});
       y = Math.max(y1,y2);
-      if(includePreCandidate){
-        y = drawBlock(ctx, "予選 候補技", preCand, margin, y, bodyW, {candidate:true,fontSize:17,titleSize:21,pad:15});
-      }
     }else{
       y = drawBlock(ctx, "決勝編成", finals, margin, y, bodyW, {cols:2, fontSize:21, titleSize:27});
       const colW = (bodyW - gap) / 2;
       const y1 = drawBlock(ctx, "予選 第1ラウンド", p1, margin, y, colW, {fontSize:20,titleSize:24});
       const y2 = drawBlock(ctx, "予選 第2ラウンド", p2, margin+colW+gap, y, colW, {fontSize:20,titleSize:24});
       y = Math.max(y1,y2);
-      const optional = [];
-      if(includePreCandidate) optional.push(["予選 候補技", preCand]);
-      if(includeFinalCandidate) optional.push(["決勝 候補技", finalsCand]);
-      if(includePredicted) optional.push(["予想技", predicted]);
-      optional.forEach((b,idx)=>{
-        y = drawBlock(ctx, b[0], b[1], margin, y, bodyW, {candidate:true,fontSize:16,titleSize:20,pad:14});
-      });
     }
 
     y = drawFooter(ctx, y);
@@ -6422,7 +6318,7 @@ function makeFastImageCanvas(kind="all", qrNode=null){
   }
 
   const first = draw(kind, 3600);
-  const finalHeight = Math.max(1100, Math.min(4600, Math.ceil(first.neededHeight)));
+  const finalHeight = Math.max(1000, Math.min(3800, Math.ceil(first.neededHeight)));
   const final = draw(kind, finalHeight);
   return final.canvas;
 }
@@ -6444,7 +6340,7 @@ async function generateCompositionImage(kind="all"){
   const originalText = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = "作成<br>中";
-  showToast("画像を作成しています", 900);
+  showToast("保存画像を作成しています", 900);
 
   try{
     const canvas = await generateCompositionImageFast(kind);
