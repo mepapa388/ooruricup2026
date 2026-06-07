@@ -2036,6 +2036,68 @@ html{
   display:none;
 }
 
+
+/* ===== v1.41 スタート時タイトル表示改善 ===== */
+body{
+  padding-top:154px !important;
+}
+h1{
+  margin-top:14px !important;
+  margin-bottom:12px !important;
+  padding:10px 12px;
+  border-radius:14px;
+  background:#fff;
+  border:2px solid #cfe3ff;
+  box-shadow:0 3px 10px rgba(10,132,255,.08);
+  color:#073b7a;
+}
+@media (max-width:430px){
+  body{
+    padding-top:166px !important;
+  }
+  h1{
+    font-size:22px;
+    line-height:1.35;
+    padding:10px;
+  }
+}
+
+
+/* ===== v1.42 画像保存の技順を編成順に統一 ===== */
+.export-list.is-two-col{
+  grid-template-columns:1fr !important;
+  column-gap:0 !important;
+}
+
+
+/* ===== v1.43 画像保存：決勝構成は2列表示＋中央罫線 ===== */
+.export-list--finals-two-col.export-list.is-two-col,
+.export-list.export-list--finals-two-col.is-two-col{
+  position:relative;
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  column-gap:22px !important;
+  row-gap:6px;
+  align-items:start;
+  padding:0 8px;
+  background-image:linear-gradient(
+    to right,
+    transparent calc(50% - 0.5px),
+    #d9e4f2 calc(50% - 0.5px),
+    #d9e4f2 calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  );
+  background-repeat:no-repeat;
+  background-size:100% 100%;
+}
+@media (max-width:430px){
+  .export-list--finals-two-col.export-list.is-two-col,
+  .export-list.export-list--finals-two-col.is-two-col{
+    column-gap:16px !important;
+    padding:0 6px;
+  }
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -2077,12 +2139,6 @@ html{
 
 <h1>オオルリカップ2026 技構成システム</h1>
 
-<!-- 予選検索 -->
-<div class="search-bar">
-  <label for="trick-search">予選技検索：</label>
-  <input id="trick-search" class="search-input" type="text" placeholder="例：とうろう / へび / whip など">
-  <span class="search-hits" id="search-hits"></span>
-</div>
 
 <!-- モード切替 -->
 <div class="mode-bar">
@@ -2335,7 +2391,6 @@ html{
     <h3>ようこそ！使い方のポイント</h3>
     <ul>
       <li>決勝スコアで技を選びつつ、予選は最大12技にチェック。</li>
-      <li>予選検索はひらがな/カタカナOK、ヒットを黄色ハイライト。</li>
       <li>合計は自動保存。次回開いても続きから再開できます。</li>
       <li>各技の「動画・判定」から区間再生＆判定基準を確認。</li>
       <li>削除は長押しで誤操作防止。並べ替えはドラッグも可。</li>
@@ -4132,21 +4187,16 @@ document.addEventListener('change', e=>{
 });
 
 /* =========================================================
-   12) 予選 検索
+   12) 予選 検索（削除済み）
 ========================================================= */
 function applySearch(){
-  const q = kanaNormalize(searchInput.value.trim());
-  let hits=0;
   document.querySelectorAll("#pre-tech-list .tech-item").forEach(item=>{
-    const t=item.querySelector(".tech-title")?.textContent || "";
-    const norm = kanaNormalize(t);
-    const isHit = q && norm.includes(q);
-    item.classList.toggle("search-hit", isHit);
-    if(isHit) hits++;
+    item.classList.remove("search-hit");
   });
-  searchHits.textContent = q ? `ヒット：${hits}` : '';
 }
-searchInput.addEventListener('input', applySearch);
+if(searchInput){
+  searchInput.addEventListener('input', applySearch);
+}
 
 /* =========================================================
    13) 決勝編成
@@ -4903,7 +4953,7 @@ function setMode(mode){
   modeButtons.forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
   miniButtons.forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
   updateCurrentModeBox(mode);
-  window.scrollTo({top:80, behavior:"smooth"});
+  window.scrollTo({top:0, behavior:"smooth"});
 }
 modeButtons.forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
 miniButtons.forEach(btn=>{
@@ -5251,7 +5301,8 @@ function buildExportSheet(kind="all"){
   const listHtml = (items, opts={})=>{
     if(!items.length) return `<div class="export-empty">未設定</div>`;
     const cols = opts.cols === 2 ? ' is-two-col' : '';
-    return `<div class="export-list${cols}">` + items.map((t,i)=>{
+    const extraClass = opts.className || '';
+    return `<div class="export-list${cols}${extraClass}">` + items.map((t,i)=>{
       const predictedClass = String(t).includes("（予想技）") ? " is-predicted" : "";
       return `<div class="export-list-row${predictedClass}"><div class="export-list-num">${i+1}.</div><div class="export-list-text">${escapeHtml(formatExportTechniqueText(t))}</div></div>`;
     }).join("") + `</div>`;
@@ -5304,11 +5355,11 @@ function buildExportSheet(kind="all"){
       <div class="export-grid">
         <div class="export-block export-block--main">
           <h2>決勝構成</h2>
-          ${listHtml(finals, {cols:2})}
+          ${listHtml(finals, {cols:2, className:" export-list--finals-two-col"})}
         </div>
         <div class="export-block export-block--candidate">
           <h2>技選択候補</h2>
-          ${listHtml(finalsCand, {cols:2})}
+          ${listHtml(finalsCand)}
         </div>
       </div>
       <div class="export-footer">
@@ -5333,7 +5384,7 @@ function buildExportSheet(kind="all"){
       <div class="export-grid">
         <div class="export-block export-block--main">
           <h2>決勝編成</h2>
-          ${listHtml(finals, {cols:2})}
+          ${listHtml(finals, {cols:2, className:" export-list--finals-two-col"})}
         </div>
         <div>
           <div class="export-block export-block--main" style="margin-bottom:14px;">
@@ -5353,7 +5404,7 @@ function buildExportSheet(kind="all"){
       <div class="export-grid" style="margin-top:14px;grid-template-columns:1fr;">
         <div class="export-block export-block--candidate">
           <h2>決勝 技選択候補</h2>
-          ${listHtml(finalsCand, {cols:2})}
+          ${listHtml(finalsCand)}
         </div>
       </div>
       <div class="export-footer">
@@ -5656,7 +5707,7 @@ document.getElementById("btn-reset").addEventListener("click",()=>{
   document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
   preInput.value=0; warn.style.display="none"; preWarn.style.display="none"; preLimitWarn.style.display="none";
   list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsList.dataset.authoritative=""; finalsCandidateList.innerHTML=""; predictList.innerHTML=""; updatePredictCount();
-  searchInput.value=""; applySearch();
+  if(searchInput) searchInput.value=""; applySearch();
   localStorage.removeItem("tsubame2025");
   updatePredictCount();
   calcTotal(); updatePreSummary(); rebuildFinalsList();
@@ -6221,6 +6272,7 @@ if('serviceWorker' in navigator){
    22) 起動処理
 ========================================================= */
 window.addEventListener("DOMContentLoaded",()=>{
+  window.scrollTo({top:0, behavior:"auto"});
   if(!restoreSharedStateIfNeeded()){
     loadState();
   }
