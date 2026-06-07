@@ -2102,6 +2102,36 @@ h1{
   }
 }
 
+
+/* ===== v1.45 画像保存：技背景の影・グレー感を除去 ===== */
+.export-sheet{
+  background:#fff !important;
+  box-shadow:none !important;
+}
+.export-block{
+  background:#fff !important;
+}
+.export-list,
+.export-list-row,
+.export-list-text,
+.export-list-num,
+.export-col,
+.export-list--finals-two-col{
+  background:#fff !important;
+  box-shadow:none !important;
+}
+.export-list--finals-two-col.export-list.is-two-col,
+.export-list.export-list--finals-two-col.is-two-col{
+  background-image:linear-gradient(
+    to right,
+    transparent calc(50% - 0.5px),
+    #d9e4f2 calc(50% - 0.5px),
+    #d9e4f2 calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  ) !important;
+  background-color:#fff !important;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
