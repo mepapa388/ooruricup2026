@@ -4304,13 +4304,18 @@ preInput.addEventListener("input", calcTotal);
 /* 決勝チェック制限 */
 document.addEventListener('change', e=>{
   if(e.target.classList.contains('chk')){
-    const c=document.querySelectorAll(".chk:checked");
-    if(c.length>30 && e.target.checked){
-      e.target.checked=false;
-      showToast("技は30個までです");
-    }
     if(e.target.checked){
       const txt = orderText(e.target.dataset.pt, e.target.dataset.name);
+      const currentFinals = [...finalsList.querySelectorAll(".order-name")].map(n=>n.textContent);
+      const checked = [...document.querySelectorAll(".chk:checked")].map(chk=>orderText(chk.dataset.pt, chk.dataset.name));
+      const mergedCount = new Set([...currentFinals, ...checked]).size;
+      if(mergedCount > 30){
+        e.target.checked=false;
+        syncToggleButtonStates();
+        showToast("決勝は30技までです");
+        calcTotal();
+        return;
+      }
       if(removeOrderTextFromList(finalsCandidateList, txt)){
         rebuildFinalsList();
       }
@@ -4397,6 +4402,109 @@ function syncPreChecksFromLists(){
 function moveItem(list, li, dir){
   if(dir==='up' && li.previousElementSibling) li.parentNode.insertBefore(li, li.previousElementSibling);
   if(dir==='down' && li.nextElementSibling) li.parentNode.insertBefore(li.nextElementSibling, li);
+}
+
+function bindLongPressDelete(btn, doDelete, hint="長押しで削除"){
+  let timer = null;
+  let fired = false;
+
+  const clear = ()=>{
+    if(timer){
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+
+  const start = (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    fired = false;
+    clear();
+    timer = setTimeout(()=>{
+      timer = null;
+      fired = true;
+      doDelete();
+    }, 650);
+  };
+
+  const end = (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(timer){
+      clear();
+      showToast(hint, 800);
+    }
+    setTimeout(()=>{ fired = false; }, 80);
+  };
+
+  btn.addEventListener("pointerdown", start);
+  btn.addEventListener("pointerup", end);
+  btn.addEventListener("pointerleave", end);
+  btn.addEventListener("pointercancel", end);
+  btn.addEventListener("click", e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(!fired) showToast(hint, 800);
+  });
+}
+
+function enforceFinalLimit(){
+  const items = [...finalsList.querySelectorAll(".order-item")];
+  if(items.length <= 30) return true;
+
+  items.slice(30).forEach(li=>{
+    const info = parseOrderText(getItemText(li));
+    if(info && li.dataset.predicted !== "1") uncheckFinalTech(info.pt, info.name);
+    li.remove();
+  });
+  finalsLimitAlert.style.display = "block";
+  showToast("決勝は30技までです。30技を超えた分は追加しませんでした。");
+  return false;
+}
+
+function getPreMainCount(){
+  return list1.querySelectorAll(".order-item").length + list2.querySelectorAll(".order-item").length;
+}
+
+function enforcePreLimit(){
+  let ok = true;
+
+  const moveExtraToCandidate = (list, limit)=>{
+    const items = [...list.querySelectorAll(".order-item")];
+    items.slice(limit).forEach(li=>{
+      const info = parseOrderText(getItemText(li));
+      li.remove();
+      if(info){
+        setPreTechChecked(info.pt, info.name, false);
+        if(preCandidateList.querySelectorAll(".order-item").length < 6 && !listContainsText(preCandidateList, orderText(info.pt, info.name))){
+          preCandidateList.appendChild(preCandidateLiTemplate(info.pt, info.name));
+        }
+      }
+      ok = false;
+    });
+  };
+
+  moveExtraToCandidate(list1, 6);
+  moveExtraToCandidate(list2, 6);
+
+  const all = [...list1.querySelectorAll(".order-item"), ...list2.querySelectorAll(".order-item")];
+  all.slice(12).forEach(li=>{
+    const info = parseOrderText(getItemText(li));
+    li.remove();
+    if(info){
+      setPreTechChecked(info.pt, info.name, false);
+      if(preCandidateList.querySelectorAll(".order-item").length < 6 && !listContainsText(preCandidateList, orderText(info.pt, info.name))){
+        preCandidateList.appendChild(preCandidateLiTemplate(info.pt, info.name));
+      }
+    }
+    ok = false;
+  });
+
+  if(!ok){
+    preMainLimitAlert.style.display = "block";
+    showToast("予選は合計12技・各ラウンド6技までです。超過分は候補へ移動しました。");
+  }
+  return ok;
 }
 
 function findFinalTechItem(pt, name){
@@ -4540,10 +4648,10 @@ function orderLiTemplate(pt,name,multi=false,predicted=false){
       <button class="order-btn order-btn-cand" data-act="cand">候補へ</button>
       <button class="order-btn order-btn-del" data-act="del">✕</button>
     </div>`;
-  let pressT=null;
   const delBtn = li.querySelector('[data-act="del"]');
 
   const doDel=()=>{
+    if(!li.isConnected) return;
     if(li.dataset.predicted !== "1"){
       const info = parseOrderText(getItemText(li));
       if(info) uncheckFinalTech(info.pt, info.name);
@@ -4553,10 +4661,7 @@ function orderLiTemplate(pt,name,multi=false,predicted=false){
     showToast("削除しました");
   };
 
-  delBtn.addEventListener('touchstart',()=>{ pressT=setTimeout(doDel,600); },{passive:true});
-  delBtn.addEventListener('touchend',()=>{ if(pressT){ clearTimeout(pressT); pressT=null; showToast("長押しで削除",800); }});
-  delBtn.addEventListener('mousedown',()=>{ pressT=setTimeout(doDel,600); });
-  ['mouseup','mouseleave'].forEach(ev=>delBtn.addEventListener(ev,()=>{ if(pressT){clearTimeout(pressT); pressT=null;} }));
+  bindLongPressDelete(delBtn, doDel);
   return li;
 }
 
@@ -4696,6 +4801,7 @@ document.getElementById("load-finals-btn").addEventListener("click",()=>{
 
   let added = 0;
   let updated = 0;
+  let skipped = 0;
 
   document.querySelectorAll(".chk:checked").forEach(chk=>{
     const multi = chk.closest('.tech-item')?.querySelector('.multi')?.checked || false;
@@ -4709,14 +4815,21 @@ document.getElementById("load-finals-btn").addEventListener("click",()=>{
       existing.querySelector('[data-act="multi"]')?.classList.toggle("selected", multi);
       if(before !== multi) updated++;
     }else{
+      if(finalsList.querySelectorAll(".order-item").length >= 30){
+        chk.checked = false;
+        skipped++;
+        return;
+      }
       finalsList.appendChild(orderLiTemplate(chk.dataset.pt, chk.dataset.name, multi));
       added++;
     }
   });
 
   pruneCandidateDuplicates(finalsList, finalsCandidateList);
+  enforceFinalLimit();
   rebuildFinalsList();
-  showToast(`決勝編成へ反映しました（追加${added}技・更新${updated}技）`);
+  syncToggleButtonStates();
+  showToast(`決勝編成へ反映しました（追加${added}技・更新${updated}技${skipped ? `・超過${skipped}技は未追加` : ""}）`);
 });
 
 finalsList.addEventListener("click",e=>{
@@ -4760,13 +4873,14 @@ finalsCandidateList.addEventListener('click',e=>{
   else if(act==='main'){
     const info=parseOrderText(getItemText(li));
     if(!info) return;
+    if(finalsList.querySelectorAll('.order-item').length >= 30){
+      finalsLimitAlert.style.display='block';
+      showToast('決勝は30技までです');
+      return;
+    }
     li.remove();
     finalsList.dataset.authoritative = "1";
     finalsList.appendChild(orderLiTemplate(info.pt, info.name));
-    if(finalsList.querySelectorAll('.order-item').length > 30){
-      finalsLimitAlert.style.display='block';
-      showToast('決勝編成が30技を超えています');
-    }
   }else if(act==='del'){
     showToast('削除は長押しで実行');
     return;
@@ -4848,14 +4962,22 @@ const preSum=document.getElementById("pre-tech-total");
 
 document.addEventListener('change', e=>{
   if(e.target.classList.contains('pre-chk')){
-    const sel=document.querySelectorAll('.pre-chk:checked');
-    if(sel.length>12 && e.target.checked){
-      e.target.checked=false; preLimitWarn.style.display="block";
-      showToast("予選は12技までです");
-    }else preLimitWarn.style.display="none";
     if(e.target.checked){
+      const currentPre = [...list1.querySelectorAll(".order-name"), ...list2.querySelectorAll(".order-name")].map(n=>n.textContent);
+      const checked = [...document.querySelectorAll(".pre-chk:checked")].map(chk=>orderText(chk.dataset.pt, chk.dataset.name));
+      const mergedCount = new Set([...currentPre, ...checked]).size;
+      if(mergedCount > 12){
+        e.target.checked=false;
+        preLimitWarn.style.display="block";
+        syncToggleButtonStates();
+        showToast("予選は合計12技までです");
+        updatePreSummary();
+        return;
+      }
       const txt = orderText(e.target.dataset.pt, e.target.dataset.name);
       removeOrderTextFromList(preCandidateList, txt);
+    }else{
+      preLimitWarn.style.display="none";
     }
     updatePreSummary();
     syncToggleButtonStates();
@@ -4877,18 +4999,16 @@ function mkPreOrderItem(pt,name,round){
       <button class="order-btn order-btn-cand" data-act="cand">候補へ</button>
       <button class="order-btn order-btn-del" data-act="del">✕</button>
     </div>`;
-  let t=null, delBtn=li.querySelector('[data-act="del"]');
+  const delBtn=li.querySelector('[data-act="del"]');
   const doDel=()=>{
+    if(!li.isConnected) return;
     const info=parseOrderText(getItemText(li));
     if(info) setPreTechChecked(info.pt, info.name, false);
     li.remove();
     updatePreSummary();
     showToast("削除しました");
   };
-  delBtn.addEventListener('touchstart',()=>{ t=setTimeout(doDel,600); },{passive:true});
-  delBtn.addEventListener('touchend',()=>{ if(t){clearTimeout(t); t=null; showToast("長押しで削除",800);} });
-  delBtn.addEventListener('mousedown',()=>{ t=setTimeout(doDel,600); });
-  ['mouseup','mouseleave'].forEach(ev=>delBtn.addEventListener(ev,()=>{ if(t){clearTimeout(t); t=null;} }));
+  bindLongPressDelete(delBtn, doDel);
   return li;
 }
 
@@ -4905,12 +5025,9 @@ function preCandidateLiTemplate(pt,name){
       <button class="order-btn order-btn-round" data-act="r2">2R</button>
       <button class="order-btn order-btn-del" data-act="del">✕</button>
     </div>`;
-  let t=null, delBtn=li.querySelector('[data-act="del"]');
-  const doDel=()=>{ li.remove(); updatePreSummary(); showToast("候補から削除しました"); };
-  delBtn.addEventListener('touchstart',()=>{ t=setTimeout(doDel,600); },{passive:true});
-  delBtn.addEventListener('touchend',()=>{ if(t){clearTimeout(t); t=null; showToast("長押しで削除",800);} });
-  delBtn.addEventListener('mousedown',()=>{ t=setTimeout(doDel,600); });
-  ['mouseup','mouseleave'].forEach(ev=>delBtn.addEventListener(ev,()=>{ if(t){clearTimeout(t); t=null;} }));
+  const delBtn=li.querySelector('[data-act="del"]');
+  const doDel=()=>{ if(!li.isConnected) return; li.remove(); updatePreSummary(); showToast("候補から削除しました"); };
+  bindLongPressDelete(delBtn, doDel);
   return li;
 }
 
@@ -4941,10 +5058,15 @@ applyPreBtn.addEventListener("click",()=>{
   list1.innerHTML=""; list2.innerHTML="";
   const sel=[...document.querySelectorAll(".pre-chk:checked")];
   sel.forEach((chk,i)=>{
+    if(i >= 12){
+      chk.checked = false;
+      return;
+    }
     const pt=chk.dataset.pt, name=chk.dataset.name;
     if(i<6) list1.appendChild(mkPreOrderItem(pt,name,1));
     else list2.appendChild(mkPreOrderItem(pt,name,2));
   });
+  syncToggleButtonStates();
   pruneCandidateDuplicates(list1, preCandidateList);
   pruneCandidateDuplicates(list2, preCandidateList);
   updatePreSummary();
@@ -4954,8 +5076,14 @@ applyPreBtn.addEventListener("click",()=>{
 
 function swapMove(li, to2){
   const info=parseOrderText(getItemText(li)); if(!info) return;
+  const target = to2 ? list2 : list1;
+  if(target.querySelectorAll('.order-item').length >= 6){
+    preMainLimitAlert.style.display='block';
+    showToast(to2 ? '第2ラウンドは6技までです' : '第1ラウンドは6技までです');
+    return;
+  }
   li.remove();
-  (to2?list2:list1).appendChild(mkPreOrderItem(info.pt,info.name,to2?2:1));
+  target.appendChild(mkPreOrderItem(info.pt,info.name,to2?2:1));
 }
 
 function preListHandler(e){
@@ -4987,15 +5115,20 @@ preCandidateList.addEventListener('click',e=>{
   else if(act==='r1' || act==='r2'){
     const info=parseOrderText(getItemText(li));
     if(!info) return;
-    li.remove();
     const target = act==='r1' ? list1 : list2;
+    if(getPreMainCount() >= 12){
+      preMainLimitAlert.style.display='block';
+      showToast('予選は合計12技までです');
+      return;
+    }
+    if(target.querySelectorAll('.order-item').length >= 6){
+      preMainLimitAlert.style.display='block';
+      showToast(act==='r1' ? '第1ラウンドは6技までです' : '第2ラウンドは6技までです');
+      return;
+    }
+    li.remove();
     setPreTechChecked(info.pt, info.name, true);
     target.appendChild(mkPreOrderItem(info.pt, info.name, act==='r1' ? 1 : 2));
-    const totalMain = list1.querySelectorAll('.order-item').length + list2.querySelectorAll('.order-item').length;
-    if(totalMain > 12){
-      preMainLimitAlert.style.display='block';
-      showToast('予選編成が12技を超えています');
-    }
   }else if(act==='del'){
     showToast('削除は長押しで実行');
     return;
@@ -5019,10 +5152,12 @@ function bindDnd(list){
       delay: 120,
       touchStartThreshold: 4,
       onEnd: ()=>{
+        enforcePreLimit();
         updatePreSummary();
         showToast("予選構成の順番を変更しました", 900);
       },
       onAdd: ()=>{
+        enforcePreLimit();
         updatePreSummary();
         showToast("ラウンド間で技を移動しました", 900);
       }
