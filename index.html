@@ -2344,6 +2344,45 @@ h1{
   vertical-align:middle;
 }
 
+
+/* ===== v1.58 決勝編成説明を自動反映前提に整理 ===== */
+.auto-finals-note{
+  font-size:15px !important;
+  line-height:1.65 !important;
+  padding:13px 14px !important;
+}
+
+
+/* ===== v1.59 画像保存オプション ===== */
+.export-option-panel{
+  margin-top:14px;
+  padding:12px;
+  border:1px solid #d7e6ff;
+  border-radius:14px;
+  background:#f7fbff;
+}
+.export-option-title{
+  font-size:14px;
+  font-weight:900;
+  color:#0b4aa6;
+  margin-bottom:8px;
+}
+.export-option-check{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:8px 0;
+  font-size:14px;
+  color:#234;
+  font-weight:700;
+}
+.export-option-check input{
+  width:18px;
+  height:18px;
+  accent-color:#0b72e7;
+  flex:0 0 auto;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -2427,17 +2466,11 @@ h1{
 
 <!-- 決勝編成 -->
 <div id="mode-finals" class="mode-section">
-  <div class="flow-box">
-    <div class="flow-title">決勝の流れ</div>
-    <div class="flow-steps">
-      <span>1. 使用技を選ぶ</span>
-      <span>2. 1.5倍を確認</span>
-      <span>3. 決勝編成へ反映</span>
-      <span>4. 並べ替え</span>
-      <span>5. 保存・画像出力</span>
-    </div>
+  <div class="auto-finals-note">
+    決勝画面で「使用」を押すと、この決勝編成へ自動で反映されます。<br>
+    技名や☰を押したまま動かすと、技の順番を並べ替えできます。<br>
+    1.5倍はこの画面でも変更でき、点数にも自動反映されます。
   </div>
-  <div class="auto-finals-note">決勝の使用ボタン・候補ボタンを押すと、決勝編成と候補欄へ自動で反映されます。</div>
 
   <div class="predict-box">
     <div class="predict-title">予想技を作成</div>
@@ -2593,16 +2626,32 @@ h1{
     <div class="export-choice-body">
       <button type="button" class="export-choice-btn" data-export-kind="all">
         <strong>① 現在の画像内容</strong>
-        <span>決勝・予選・候補をまとめて1枚で保存します。</span>
+        <span>決勝・予選をまとめて1枚で保存します。候補技・予想技は下の設定で追加できます。</span>
       </button>
       <button type="button" class="export-choice-btn" data-export-kind="prelim">
         <strong>② 予選専用画像</strong>
-        <span>第1ラウンド・第2ラウンド・予選候補をA4縦で保存します。</span>
+        <span>第1ラウンド・第2ラウンドをA4縦で保存します。候補技は下の設定で追加できます。</span>
       </button>
       <button type="button" class="export-choice-btn" data-export-kind="final">
         <strong>③ 決勝構成専用画像</strong>
-        <span>決勝30技と決勝候補をA4縦で保存します。</span>
+        <span>決勝構成をA4縦で保存します。候補技・予想技は下の設定で追加できます。</span>
       </button>
+
+      <div class="export-option-panel">
+        <div class="export-option-title">画像保存に追加する内容</div>
+        <label class="export-option-check">
+          <input type="checkbox" id="export-include-pre-candidate">
+          <span>予選画像に候補技を含める</span>
+        </label>
+        <label class="export-option-check">
+          <input type="checkbox" id="export-include-final-candidate">
+          <span>決勝画像に候補技を含める</span>
+        </label>
+        <label class="export-option-check">
+          <input type="checkbox" id="export-include-predicted">
+          <span>決勝画像に予想技リストを含める</span>
+        </label>
+      </div>
     </div>
     <div class="export-choice-actions">
       <button type="button" class="export-choice-close" id="export-choice-close">閉じる</button>
@@ -5758,13 +5807,14 @@ function getExportData(){
   const p1 = getOrderTexts(list1);
   const p2 = getOrderTexts(list2);
   const preCand = getOrderTexts(preCandidateList);
+  const predicted = getPredictedTechEntries().map(d=>`${orderText(d.pt, d.name)}（予想技）`);
   const now = new Date().toLocaleString();
   const shareUrl = createShareUrl();
   const finalScore = calcOrderSquareScore(finalEntries);
   const baseScore = calcOrderBaseScore(finalEntries);
   const prelimScore = calcOrderBaseScore([...p1, ...p2]);
   return {
-    finals, finalsCand, p1, p2, preCand, now, shareUrl, finalScore, baseScore, prelimScore,
+    finals, finalsCand, p1, p2, preCand, predicted, now, shareUrl, finalScore, baseScore, prelimScore,
     overallTotal: finalSpan.textContent,
     preInput: preSpan.textContent,
     presetLabel: getCurrentPresetLabel("overall")
@@ -5781,8 +5831,11 @@ function getExportQrInfo(){
 
 function buildExportSheet(kind="all"){
   const data = getExportData();
-  const {finals, finalsCand, p1, p2, preCand, now, finalScore, baseScore, prelimScore, overallTotal, preInput, presetLabel} = data;
+  const {finals, finalsCand, p1, p2, preCand, predicted, now, finalScore, baseScore, prelimScore, overallTotal, preInput, presetLabel} = data;
   const qrInfo = getExportQrInfo();
+  const includePreCandidate = !!document.getElementById("export-include-pre-candidate")?.checked;
+  const includeFinalCandidate = !!document.getElementById("export-include-final-candidate")?.checked;
+  const includePredicted = !!document.getElementById("export-include-predicted")?.checked;
 
   const host = document.createElement("div");
   host.className = "export-sheet-host";
@@ -5839,6 +5892,13 @@ function buildExportSheet(kind="all"){
           ${listHtml(p2)}
         </div>
       </div>
+      ${includePreCandidate ? `
+      <div class="export-grid" style="margin-top:12px;grid-template-columns:1fr;">
+        <div class="export-block export-block--candidate">
+          <h2>予選 候補技</h2>
+          ${listHtml(preCand)}
+        </div>
+      </div>` : ``}
       <div class="export-footer">
         <div class="export-note">${escapeHtml(qrInfo.note)}</div>
         <div class="export-qr-area">
@@ -5864,6 +5924,19 @@ function buildExportSheet(kind="all"){
           ${listHtml(finals, {cols:2, className:" export-list--finals-two-col"})}
         </div>
       </div>
+      ${(includeFinalCandidate || includePredicted) ? `
+      <div class="export-grid" style="margin-top:12px;grid-template-columns:${includeFinalCandidate && includePredicted ? "1fr 1fr" : "1fr"};">
+        ${includeFinalCandidate ? `
+        <div class="export-block export-block--candidate">
+          <h2>決勝 候補技</h2>
+          ${listHtml(finalsCand)}
+        </div>` : ``}
+        ${includePredicted ? `
+        <div class="export-block export-block--candidate">
+          <h2>予想技</h2>
+          ${listHtml(predicted)}
+        </div>` : ``}
+      </div>` : ``}
       <div class="export-footer">
         <div class="export-note">${escapeHtml(qrInfo.note)}</div>
         <div class="export-qr-area">
@@ -5897,6 +5970,21 @@ function buildExportSheet(kind="all"){
             <h2>予選 第2ラウンド</h2>
             ${listHtml(p2)}
           </div>
+          ${includePreCandidate ? `
+          <div class="export-block export-block--candidate" style="margin-bottom:14px;">
+            <h2>予選 候補技</h2>
+            ${listHtml(preCand)}
+          </div>` : ``}
+          ${includeFinalCandidate ? `
+          <div class="export-block export-block--candidate" style="margin-bottom:14px;">
+            <h2>決勝 候補技</h2>
+            ${listHtml(finalsCand)}
+          </div>` : ``}
+          ${includePredicted ? `
+          <div class="export-block export-block--candidate" style="margin-bottom:0;">
+            <h2>予想技</h2>
+            ${listHtml(predicted)}
+          </div>` : ``}
         </div>
       </div>
       <div class="export-footer">
