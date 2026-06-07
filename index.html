@@ -2132,6 +2132,100 @@ h1{
   background-color:#fff !important;
 }
 
+
+/* ===== v1.46 決勝構成画像：中央罫線・影・グレー感を完全削除 ===== */
+.export-sheet,
+.export-block,
+.export-list,
+.export-list-row,
+.export-list-text,
+.export-list-num,
+.export-col,
+.export-list--finals-two-col,
+.export-list--finals-two-col.export-list.is-two-col,
+.export-list.export-list--finals-two-col.is-two-col{
+  background:#fff !important;
+  background-image:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+}
+
+.export-list--finals-two-col.export-list.is-two-col,
+.export-list.export-list--finals-two-col.is-two-col{
+  column-gap:22px !important;
+}
+
+@media (max-width:430px){
+  .export-list--finals-two-col.export-list.is-two-col,
+  .export-list.export-list--finals-two-col.is-two-col{
+    column-gap:16px !important;
+  }
+}
+
+
+/* ===== v1.47 画像保存：候補/予想技を非印刷、決勝構成を拡大 ===== */
+.export-sheet--final .export-grid{
+  grid-template-columns:1fr !important;
+}
+.export-sheet--all .export-grid:first-of-type{
+  grid-template-columns:1fr !important;
+}
+.export-sheet--all .export-grid:first-of-type > div:first-child{
+  width:100%;
+}
+
+.export-sheet--final .export-block--main,
+.export-sheet--all .export-block--main:first-child{
+  padding:18px 20px !important;
+}
+
+.export-sheet--final .export-list--finals-two-col .export-list-row,
+.export-sheet--all .export-list--finals-two-col .export-list-row{
+  grid-template-columns:48px 1fr !important;
+  gap:10px !important;
+  align-items:start;
+  margin-bottom:4px;
+}
+.export-sheet--final .export-list--finals-two-col .export-list-num,
+.export-sheet--all .export-list--finals-two-col .export-list-num{
+  font-size:20px !important;
+  line-height:1.35 !important;
+  font-weight:1000 !important;
+}
+.export-sheet--final .export-list--finals-two-col .export-list-text,
+.export-sheet--all .export-list--finals-two-col .export-list-text{
+  font-size:18px !important;
+  line-height:1.45 !important;
+  font-weight:900 !important;
+  letter-spacing:.01em;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.export-sheet--final .export-block h2,
+.export-sheet--all .export-block:first-child h2{
+  font-size:22px !important;
+  margin-bottom:12px !important;
+}
+.export-sheet--all .export-grid:first-of-type{
+  gap:14px !important;
+}
+@media (max-width:430px){
+  .export-sheet--final .export-list--finals-two-col .export-list-row,
+  .export-sheet--all .export-list--finals-two-col .export-list-row{
+    grid-template-columns:42px 1fr !important;
+    gap:8px !important;
+  }
+  .export-sheet--final .export-list--finals-two-col .export-list-num,
+  .export-sheet--all .export-list--finals-two-col .export-list-num{
+    font-size:18px !important;
+  }
+  .export-sheet--final .export-list--finals-two-col .export-list-text,
+  .export-sheet--all .export-list--finals-two-col .export-list-text{
+    font-size:16px !important;
+    line-height:1.4 !important;
+  }
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -5375,10 +5469,6 @@ function buildExportSheet(kind="all"){
           <h2>第2ラウンド</h2>
           ${listHtml(p2)}
         </div>
-        <div class="export-block export-block--candidate">
-          <h2>技選択候補</h2>
-          ${listHtml(preCand)}
-        </div>
       </div>
       <div class="export-footer">
         <div class="export-note">${escapeHtml(qrInfo.note)}</div>
@@ -5403,10 +5493,6 @@ function buildExportSheet(kind="all"){
         <div class="export-block export-block--main">
           <h2>決勝構成</h2>
           ${listHtml(finals, {cols:2, className:" export-list--finals-two-col"})}
-        </div>
-        <div class="export-block export-block--candidate">
-          <h2>技選択候補</h2>
-          ${listHtml(finalsCand)}
         </div>
       </div>
       <div class="export-footer">
@@ -5442,16 +5528,6 @@ function buildExportSheet(kind="all"){
             <h2>予選 第2ラウンド</h2>
             ${listHtml(p2)}
           </div>
-          <div class="export-block export-block--candidate">
-            <h2>予選 技選択候補</h2>
-            ${listHtml(preCand)}
-          </div>
-        </div>
-      </div>
-      <div class="export-grid" style="margin-top:14px;grid-template-columns:1fr;">
-        <div class="export-block export-block--candidate">
-          <h2>決勝 技選択候補</h2>
-          ${listHtml(finalsCand)}
         </div>
       </div>
       <div class="export-footer">
