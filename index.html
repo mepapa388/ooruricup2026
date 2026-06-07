@@ -2325,6 +2325,25 @@ h1{
   font-weight:600 !important;
 }
 
+
+/* ===== v1.57 決勝編成：技名横の1.5倍楕円ラベルを削除 ===== */
+#finals-list .order-item.finals-multi-on:not(.is-predicted) .order-name::after{
+  content:none !important;
+  display:none !important;
+}
+#finals-list .order-item.is-predicted.finals-multi-on .order-name::after{
+  content:"  予想技" !important;
+  display:inline-block !important;
+  margin-left:6px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:#d60000;
+  color:#fff;
+  font-size:11px;
+  font-weight:1000;
+  vertical-align:middle;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
