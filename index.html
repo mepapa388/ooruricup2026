@@ -4331,13 +4331,19 @@ function syncToggleButtonStates(){
     }
   });
 
+  // 初期化の早い段階でも落ちないよう、const変数ではなくDOMから取得する。
+  // v1.54でここが初期化前のfinalsCandidateList/preCandidateListを参照し、
+  // 全ボタンが反応しなくなる原因になっていた。
+  const finalCandListEl = document.getElementById("finals-candidate-list");
+  const preCandListEl = document.getElementById("pre-candidate-list");
+
   document.querySelectorAll('.candidate-add-btn[data-kind="finals"]').forEach(btn=>{
     const txt = orderText(btn.dataset.pt, btn.dataset.name);
-    btn.classList.toggle("selected", listContainsText(finalsCandidateList, txt));
+    btn.classList.toggle("selected", finalCandListEl ? listContainsText(finalCandListEl, txt) : false);
   });
   document.querySelectorAll('.candidate-add-btn[data-kind="prelims"]').forEach(btn=>{
     const txt = orderText(btn.dataset.pt, btn.dataset.name);
-    btn.classList.toggle("selected", listContainsText(preCandidateList, txt));
+    btn.classList.toggle("selected", preCandListEl ? listContainsText(preCandListEl, txt) : false);
   });
 }
 
