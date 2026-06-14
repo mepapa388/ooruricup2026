@@ -1,0 +1,6823 @@
+<!DOCTYPE html>
+<!-- OoruriCup2026 PWA TEST v1.66 -->
+<html lang="ja">
+<head>
+  <!-- PWAテスト対応 v1.66-test -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0b4aa6">
+  <meta name="application-name" content="オオルリ2026 TEST">
+  <meta name="apple-mobile-web-app-title" content="オオルリ2026 TEST">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>オオルリカップ2026 技構成システム PWA TEST</title>
+<meta name="theme-color" content="#0a84ff" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕊️</text></svg>">
+<style>
+:root{
+  --blue:#0a84ff;
+  --chip:#ffffff;
+  --bar:#f0f0f0;
+  --hit-bg:#fff6cc;
+  --hit-bd:#ffcc66;
+  --toast:#323232;
+
+  --soft:#f7fbff;
+  --line:#e6eefb;
+}
+*{box-sizing:border-box}
+body{
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  font-size:16px; line-height:1.6;
+  padding:12px; background:#f6faff;
+  padding-top:112px;   /* 上部バー＋検索バー */
+  padding-bottom:92px; /* 下部ミニメニュー */
+}
+h1{font-size:23px;margin:6px 0 8px;font-weight:800}
+button{border:none;border-radius:8px;cursor:pointer}
+
+/* ===== 上部固定スコアバー ===== */
+.total-bar{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  padding:7px 10px;background:rgba(240,240,240,.96);
+  box-shadow:0 2px 6px rgba(0,0,0,.2); transition:background .3s ease,color .3s ease;
+}
+.total-box{display:flex;flex-direction:column;gap:6px}
+.total-top-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.total-chip{
+  background:rgba(255,255,255,.9); padding:2px 8px;
+  border-radius:999px; font-size:13px; border:1px solid rgba(0,0,0,.06)
+}
+.total-main{font-size:18px;font-weight:800}
+.total-buttons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.total-buttons button,
+.total-buttons label{
+  min-width:0;
+  min-height:50px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  line-height:1.15;
+  padding:7px 5px;
+  font-size:14px;
+  font-weight:800;
+  border-radius:10px;
+  white-space:normal;
+}
+
+/* ===== モード ===== */
+.mode-bar{display:flex;gap:6px;margin:8px 0 10px;flex-wrap:wrap}
+.mode-btn{flex:1;min-width:90px;padding:9px 4px;font-size:14px;border-radius:8px;border:1px solid var(--blue);background:#fff;color:var(--blue)}
+.mode-btn.active{background:var(--blue);color:#fff}
+
+/* ===== 検索 ===== */
+.search-bar{display:flex;align-items:center;gap:8px;margin:6px 0 10px}
+.search-input{flex:1;padding:8px 10px;font-size:14px;border-radius:8px;border:1px solid #cfcfcf;background:#fff}
+.search-hits{font-size:12px;opacity:.7;white-space:nowrap}
+
+/* ===== セクション ===== */
+.section{
+  margin-top:10px;border-radius:10px;overflow:hidden;border:1px solid #e5efff;background:#fff
+}
+.section summary{
+  list-style:none; cursor:pointer; padding:10px 12px; font-weight:700; font-size:16px;
+  background:#eaf3ff; border-bottom:1px solid #e5efff; user-select:none
+}
+.section[open] summary{background:#dff0ff}
+.section-content{padding:6px 10px}
+
+/* ===== 点数ラベル ===== */
+.section-title{
+  display:inline-block;
+  margin:4px 0;
+  padding:3px 9px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
+}
+.section-title.pt-1{background:#e3f2fd;border-left:4px solid #2196f3;}
+.section-title.pt-2{background:#e8f5e9;border-left:4px solid #43a047;}
+.section-title.pt-3{background:#fff3e0;border-left:4px solid #fb8c00;}
+.section-title.pt-4{background:#f3e5f5;border-left:4px solid #8e24aa;}
+.section-title.pt-5{background:#e0f7fa;border-left:4px solid #00838f;}
+.section-title.pt-6{background:#fbe9e7;border-left:4px solid #d84315;}
+.section-title.pt-7{background:#ede7f6;border-left:4px solid #5e35b1;}
+.section-title.pt-8{background:#e0f2f1;border-left:4px solid #00796b;}
+.section-title.pt-9{background:#fff8e1;border-left:4px solid #ffb300;}
+.section-title.pt-10{background:#fce4ec;border-left:4px solid #c2185b;}
+
+/* ===== 点数ごとの折りたたみ ===== */
+.pt-group{
+  margin:2px 0 4px;
+}
+.pt-group > summary{
+  list-style:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.pt-group > summary::-webkit-details-marker{display:none}
+.pt-group-arrow{font-size:12px;opacity:.6}
+
+/* 全動画ボタン */
+.full-video-btn{
+  margin-left:auto;
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid #b9d8ff;
+  background:#f1f7ff;
+  color:#0b4aa6;
+  white-space:nowrap;
+}
+.full-video-btn:hover{background:#e3f0ff}
+
+/* ===== 技アイテム ===== */
+.tech-item{
+  background:#fff;margin:6px 0;padding:10px;border-radius:8px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid transparent
+}
+.tech-item.search-hit{background:var(--hit-bg);border-color:var(--hit-bd)}
+.tech-title{font-size:17px}
+.tech-pt-label{font-size:13px;color:#666}
+.tech-controls{display:flex;align-items:center;gap:8px;min-width:160px;justify-content:flex-end;flex-wrap:wrap}
+.tech-controls label{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;border:1px solid #ddd;background:#fafafa}
+.tech-controls input[type=checkbox]{width:18px;height:18px}
+
+/* 決勝スコア画面：スマホでも「技名／動画／1.5倍／使用」を横並びにする */
+.score-tech-item{
+  display:grid;
+  grid-template-columns:minmax(92px,1fr) auto auto auto;
+  grid-template-areas:
+    "name judge multi use"
+    "cand cand cand cand";
+  align-items:center;
+  gap:8px;
+}
+.score-tech-item .tech-name-cell{min-width:0;grid-area:name;}
+.score-tech-item .tech-title{
+  display:block;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.score-tech-item .tech-pt-label{display:block;margin-top:2px;}
+.score-tech-item .judge-btn{grid-area:judge;}
+.score-tech-item .multi-toggle{grid-area:multi;}
+.score-tech-item .use-toggle{grid-area:use;}
+.score-tech-item .candidate-add-btn{grid-area:cand;}
+
+/* 動画・判定ボタン */
+.judge-btn{
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid #90caf9;
+  background:#e3f2fd;
+  color:#0d47a1;
+  white-space:nowrap;
+}
+.judge-btn:hover{background:#bbdefb}
+.score-tech-item .judge-btn{
+  min-height:38px;
+  padding:6px 10px;
+  font-size:12px;
+}
+
+/* チェックボックスを見せず、ボタン自体の色で選択状態を見せる */
+.toggle-btn{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:6px 12px;
+  border-radius:10px;
+  border:1px solid #d6d6d6;
+  background:#fff;
+  color:#222;
+  font-size:14px;
+  font-weight:700;
+  white-space:nowrap;
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.toggle-btn input[type=checkbox]{
+  position:absolute;
+  opacity:0;
+  width:1px;
+  height:1px;
+  pointer-events:none;
+}
+.toggle-btn.selected{
+  color:#fff;
+  border-color:var(--blue);
+  background:var(--blue);
+  box-shadow:0 0 0 2px rgba(10,132,255,.12);
+}
+.toggle-btn.multi-toggle.selected{
+  border-color:#ff8a00;
+  background:#ff8a00;
+}
+
+/* 予選技選択画面：技名／動画／予選を必ず1行に並べる */
+.pre-tech-item{
+  display:grid;
+  grid-template-columns:minmax(110px,1fr) auto auto;
+  grid-template-areas:
+    "name judge pre"
+    "cand cand cand";
+  align-items:center;
+  gap:8px;
+}
+.pre-tech-item .tech-name-cell{min-width:0;grid-area:name;}
+.pre-tech-item .tech-title{
+  display:block;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.pre-tech-item .tech-pt-label{display:block;margin-top:2px;}
+.pre-tech-item .judge-btn{
+  min-height:38px;
+  padding:6px 10px;
+  font-size:12px;
+  grid-area:judge;
+}
+.pre-tech-item .pre-toggle{grid-area:pre;}
+.pre-tech-item .candidate-add-btn{grid-area:cand;}
+.pre-toggle.selected{
+  color:#fff;
+  border-color:#0a9f5a;
+  background:#0a9f5a;
+  box-shadow:0 0 0 2px rgba(10,159,90,.14);
+}
+
+@media (max-width:430px){
+  .score-tech-item{
+    grid-template-columns:minmax(88px,1fr) auto auto auto;
+    gap:6px;
+    padding:10px 6px;
+  }
+  .score-tech-item .tech-title{font-size:15px;}
+  .score-tech-item .judge-btn{font-size:11px;padding:5px 8px;}
+  .toggle-btn{font-size:13px;padding:5px 9px;}
+  .score-tech-item .candidate-add-btn{
+    font-size:13px;
+    padding:9px 10px;
+  }
+
+  .pre-tech-item{
+    grid-template-columns:minmax(96px,1fr) auto auto;
+    gap:6px;
+    padding:10px 6px;
+  }
+  .pre-tech-item .tech-title{font-size:15px;}
+  .pre-tech-item .judge-btn{font-size:11px;padding:5px 8px;}
+  .pre-tech-item .candidate-add-btn{
+    font-size:13px;
+    padding:9px 10px;
+  }
+}
+
+/* ===== 予選点入力 ===== */
+.pre-box{margin-top:14px;background:#e6f4ff;padding:12px;border-radius:10px;font-size:16px}
+.pre-input{width:96px;padding:7px 9px;font-size:17px;border-radius:8px;border:1px solid #cfcfcf;background:#fff}
+.pre-help{font-size:14px;font-weight:700;color:#366;display:inline-block;margin-left:4px}
+
+.warning{color:#d11;font-weight:700;display:none;font-size:12px;margin:6px 0}
+
+.pre-sum{
+  font-size:20px;
+  font-weight:900;
+  line-height:1.7;
+  margin:14px 0 10px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:#eef7ff;
+  border:2px solid #b9d8ff;
+  color:#003f7f;
+}
+.pre-sum #pre-tech-total{
+  font-size:26px;
+  font-weight:1000;
+  color:#0057b8;
+}
+@media (max-width:420px){
+  .pre-sum{
+    font-size:18px;
+    padding:12px;
+  }
+  .pre-sum #pre-tech-total{
+    font-size:24px;
+  }
+}
+
+.mode-section{display:none}
+.mode-section.active{display:block}
+
+/* ===== 編成リスト ===== */
+.order-box{margin-top:10px;background:#fff;padding:8px;border-radius:10px;border:1px solid #ddd}
+.order-box-title{font-size:13px;margin:4px 4px 6px 4px}
+.order-list{list-style:none;padding:0;margin:0}
+.order-item{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:7px 6px;border-bottom:1px solid #eee;font-size:14px;touch-action:none;
+  background:#fff;
+}
+.drag-handle{
+  width:28px;
+  min-width:28px;
+  height:28px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#eef6ff;
+  color:#0b4aa6;
+  border:1px solid #cfe3ff;
+  font-weight:800;
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+}
+.drag-handle:active{cursor:grabbing}
+.order-name{flex:1;cursor:grab;touch-action:none}
+.order-controls{display:flex;gap:6px}
+.order-btn{font-size:12px;padding:6px 8px;border-radius:8px;border:1px solid #999;background:#f5f5f5}
+.order-btn-del{border-color:#ff6666;background:#ffdddd;color:#a40000}
+.order-btn-move{border-color:var(--blue);background:#e2f0ff;color:#004a99}
+.order-item.dragging,.sortable-ghost{opacity:.55;background:#eaf3ff}
+.sortable-chosen{background:#f6fbff}
+.sortable-drag{box-shadow:0 8px 24px rgba(0,0,0,.18);border-radius:10px}
+
+/* ===== 下部ミニメニュー ===== */
+.mini-nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:180;background:#fff;
+  box-shadow:0 -1px 6px rgba(0,0,0,.15); display:flex; justify-content:space-around; padding:6px 4px
+}
+.mini-btn{
+  flex:1;background:transparent;border:none;font-size:11px;color:#555;
+  display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0
+}
+.mini-btn-icon{font-size:18px}
+.mini-btn.active{color:var(--blue)}
+
+/* ===== トースト ===== */
+.toast{
+  position:fixed;left:50%;bottom:100px;transform:translateX(-50%);
+  background:var(--toast);color:#fff;padding:10px 14px;border-radius:999px;font-size:13px;
+  opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:300
+}
+.toast.show{opacity:.95}
+
+/* ===== しきい値ポップ ===== */
+.pop{animation:pop .25s ease}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+
+/* ===== ツアー ===== */
+.tour{
+  position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:350
+}
+.tour-card{
+  background:#fff; width:min(520px,92vw); border-radius:12px; padding:16px; box-shadow:0 8px 28px rgba(0,0,0,.25)
+}
+.tour-card h3{margin:0 0 8px 0}
+.tour-card ul{margin:8px 0 0 18px; font-size:14px}
+.tour-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.tour-actions button{padding:8px 12px;font-size:14px}
+
+/* ===== プリセットUI ===== */
+.preset-box{
+  margin-top:10px;
+  background:var(--soft);
+  border:1px solid var(--line);
+  padding:10px;
+  border-radius:10px;
+}
+.preset-row{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.preset-row select{
+  padding:6px 8px;
+  font-size:12px;
+  border-radius:8px;
+  border:1px solid #cfd8ea;
+  background:#fff;
+}
+.preset-row input{
+  flex:1;
+  min-width:140px;
+  padding:6px 8px;
+  font-size:12px;
+  border-radius:8px;
+  border:1px solid #cfd8ea;
+  background:#fff;
+}
+.preset-row button{
+  padding:7px 10px;
+  font-size:12px;
+  border-radius:8px;
+  border:1px solid #bcd3ff;
+  background:#fff;
+}
+.preset-hint{
+  font-size:11px;
+  opacity:.7;
+  margin-top:6px;
+}
+
+/* ===== 統合メディアモーダル ===== */
+.media-modal{
+  position:fixed;
+  inset:0;
+  z-index:260;
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.media-overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.4);
+}
+.media-dialog{
+  position:relative;
+  z-index:1;
+  width:min(560px,94vw);
+  max-height:86vh;
+  background:#fff;
+  border-radius:14px;
+  box-shadow:0 10px 28px rgba(0,0,0,.3);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.media-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 12px;
+  border-bottom:1px solid #eee;
+  gap:8px;
+}
+.media-title{
+  font-size:14px;font-weight:800;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.media-pt-chip{
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:#eef6ff;
+  border:1px solid #cfe3ff;
+  font-weight:700;
+}
+#media-close{
+  border:none;background:transparent;font-size:18px;padding:4px 6px;cursor:pointer
+}
+.media-body{
+  padding:0;
+  overflow-y:auto;
+}
+.media-video{
+  padding:10px 12px 0 12px;
+}
+.media-player-shell{
+  border:1px solid #e6e6e6;
+  border-radius:12px;
+  overflow:hidden;
+  background:#000;
+}
+#yt-player{
+  width:100%;
+  aspect-ratio:16/9;
+  background:#000;
+}
+.media-video-actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin:8px 0 10px 0;
+}
+.media-link{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:11px;
+  padding:5px 9px;
+  border-radius:999px;
+  border:1px solid #cfe3ff;
+  background:#f6fbff;
+  color:#0b4aa6;
+  text-decoration:none;
+}
+.media-link:hover{background:#eaf5ff}
+.media-criteria{
+  padding:6px 12px 14px 12px;
+}
+
+/* 判定基準の見やすい整形 */
+.criteria-block{
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:10px;
+  padding:10px;
+  margin:8px 0;
+}
+.criteria-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:6px;
+}
+.criteria-tag{
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:#f1f7ff;
+  border:1px solid #cfe3ff;
+  font-weight:700;
+}
+.criteria-value{
+  font-size:12px;
+  font-weight:700;
+}
+.criteria-section-title{
+  font-size:12px;
+  font-weight:800;
+  padding:4px 0 2px 0;
+  border-top:1px dashed #e6eefb;
+  margin-top:8px;
+}
+.criteria-section-title:first-of-type{
+  border-top:none;margin-top:0;
+}
+.criteria-list{
+  margin:6px 0 0 18px;
+  padding:0;
+  font-size:13px;
+}
+.criteria-note{
+  font-size:11px;
+  opacity:.75;
+  margin-top:4px;
+}
+.criteria-plain{
+  font-size:13px;
+  white-space:pre-wrap;
+}
+.criteria-empty{
+  font-size:12px;
+  opacity:.7;
+}
+
+
+/* ===== 構成画像保存用シート ===== */
+.export-sheet-host{
+  position:fixed;
+  left:-99999px;
+  top:0;
+  width:900px;
+  z-index:-1;
+}
+.export-sheet{
+  width:980px;
+  background:#fff;
+  color:#111;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  border:8px solid var(--blue);
+  border-radius:22px;
+  padding:26px;
+  box-shadow:0 8px 26px rgba(0,0,0,.12);
+}
+.export-sheet h1{
+  font-size:34px;
+  margin:0 0 8px;
+  color:#0057a8;
+}
+.export-sheet .export-subtitle{
+  font-size:18px;
+  font-weight:800;
+  margin-bottom:12px;
+}
+.export-sheet .export-meta{
+  font-size:14px;
+  color:#555;
+  border-bottom:2px solid #e6eefb;
+  padding-bottom:12px;
+  margin-bottom:18px;
+}
+.export-score-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:12px 0 18px;
+}
+.export-score-chip{
+  background:#f1f7ff;
+  border:1px solid #cfe3ff;
+  border-radius:999px;
+  padding:8px 14px;
+  font-size:16px;
+  font-weight:800;
+}
+.export-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+.export-block{
+  border:1px solid #dbeafe;
+  border-radius:14px;
+  padding:14px 16px;
+  background:#fbfdff;
+}
+.export-block h2{
+  font-size:20px;
+  margin:0 0 10px;
+  color:#0b4aa6;
+}
+.export-block ol{
+  margin:0;
+  padding-left:24px;
+}
+.export-block li{
+  font-size:16px;
+  margin:5px 0;
+}
+.export-list{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.export-list.is-two-col{
+  grid-template-columns:1fr 1fr;
+  column-gap:34px;
+  row-gap:8px;
+}
+.export-list-row{
+  display:grid;
+  grid-template-columns:2.5em minmax(0,1fr);
+  align-items:start;
+  gap:4px;
+  break-inside:avoid;
+}
+.export-list-num{
+  text-align:right;
+  font-weight:900;
+  line-height:1.45;
+  white-space:nowrap;
+}
+.export-list-text{
+  min-width:0;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.export-empty{
+  color:#777;
+  font-size:15px;
+}
+.export-footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:18px;
+  margin-top:20px;
+  padding-top:16px;
+  border-top:2px solid #e6eefb;
+}
+.export-qr-area{
+  text-align:center;
+  font-size:12px;
+  color:#555;
+  min-width:132px;
+}
+.export-qr-area canvas, .export-qr-area img{
+  display:block;
+  margin:0 auto 6px;
+}
+.export-note{
+  font-size:14px;
+  color:#555;
+  font-weight:700;
+  line-height:1.6;
+  max-width:620px;
+}
+.export-sheet--a4{
+  width:900px;
+  min-height:1123px;
+  padding:34px 30px;
+}
+.export-sheet--prelim .export-grid,
+.export-sheet--final .export-grid{
+  grid-template-columns:1fr;
+}
+.export-sheet--prelim .export-block,
+.export-sheet--final .export-block{
+  padding:18px 20px;
+}
+.export-sheet--prelim .export-block h2,
+.export-sheet--final .export-block h2{
+  font-size:24px;
+  margin-bottom:12px;
+}
+.export-sheet--prelim .export-block li,
+.export-sheet--final .export-block li{
+  font-size:18px;
+  margin:8px 0;
+}
+.export-sheet--prelim .export-empty,
+.export-sheet--final .export-empty{
+  font-size:18px;
+}
+.export-sheet--prelim .export-footer,
+.export-sheet--final .export-footer{
+  margin-top:28px;
+  align-items:center;
+}
+.export-sheet--prelim .export-note,
+.export-sheet--final .export-note{
+  font-size:16px;
+}
+.export-sheet--prelim .export-score-chip,
+.export-sheet--final .export-score-chip{
+  font-size:18px;
+  padding:10px 16px;
+}
+.export-sheet--prelim .export-qr-area,
+.export-sheet--final .export-qr-area,
+.export-sheet--all .export-qr-area{
+  min-width:160px;
+  font-size:13px;
+}
+.export-sheet--prelim .export-qr-area canvas,
+.export-sheet--prelim .export-qr-area img,
+.export-sheet--final .export-qr-area canvas,
+.export-sheet--final .export-qr-area img,
+.export-sheet--all .export-qr-area canvas,
+.export-sheet--all .export-qr-area img{
+  padding:8px;
+  background:#fff;
+  border:1px solid #d7e6ff;
+  border-radius:10px;
+}
+
+/* ===== 画像保存高速化・30技対応 ===== */
+.export-sheet--all .export-block:first-child ol,
+.export-sheet--final .export-block ol{
+  columns:auto;
+  column-gap:0;
+}
+.export-sheet--all .export-block:first-child li,
+.export-sheet--final .export-block li{
+  break-inside:auto;
+}
+.export-sheet--final .export-block li{
+  font-size:16px;
+  margin:6px 0;
+}
+.export-sheet--final .export-score-row{
+  margin-bottom:14px;
+}
+.export-sheet--final .export-footer{
+  margin-top:22px;
+}
+
+/* ===== 画像書き出し種別選択 ===== */
+.export-choice-modal{
+  position:fixed;
+  inset:0;
+  z-index:430;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.48);
+  padding:14px;
+}
+.export-choice-dialog{
+  width:min(520px,96vw);
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 16px 40px rgba(0,0,0,.28);
+  overflow:hidden;
+}
+.export-choice-header{
+  padding:14px 16px;
+  border-bottom:1px solid #e6eefb;
+}
+.export-choice-header h3{
+  margin:0 0 4px;
+  font-size:20px;
+}
+.export-choice-header p{
+  margin:0;
+  color:#555;
+  font-size:14px;
+}
+.export-choice-body{
+  padding:14px;
+  display:grid;
+  gap:10px;
+}
+.export-choice-btn{
+  width:100%;
+  text-align:left;
+  border:1px solid #cfe3ff;
+  background:#f7fbff;
+  border-radius:14px;
+  padding:14px 16px;
+  cursor:pointer;
+}
+.export-choice-btn strong{
+  display:block;
+  font-size:17px;
+  margin-bottom:4px;
+  color:#0b4aa6;
+}
+.export-choice-btn span{
+  display:block;
+  font-size:13px;
+  color:#555;
+  line-height:1.6;
+}
+.export-choice-actions{
+  padding:0 14px 14px;
+}
+.export-choice-close{
+  width:100%;
+  border:none;
+  background:#555;
+  color:#fff;
+  border-radius:12px;
+  padding:12px 14px;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+
+
+/* ===== A4全面利用・共有URL短縮対応 ===== */
+.export-sheet--a4 .export-grid{
+  width:100%;
+}
+.export-sheet--final .export-block--main li,
+.export-sheet--prelim .export-block--main li,
+.export-sheet--all .export-block--main li{
+  letter-spacing:.01em;
+}
+
+/* ===== 画像保存レイアウト最適化 ===== */
+.export-sheet .export-footer{
+  margin-top:18px;
+  padding-top:14px;
+  align-items:flex-end;
+  gap:12px;
+}
+.export-sheet .export-note{
+  font-size:13px;
+  line-height:1.55;
+  max-width:560px;
+}
+.export-sheet .export-qr-area{
+  min-width:104px !important;
+  font-size:11px !important;
+  gap:6px;
+}
+.export-sheet .export-qr-area canvas,
+.export-sheet .export-qr-area img{
+  width:92px !important;
+  height:92px !important;
+  padding:6px !important;
+  background:#fff !important;
+  border:1px solid #d7e6ff !important;
+  border-radius:8px !important;
+}
+.export-sheet.export-sheet--final .export-grid,
+.export-sheet.export-sheet--all .export-grid{
+  gap:12px;
+}
+.export-sheet.export-sheet--final .export-block--main,
+.export-sheet.export-sheet--all .export-block--main{
+  padding:20px 22px;
+}
+.export-sheet.export-sheet--final .export-block--main h2,
+.export-sheet.export-sheet--all .export-block--main h2{
+  font-size:30px;
+  margin-bottom:14px;
+}
+.export-sheet.export-sheet--final .export-block--main ol,
+.export-sheet.export-sheet--all .export-block--main ol{
+  padding-left:30px;
+}
+.export-sheet.export-sheet--final .export-block--main li,
+.export-sheet.export-sheet--all .export-block--main li{
+  font-size:19px;
+  line-height:1.55;
+  margin:7px 0;
+}
+.export-sheet.export-sheet--final .export-block--candidate,
+.export-sheet.export-sheet--all .export-block--candidate{
+  padding:14px 16px;
+  background:#fbfcff;
+}
+.export-sheet.export-sheet--final .export-block--candidate h2,
+.export-sheet.export-sheet--all .export-block--candidate h2{
+  font-size:20px;
+  margin-bottom:10px;
+}
+.export-sheet.export-sheet--final .export-block--candidate ol,
+.export-sheet.export-sheet--all .export-block--candidate ol{
+  padding-left:24px;
+}
+.export-sheet.export-sheet--final .export-block--candidate li,
+.export-sheet.export-sheet--all .export-block--candidate li{
+  font-size:15px;
+  line-height:1.4;
+  margin:5px 0;
+}
+.export-sheet.export-sheet--prelim .export-block--candidate{
+  padding:14px 16px;
+  background:#fbfcff;
+}
+.export-sheet.export-sheet--prelim .export-block--candidate h2{
+  font-size:20px;
+}
+.export-sheet.export-sheet--prelim .export-block--candidate li{
+  font-size:15px;
+  line-height:1.4;
+  margin:5px 0;
+}
+
+
+.export-sheet.export-sheet--final .export-block--main .export-list,
+.export-sheet.export-sheet--all .export-block--main .export-list,
+.export-sheet.export-sheet--prelim .export-block--main .export-list{
+  gap:10px;
+}
+.export-sheet.export-sheet--final .export-block--main .export-list.is-two-col,
+.export-sheet.export-sheet--all .export-block--main .export-list.is-two-col{
+  column-gap:42px;
+}
+.export-sheet.export-sheet--final .export-block--main .export-list-row,
+.export-sheet.export-sheet--all .export-block--main .export-list-row,
+.export-sheet.export-sheet--prelim .export-block--main .export-list-row{
+  grid-template-columns:2.8em minmax(0,1fr);
+  gap:6px;
+}
+.export-sheet.export-sheet--final .export-block--main .export-list-text,
+.export-sheet.export-sheet--all .export-block--main .export-list-text,
+.export-sheet.export-sheet--prelim .export-block--main .export-list-text{
+  font-size:19px;
+  line-height:1.5;
+}
+.export-sheet.export-sheet--final .export-block--main .export-list-num,
+.export-sheet.export-sheet--all .export-block--main .export-list-num,
+.export-sheet.export-sheet--prelim .export-block--main .export-list-num{
+  font-size:18px;
+  line-height:1.5;
+}
+.export-sheet.export-sheet--final .export-block--candidate .export-list,
+.export-sheet.export-sheet--all .export-block--candidate .export-list,
+.export-sheet.export-sheet--prelim .export-block--candidate .export-list{
+  gap:6px;
+}
+.export-sheet.export-sheet--final .export-block--candidate .export-list-row,
+.export-sheet.export-sheet--all .export-block--candidate .export-list-row,
+.export-sheet.export-sheet--prelim .export-block--candidate .export-list-row{
+  grid-template-columns:2.2em minmax(0,1fr);
+  gap:4px;
+}
+.export-sheet.export-sheet--final .export-block--candidate .export-list-text,
+.export-sheet.export-sheet--all .export-block--candidate .export-list-text,
+.export-sheet.export-sheet--prelim .export-block--candidate .export-list-text{
+  font-size:15px;
+  line-height:1.35;
+}
+.export-sheet.export-sheet--final .export-block--candidate .export-list-num,
+.export-sheet.export-sheet--all .export-block--candidate .export-list-num,
+.export-sheet.export-sheet--prelim .export-block--candidate .export-list-num{
+  font-size:14px;
+  line-height:1.35;
+}
+
+/* ===== 画像保存プレビュー ===== */
+.image-save-modal{
+  position:fixed;
+  inset:0;
+  z-index:420;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.5);
+  padding:14px;
+}
+.image-save-dialog{
+  width:min(680px,96vw);
+  max-height:92vh;
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 14px 40px rgba(0,0,0,.32);
+  display:flex;
+  flex-direction:column;
+}
+.image-save-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  border-bottom:1px solid #e6eefb;
+  font-weight:800;
+}
+.image-save-body{
+  padding:12px;
+  overflow:auto;
+}
+.image-save-body img{
+  display:block;
+  width:100%;
+  height:auto;
+  border:1px solid #dbeafe;
+  border-radius:12px;
+  background:#fff;
+}
+.image-save-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:12px;
+  border-top:1px solid #e6eefb;
+}
+.image-save-actions button,
+.image-save-actions a{
+  flex:1;
+  min-width:130px;
+  text-align:center;
+  text-decoration:none;
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:15px;
+  font-weight:800;
+}
+.image-save-primary{background:var(--blue);color:#fff}
+.image-save-secondary{background:#eef6ff;color:#0b4aa6;border:1px solid #cfe3ff}
+.image-save-close{background:#555;color:#fff}
+.image-save-note{
+  font-size:13px;
+  color:#555;
+  line-height:1.6;
+  padding:0 12px 10px;
+}
+
+
+.candidate-box{
+  border:2px solid #f2b84b;
+  background:#fff7e6;
+  box-shadow:0 2px 10px rgba(242,184,75,.18);
+}
+.candidate-box .order-box-title{
+  color:#9a5a00;
+}
+.candidate-box .order-list{
+  background:#fffdf7;
+  border-radius:12px;
+}
+.candidate-box .order-item{
+  background:#fffaf0;
+  border-color:#f4d28a;
+}
+.candidate-note{
+  font-size:12px;
+  color:#466;
+  margin-top:4px;
+}
+.inline-warning{
+  display:none;
+  margin:10px 0 0;
+}
+.candidate-add-btn{
+  border:1px solid #90caf9;
+  background:#eef6ff;
+  color:#0b4aa6;
+  padding:10px 12px;
+  border-radius:12px;
+  font-weight:900;
+  cursor:pointer;
+  white-space:normal;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  line-height:1.25;
+  text-align:center;
+}
+.candidate-add-btn::before{
+  content:"＋";
+  font-size:15px;
+  font-weight:900;
+}
+.candidate-add-btn:hover{filter:brightness(.98)}
+.candidate-add-btn:active{transform:translateY(1px)}
+.order-btn-cand{
+  background:#eef6ff;
+  color:#0b4aa6;
+}
+.order-btn-main{
+  background:#dff7e8;
+  color:#10693a;
+}
+.order-btn-round{
+  background:#f2e8ff;
+  color:#6b2dbd;
+}
+.candidate-sort-btn{
+  width:100%;
+  margin-top:8px;
+  border:1px solid #b9d8ff;
+  background:#fff;
+  color:#0b4aa6;
+  padding:9px 12px;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+}
+.candidate-sort-btn:hover{background:#eef6ff}
+@media (max-width:640px){
+  .candidate-add-btn{padding:9px 10px;font-size:13px}
+}
+
+
+
+/* ===== 規定技数超過アラート ===== */
+.limit-over{
+  color:#d60000 !important;
+  font-weight:900 !important;
+  background:#fff1f1;
+  border:1px solid #ffb3b3;
+  border-radius:999px;
+  padding:2px 8px;
+  display:inline-block;
+}
+
+/* ===== 下部メニュー：アイコン削除後の見やすさ調整 ===== */
+.mini-nav{
+  gap:8px;
+  padding:9px 10px calc(9px + env(safe-area-inset-bottom));
+  justify-content:space-between;
+  align-items:center;
+}
+.mini-btn{
+  min-height:46px;
+  padding:10px 8px;
+  font-size:16px;
+  font-weight:900;
+  line-height:1.15;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.mini-btn span{
+  display:block;
+  width:100%;
+}
+@media (max-width:420px){
+  .mini-nav{
+    gap:6px;
+    padding-left:6px;
+    padding-right:6px;
+  }
+  .mini-btn{
+    font-size:15px;
+    padding:10px 6px;
+    min-height:44px;
+  }
+}
+
+
+/* ===== v1.27 ボタン配置・決勝編成1.5倍調整 ===== */
+.use-toggle,
+.pre-toggle{
+  background:#eefaf3;
+  border-color:#9bd5b5;
+  color:#075f32;
+}
+.use-toggle.selected,
+.pre-toggle.selected{
+  background:#0a9f5a;
+  border-color:#0a9f5a;
+  color:#fff;
+}
+.multi-toggle{
+  background:#fff7e8;
+  border-color:#ffc56d;
+  color:#8a4b00;
+}
+.multi-toggle.selected{
+  background:#ff8a00;
+  border-color:#ff8a00;
+  color:#fff;
+}
+.final-multi-btn{
+  background:#fff7e8;
+  color:#8a4b00;
+  border:1px solid #ffc56d;
+  font-weight:900;
+}
+.final-multi-btn.selected{
+  background:#ff8a00;
+  color:#fff;
+  border-color:#ff8a00;
+}
+.final-multi-btn::after{
+  content:"";
+}
+#finals-list .order-controls{
+  gap:6px;
+}
+#finals-list .order-btn{
+  min-height:34px;
+}
+@media (max-width:430px){
+  .score-tech-item{
+    grid-template-columns:minmax(95px,1fr) auto auto;
+    grid-template-areas:
+      "name judge use"
+      "cand cand multi";
+  }
+  .score-tech-item .multi-toggle{
+    width:100%;
+    min-height:36px;
+  }
+  .score-tech-item .use-toggle{
+    min-width:58px;
+  }
+  .pre-tech-item{
+    grid-template-columns:minmax(96px,1fr) auto auto;
+    grid-template-areas:
+      "name judge pre"
+      "cand cand cand";
+  }
+}
+
+
+/* ===== v1.29 決勝画面1.5倍は選択時オレンジ、決勝編成側も選択状態を明確化 ===== */
+.score-tech-item .multi-toggle{
+  background:#fff !important;
+  border-color:#d6d6d6 !important;
+  color:#222 !important;
+  box-shadow:none !important;
+}
+.score-tech-item .multi-toggle.selected{
+  background:#ff8a00 !important;
+  border-color:#ff8a00 !important;
+  color:#fff !important;
+  box-shadow:0 0 0 2px rgba(255,138,0,.16) !important;
+}
+.finals-multi-on{
+  background:#fff4df !important;
+  border-color:#ff9f1a !important;
+}
+.finals-multi-on .final-multi-btn{
+  background:#ff8a00 !important;
+  color:#fff !important;
+  border-color:#ff8a00 !important;
+  box-shadow:0 0 0 2px rgba(255,138,0,.16);
+}
+.finals-multi-on .order-name::after{
+  content:"  1.5倍";
+  display:inline-block;
+  margin-left:6px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:#ff8a00;
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  vertical-align:middle;
+}
+
+
+/* ===== v1.30 決勝画面ボタン配置調整 ===== */
+.score-tech-item{
+  grid-template-columns:minmax(98px,1fr) auto auto minmax(64px,74px) !important;
+  grid-template-areas:"name judge multi use" !important;
+  column-gap:6px;
+  row-gap:4px;
+}
+.score-tech-item .use-toggle{
+  min-width:68px;
+  min-height:44px;
+  padding:7px 10px;
+  font-size:15px;
+  font-weight:1000;
+}
+.score-tech-item .candidate-add-btn{
+  grid-area:auto !important;
+  width:auto;
+  min-width:54px;
+  min-height:34px;
+  padding:5px 7px;
+  font-size:12px;
+  line-height:1.15;
+  border-radius:9px;
+  align-self:center;
+  white-space:normal;
+}
+.score-tech-item .candidate-add-btn::before{
+  content:"";
+}
+.score-tech-item .candidate-add-btn span{
+  display:inline;
+}
+.score-tech-item .judge-btn,
+.score-tech-item .multi-toggle{
+  min-height:36px;
+}
+.score-tech-item .multi-toggle{
+  padding:5px 8px;
+  font-size:13px;
+}
+@media (max-width:430px){
+  .score-tech-item{
+    grid-template-columns:minmax(82px,1fr) auto auto minmax(58px,66px) !important;
+    grid-template-areas:"name judge multi use" !important;
+    gap:5px;
+    padding:8px 5px;
+  }
+  .score-tech-item .tech-title{
+    font-size:14px;
+    line-height:1.25;
+  }
+  .score-tech-item .tech-pt-label{
+    font-size:11px;
+  }
+  .score-tech-item .judge-btn{
+    min-height:34px;
+    padding:4px 6px;
+    font-size:10px;
+  }
+  .score-tech-item .multi-toggle{
+    width:auto;
+    min-height:34px;
+    padding:4px 6px;
+    font-size:12px;
+  }
+  .score-tech-item .use-toggle{
+    min-width:58px;
+    min-height:40px;
+    padding:5px 8px;
+    font-size:15px;
+  }
+  .score-tech-item .candidate-add-btn{
+    min-width:48px;
+    min-height:32px;
+    padding:4px 5px;
+    font-size:11px;
+  }
+}
+@media (max-width:370px){
+  .score-tech-item{
+    grid-template-columns:minmax(76px,1fr) auto auto minmax(54px,60px) !important;
+    gap:4px;
+  }
+  .score-tech-item .judge-btn{
+    font-size:10px;
+    padding:4px 5px;
+  }
+  .score-tech-item .multi-toggle{
+    font-size:11px;
+    padding:4px 5px;
+  }
+  .score-tech-item .use-toggle{
+    min-width:54px;
+    font-size:14px;
+    padding:5px 6px;
+  }
+  .score-tech-item .candidate-add-btn{
+    min-width:44px;
+    font-size:10px;
+  }
+}
+
+
+/* ===== v1.31 決勝画面：候補ボタン小型化・行区切り調整 ===== */
+.score-tech-item{
+  border-top:1px solid #e5eef8;
+  border-bottom:1px solid #e5eef8;
+  border-left:1px solid transparent;
+  border-right:1px solid transparent;
+  border-radius:8px;
+  grid-template-columns:minmax(88px,1fr) minmax(40px,46px) auto minmax(58px,68px) auto !important;
+  grid-template-areas:"name cand multi use judge" !important;
+  column-gap:5px;
+  row-gap:0;
+}
+.score-tech-item + .score-tech-item{
+  margin-top:4px;
+}
+.score-tech-item .candidate-add-btn{
+  grid-area:cand !important;
+  width:100%;
+  min-width:40px;
+  max-width:46px;
+  min-height:30px;
+  padding:3px 4px;
+  font-size:10px;
+  line-height:1.05;
+  border-radius:8px;
+  font-weight:900;
+  background:#f7fbff;
+  border:1px solid #cfe3ff;
+  color:#0b4aa6;
+}
+.score-tech-item .judge-btn{
+  justify-self:end;
+  min-height:34px;
+  padding:4px 7px;
+  font-size:11px;
+}
+.score-tech-item .multi-toggle{
+  min-height:34px;
+  padding:4px 7px;
+  font-size:12px;
+}
+.score-tech-item .use-toggle{
+  min-height:40px;
+  min-width:62px;
+  padding:5px 8px;
+  font-size:15px;
+}
+@media (max-width:430px){
+  .score-tech-item{
+    grid-template-columns:minmax(78px,1fr) minmax(36px,42px) auto minmax(56px,64px) auto !important;
+    grid-template-areas:"name cand multi use judge" !important;
+    gap:4px;
+    padding:8px 5px;
+  }
+  .score-tech-item .candidate-add-btn{
+    min-width:36px;
+    max-width:42px;
+    min-height:28px;
+    padding:3px 3px;
+    font-size:9.5px;
+  }
+  .score-tech-item .judge-btn{
+    min-height:32px;
+    padding:4px 5px;
+    font-size:10px;
+  }
+  .score-tech-item .multi-toggle{
+    min-height:32px;
+    padding:4px 5px;
+    font-size:11px;
+  }
+  .score-tech-item .use-toggle{
+    min-width:56px;
+    min-height:38px;
+    padding:5px 6px;
+    font-size:14px;
+  }
+}
+@media (max-width:370px){
+  .score-tech-item{
+    grid-template-columns:minmax(70px,1fr) minmax(34px,38px) auto minmax(52px,58px) auto !important;
+    gap:3px;
+  }
+  .score-tech-item .candidate-add-btn{
+    min-width:34px;
+    max-width:38px;
+    font-size:9px;
+  }
+  .score-tech-item .judge-btn{
+    font-size:9.5px;
+    padding:3px 4px;
+  }
+  .score-tech-item .multi-toggle{
+    font-size:10.5px;
+    padding:3px 4px;
+  }
+  .score-tech-item .use-toggle{
+    min-width:52px;
+    font-size:13.5px;
+  }
+}
+
+
+/* ===== v1.32 決勝画面：動画判定・候補・1.5倍・使用の順に配置 ===== */
+.score-tech-item{
+  grid-template-columns:minmax(80px,1fr) auto minmax(36px,42px) auto minmax(56px,66px) !important;
+  grid-template-areas:"name judge cand multi use" !important;
+  column-gap:5px;
+}
+.score-tech-item .judge-btn{
+  grid-area:judge !important;
+  justify-self:end;
+}
+.score-tech-item .candidate-add-btn{
+  grid-area:cand !important;
+}
+.score-tech-item .multi-toggle{
+  grid-area:multi !important;
+}
+.score-tech-item .use-toggle{
+  grid-area:use !important;
+}
+@media (max-width:430px){
+  .score-tech-item{
+    grid-template-columns:minmax(70px,1fr) auto minmax(34px,40px) auto minmax(54px,62px) !important;
+    grid-template-areas:"name judge cand multi use" !important;
+    gap:4px;
+  }
+}
+@media (max-width:370px){
+  .score-tech-item{
+    grid-template-columns:minmax(64px,1fr) auto minmax(32px,36px) auto minmax(50px,56px) !important;
+    grid-template-areas:"name judge cand multi use" !important;
+    gap:3px;
+  }
+}
+
+
+/* ===== v1.33 プリセット導線・重要表示 ===== */
+.preset-important{
+  margin-top:18px;
+  padding:14px;
+  border-width:2px;
+  border-radius:16px;
+  box-shadow:0 5px 16px rgba(0,0,0,.08);
+  scroll-margin-top:118px;
+}
+.preset-finals-important{
+  background:#f4f0ff;
+  border-color:#9b7cff;
+}
+.preset-prelims-important{
+  background:#eefaf3;
+  border-color:#79d79f;
+}
+.preset-heading{
+  font-size:20px;
+  font-weight:1000;
+  line-height:1.2;
+  margin:0 0 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.preset-finals-important .preset-heading{color:#4b2dcc;}
+.preset-prelims-important .preset-heading{color:#075f32;}
+.preset-heading::before{
+  content:"重要";
+  font-size:12px;
+  font-weight:1000;
+  color:#fff;
+  padding:3px 8px;
+  border-radius:999px;
+}
+.preset-finals-important .preset-heading::before{background:#6b4eff;}
+.preset-prelims-important .preset-heading::before{background:#0a9f5a;}
+.preset-important .preset-row select,
+.preset-important .preset-row input{
+  font-size:15px;
+  padding:9px 10px;
+}
+.preset-important .preset-row button{
+  font-size:15px;
+  font-weight:900;
+  padding:10px 13px;
+  border-radius:10px;
+}
+.preset-important .preset-hint{
+  font-size:13px;
+  opacity:.9;
+  font-weight:700;
+  margin-top:8px;
+}
+@media (max-width:430px){
+  .preset-important{
+    padding:13px;
+    border-radius:14px;
+  }
+  .preset-heading{
+    font-size:19px;
+  }
+  .preset-important .preset-row{
+    gap:8px;
+  }
+  .preset-important .preset-row select,
+  .preset-important .preset-row input{
+    font-size:15px;
+    padding:10px;
+  }
+  .preset-important .preset-row button{
+    flex:1;
+    min-width:82px;
+    font-size:16px;
+    padding:11px 12px;
+  }
+}
+
+
+/* ===== v1.35 使いやすさ・整理改善 ===== */
+.save-status{
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  max-width:100%;
+  padding:3px 9px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  line-height:1.3;
+  border:1px solid rgba(0,0,0,.08);
+  background:#fff;
+  color:#075f32;
+}
+.save-status.is-dirty{
+  background:#fff4df;
+  color:#9a5a00;
+  border-color:#ffc56d;
+}
+.save-status.is-clean{
+  background:#eefaf3;
+  color:#075f32;
+  border-color:#9bd5b5;
+}
+.current-mode-box{
+  margin:6px 0 10px;
+  padding:9px 12px;
+  border-radius:12px;
+  background:#fff;
+  border:2px solid #cfe3ff;
+  color:#0b4aa6;
+  font-size:16px;
+  font-weight:1000;
+  box-shadow:0 2px 8px rgba(10,132,255,.08);
+}
+.flow-box{
+  margin:10px 0 12px;
+  padding:12px;
+  border-radius:14px;
+  background:#fff;
+  border:2px solid #cfe3ff;
+  box-shadow:0 3px 10px rgba(10,132,255,.08);
+}
+.flow-title{
+  font-size:17px;
+  font-weight:1000;
+  color:#0b4aa6;
+  margin-bottom:8px;
+}
+.flow-steps{
+  display:grid;
+  gap:6px;
+}
+.flow-steps span{
+  display:block;
+  background:#f6fbff;
+  border:1px solid #dbeafe;
+  border-radius:10px;
+  padding:7px 9px;
+  font-size:13px;
+  font-weight:800;
+}
+.primary-flow-btn{
+  background:linear-gradient(135deg,#0a84ff,#0060c9);
+  color:#fff;
+  width:100%;
+  padding:14px 12px;
+  border-radius:14px;
+  font-size:17px;
+  font-weight:1000;
+  box-shadow:0 6px 14px rgba(10,132,255,.22);
+}
+.primary-flow-btn.is-attention{
+  animation:flowPulse 1.4s ease-in-out infinite;
+}
+@keyframes flowPulse{
+  0%,100%{box-shadow:0 6px 14px rgba(10,132,255,.22);}
+  50%{box-shadow:0 6px 22px rgba(10,132,255,.48);}
+}
+.preset-summary{
+  background:#fff;
+  border:1px dashed rgba(0,0,0,.18);
+  border-radius:12px;
+  padding:8px 10px;
+  margin:0 0 10px;
+  font-size:14px;
+  font-weight:900;
+  line-height:1.45;
+}
+.preset-finals-important .preset-summary{color:#4b2dcc;}
+.preset-prelims-important .preset-summary{color:#075f32;}
+.export-choice-header h3{
+  font-size:22px;
+}
+.export-choice-header p{
+  font-size:15px;
+  line-height:1.6;
+}
+.export-choice-btn{
+  padding:16px 17px;
+}
+.export-choice-btn strong{
+  font-size:19px;
+}
+.export-choice-btn span{
+  font-size:14px;
+}
+@media (max-width:430px){
+  .current-mode-box{font-size:15px;padding:8px 10px;}
+  .flow-steps{grid-template-columns:1fr;}
+  .primary-flow-btn{font-size:16px;}
+}
+
+
+/* ===== v1.36 予選選択画面：候補ボタン小型化・技間の罫線 ===== */
+.pre-tech-item{
+  border-top:1px solid #e5eef8;
+  border-bottom:1px solid #e5eef8;
+  border-left:1px solid transparent;
+  border-right:1px solid transparent;
+  border-radius:8px;
+  grid-template-columns:minmax(100px,1fr) auto minmax(42px,50px) auto !important;
+  grid-template-areas:"name judge cand pre" !important;
+  column-gap:6px;
+  row-gap:0;
+}
+.pre-tech-item + .pre-tech-item{
+  margin-top:4px;
+}
+.pre-tech-item .candidate-add-btn{
+  grid-area:cand !important;
+  width:100%;
+  min-width:42px;
+  max-width:50px;
+  min-height:30px;
+  padding:3px 4px;
+  font-size:10px;
+  line-height:1.05;
+  border-radius:8px;
+  font-weight:900;
+  background:#f7fbff;
+  border:1px solid #cfe3ff;
+  color:#0b4aa6;
+}
+.pre-tech-item .candidate-add-btn::before{
+  content:"";
+}
+.pre-tech-item .judge-btn{
+  grid-area:judge !important;
+  justify-self:end;
+  min-height:34px;
+  padding:4px 7px;
+  font-size:11px;
+}
+.pre-tech-item .pre-toggle{
+  grid-area:pre !important;
+  min-width:58px;
+  min-height:38px;
+  padding:5px 8px;
+  font-size:14px;
+  font-weight:900;
+}
+@media (max-width:430px){
+  .pre-tech-item{
+    grid-template-columns:minmax(82px,1fr) auto minmax(36px,42px) minmax(54px,62px) !important;
+    grid-template-areas:"name judge cand pre" !important;
+    gap:4px;
+    padding:8px 5px;
+  }
+  .pre-tech-item .tech-title{
+    font-size:14px;
+    line-height:1.25;
+  }
+  .pre-tech-item .tech-pt-label{
+    font-size:11px;
+  }
+  .pre-tech-item .candidate-add-btn{
+    min-width:36px;
+    max-width:42px;
+    min-height:28px;
+    padding:3px 3px;
+    font-size:9.5px;
+  }
+  .pre-tech-item .judge-btn{
+    min-height:32px;
+    padding:4px 5px;
+    font-size:10px;
+  }
+  .pre-tech-item .pre-toggle{
+    min-width:54px;
+    min-height:36px;
+    padding:5px 6px;
+    font-size:13.5px;
+  }
+}
+@media (max-width:370px){
+  .pre-tech-item{
+    grid-template-columns:minmax(72px,1fr) auto minmax(34px,38px) minmax(50px,56px) !important;
+    gap:3px;
+  }
+  .pre-tech-item .candidate-add-btn{
+    min-width:34px;
+    max-width:38px;
+    font-size:9px;
+  }
+  .pre-tech-item .judge-btn{
+    font-size:9.5px;
+    padding:3px 4px;
+  }
+  .pre-tech-item .pre-toggle{
+    min-width:50px;
+    font-size:13px;
+    padding:4px 5px;
+  }
+}
+
+
+/* ===== v1.37 決勝編成スクロール・予想技 ===== */
+html{
+  scroll-behavior:smooth;
+}
+#mode-finals .order-list,
+#mode-prelims .order-list{
+  max-height:58vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scroll-behavior:smooth;
+}
+#mode-finals .order-list::-webkit-scrollbar,
+#mode-prelims .order-list::-webkit-scrollbar{
+  width:8px;
+}
+#mode-finals .order-list::-webkit-scrollbar-thumb,
+#mode-prelims .order-list::-webkit-scrollbar-thumb{
+  background:#b9d8ff;
+  border-radius:999px;
+}
+.predict-box{
+  margin:12px 0;
+  padding:12px;
+  border-radius:14px;
+  background:#fffdf4;
+  border:2px solid #f4d28a;
+  box-shadow:0 3px 10px rgba(154,90,0,.08);
+}
+.predict-title{
+  font-size:17px;
+  font-weight:1000;
+  color:#9a5a00;
+  margin-bottom:4px;
+}
+.predict-note{
+  margin:0 0 8px;
+  font-size:12px;
+  line-height:1.5;
+  color:#6c4a00;
+  font-weight:700;
+}
+.predict-form{
+  display:grid;
+  grid-template-columns:86px 1fr auto;
+  gap:7px;
+  align-items:center;
+}
+.predict-form select,
+.predict-form input{
+  min-height:38px;
+  border:1px solid #d8c38a;
+  border-radius:10px;
+  padding:7px 9px;
+  font-size:14px;
+  background:#fff;
+}
+.predict-form button{
+  min-height:38px;
+  padding:7px 12px;
+  border-radius:10px;
+  background:#9a5a00;
+  color:#fff;
+  font-weight:1000;
+}
+.predict-count{
+  margin-top:8px;
+  font-size:12px;
+  font-weight:900;
+  color:#6c4a00;
+}
+.predict-list{
+  list-style:none;
+  padding:0;
+  margin:8px 0 0;
+  display:grid;
+  gap:6px;
+  max-height:210px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.predict-item{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:6px;
+  align-items:center;
+  padding:7px 8px;
+  border-radius:10px;
+  background:#fffaf0;
+  border:1px solid #f4d28a;
+}
+.predict-name{
+  font-size:13px;
+  font-weight:900;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.predict-actions{
+  display:flex;
+  gap:5px;
+}
+.predict-actions button{
+  padding:5px 8px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:900;
+}
+.predict-add-final{
+  background:#0a84ff;
+  color:#fff;
+}
+.predict-del{
+  background:#fff;
+  color:#a00000;
+  border:1px solid #ffc2c2;
+}
+@media (max-width:430px){
+  #mode-finals .order-list,
+  #mode-prelims .order-list{
+    max-height:54vh;
+  }
+  .predict-form{
+    grid-template-columns:74px 1fr auto;
+    gap:5px;
+  }
+  .predict-form select,
+  .predict-form input{
+    font-size:13px;
+    padding:6px 7px;
+  }
+  .predict-form button{
+    padding:6px 9px;
+    font-size:13px;
+  }
+}
+
+
+/* ===== v1.38 予想技の視認性強化 ===== */
+.order-item.is-predicted{
+  background:#fff5f5 !important;
+  border:1px solid #ffb3b3 !important;
+}
+.order-item.is-predicted .order-name{
+  color:#d60000 !important;
+  font-weight:1000;
+}
+.order-item.is-predicted .order-name::after{
+  content:"  予想技";
+  display:inline-block;
+  margin-left:6px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:#d60000;
+  color:#fff;
+  font-size:11px;
+  font-weight:1000;
+  vertical-align:middle;
+}
+.predict-item .predict-name{
+  color:#d60000;
+}
+.export-list-row.is-predicted .export-list-text{
+  color:#d60000;
+  font-weight:900;
+}
+.export-list-row.is-predicted .export-list-text::after{
+  content:"　予想技";
+  display:inline-block;
+  margin-left:6px;
+  padding:1px 6px;
+  border-radius:999px;
+  background:#d60000;
+  color:#fff;
+  font-size:11px;
+  font-weight:900;
+}
+
+
+.order-item.is-predicted.finals-multi-on .order-name::after{
+  content:"  予想技 / 1.5倍";
+  background:#d60000;
+  color:#fff;
+}
+
+
+/* ===== v1.40 決勝編成欄は全技一覧表示 ===== */
+#finals-list.order-list{
+  max-height:none !important;
+  overflow-y:visible !important;
+  scrollbar-width:auto !important;
+}
+#finals-list.order-list::-webkit-scrollbar{
+  display:none;
+}
+
+
+/* ===== v1.41 スタート時タイトル表示改善 ===== */
+body{
+  padding-top:154px !important;
+}
+h1{
+  margin-top:14px !important;
+  margin-bottom:12px !important;
+  padding:10px 12px;
+  border-radius:14px;
+  background:#fff;
+  border:2px solid #cfe3ff;
+  box-shadow:0 3px 10px rgba(10,132,255,.08);
+  color:#073b7a;
+}
+@media (max-width:430px){
+  body{
+    padding-top:166px !important;
+  }
+  h1{
+    font-size:22px;
+    line-height:1.35;
+    padding:10px;
+  }
+}
+
+
+/* ===== v1.42 画像保存の技順を編成順に統一 ===== */
+.export-list.is-two-col{
+  grid-template-columns:1fr !important;
+  column-gap:0 !important;
+}
+
+
+/* ===== v1.43 画像保存：決勝構成は2列表示＋中央罫線 ===== */
+.export-list--finals-two-col.export-list.is-two-col,
+.export-list.export-list--finals-two-col.is-two-col{
+  position:relative;
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  column-gap:22px !important;
+  align-items:start;
+  padding:0 8px;
+  background-image:linear-gradient(
+    to right,
+    transparent calc(50% - 0.5px),
+    #d9e4f2 calc(50% - 0.5px),
+    #d9e4f2 calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  );
+  background-repeat:no-repeat;
+  background-size:100% 100%;
+}
+.export-list--finals-two-col .export-col{
+  display:grid;
+  gap:6px;
+  align-content:start;
+}
+@media (max-width:430px){
+  .export-list--finals-two-col.export-list.is-two-col,
+  .export-list.export-list--finals-two-col.is-two-col{
+    column-gap:16px !important;
+    padding:0 6px;
+  }
+}
+
+
+/* ===== v1.45 画像保存：技背景の影・グレー感を除去 ===== */
+.export-sheet{
+  background:#fff !important;
+  box-shadow:none !important;
+}
+.export-block{
+  background:#fff !important;
+}
+.export-list,
+.export-list-row,
+.export-list-text,
+.export-list-num,
+.export-col,
+.export-list--finals-two-col{
+  background:#fff !important;
+  box-shadow:none !important;
+}
+.export-list--finals-two-col.export-list.is-two-col,
+.export-list.export-list--finals-two-col.is-two-col{
+  background-image:linear-gradient(
+    to right,
+    transparent calc(50% - 0.5px),
+    #d9e4f2 calc(50% - 0.5px),
+    #d9e4f2 calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  ) !important;
+  background-color:#fff !important;
+}
+
+
+/* ===== v1.46 決勝構成画像：中央罫線・影・グレー感を完全削除 ===== */
+.export-sheet,
+.export-block,
+.export-list,
+.export-list-row,
+.export-list-text,
+.export-list-num,
+.export-col,
+.export-list--finals-two-col,
+.export-list--finals-two-col.export-list.is-two-col,
+.export-list.export-list--finals-two-col.is-two-col{
+  background:#fff !important;
+  background-image:none !important;
+  box-shadow:none !important;
+  filter:none !important;
+}
+
+.export-list--finals-two-col.export-list.is-two-col,
+.export-list.export-list--finals-two-col.is-two-col{
+  column-gap:22px !important;
+}
+
+@media (max-width:430px){
+  .export-list--finals-two-col.export-list.is-two-col,
+  .export-list.export-list--finals-two-col.is-two-col{
+    column-gap:16px !important;
+  }
+}
+
+
+/* ===== v1.47 画像保存：候補/予想技を非印刷、決勝構成を拡大 ===== */
+.export-sheet--final .export-grid{
+  grid-template-columns:1fr !important;
+}
+.export-sheet--all .export-grid:first-of-type{
+  grid-template-columns:1fr !important;
+}
+.export-sheet--all .export-grid:first-of-type > div:first-child{
+  width:100%;
+}
+
+.export-sheet--final .export-block--main,
+.export-sheet--all .export-block--main:first-child{
+  padding:18px 20px !important;
+}
+
+.export-sheet--final .export-list--finals-two-col .export-list-row,
+.export-sheet--all .export-list--finals-two-col .export-list-row{
+  grid-template-columns:48px 1fr !important;
+  gap:10px !important;
+  align-items:start;
+  margin-bottom:4px;
+}
+.export-sheet--final .export-list--finals-two-col .export-list-num,
+.export-sheet--all .export-list--finals-two-col .export-list-num{
+  font-size:20px !important;
+  line-height:1.35 !important;
+  font-weight:1000 !important;
+}
+.export-sheet--final .export-list--finals-two-col .export-list-text,
+.export-sheet--all .export-list--finals-two-col .export-list-text{
+  font-size:18px !important;
+  line-height:1.45 !important;
+  font-weight:900 !important;
+  letter-spacing:.01em;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.export-sheet--final .export-block h2,
+.export-sheet--all .export-block:first-child h2{
+  font-size:22px !important;
+  margin-bottom:12px !important;
+}
+.export-sheet--all .export-grid:first-of-type{
+  gap:14px !important;
+}
+@media (max-width:430px){
+  .export-sheet--final .export-list--finals-two-col .export-list-row,
+  .export-sheet--all .export-list--finals-two-col .export-list-row{
+    grid-template-columns:42px 1fr !important;
+    gap:8px !important;
+  }
+  .export-sheet--final .export-list--finals-two-col .export-list-num,
+  .export-sheet--all .export-list--finals-two-col .export-list-num{
+    font-size:18px !important;
+  }
+  .export-sheet--final .export-list--finals-two-col .export-list-text,
+  .export-sheet--all .export-list--finals-two-col .export-list-text{
+    font-size:16px !important;
+    line-height:1.4 !important;
+  }
+}
+
+
+/* ===== v1.52 予選自動反映 ===== */
+.auto-prelim-note{
+  margin:10px 0 12px;
+  padding:11px 12px;
+  border-radius:12px;
+  background:#eefaf3;
+  border:2px solid #79d79f;
+  color:#075f32;
+  font-size:14px;
+  font-weight:900;
+  line-height:1.5;
+}
+
+
+/* ===== v1.53 予選ラウンド超過アラート強化 ===== */
+#pre-main-limit-alert{
+  font-size:14px;
+  font-weight:1000;
+  border:2px solid #ffb3b3;
+  background:#fff5f5;
+  color:#b00000;
+  border-radius:12px;
+  padding:10px 12px;
+}
+
+
+/* ===== v1.54 決勝自動反映 ===== */
+.auto-finals-note{
+  margin:10px 0 12px;
+  padding:11px 12px;
+  border-radius:12px;
+  background:#f4f0ff;
+  border:2px solid #9b7cff;
+  color:#4b2dcc;
+  font-size:14px;
+  font-weight:900;
+  line-height:1.5;
+}
+.candidate-add-btn.selected{
+  background:#7c4dff !important;
+  border-color:#7c4dff !important;
+  color:#fff !important;
+  box-shadow:0 0 0 2px rgba(124,77,255,.14) !important;
+}
+
+
+/* ===== v1.56 画像保存フォントをやや細く・見やすく調整 ===== */
+.export-sheet{
+  font-weight:500 !important;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+.export-sheet h1,
+.export-sheet h2,
+.export-sheet h3,
+.export-sheet .export-title,
+.export-sheet .export-head,
+.export-sheet .export-block h2{
+  font-weight:700 !important;
+  letter-spacing:.01em;
+}
+.export-sheet .export-meta,
+.export-sheet .export-summary,
+.export-sheet .export-note,
+.export-sheet .export-footer,
+.export-sheet .export-label{
+  font-weight:500 !important;
+}
+.export-sheet .export-value,
+.export-sheet .export-score,
+.export-sheet .export-total{
+  font-weight:700 !important;
+}
+.export-list-row{
+  align-items:start;
+}
+.export-list-num{
+  font-weight:700 !important;
+}
+.export-list-text{
+  font-weight:500 !important;
+  line-height:1.48 !important;
+  letter-spacing:.01em;
+}
+.export-sheet--final .export-list--finals-two-col .export-list-num,
+.export-sheet--all .export-list--finals-two-col .export-list-num{
+  font-weight:700 !important;
+}
+.export-sheet--final .export-list--finals-two-col .export-list-text,
+.export-sheet--all .export-list--finals-two-col .export-list-text{
+  font-weight:500 !important;
+  line-height:1.5 !important;
+}
+.export-list-row.is-predicted .export-list-text{
+  font-weight:600 !important;
+}
+
+
+/* ===== v1.57 決勝編成：技名横の1.5倍楕円ラベルを削除 ===== */
+#finals-list .order-item.finals-multi-on:not(.is-predicted) .order-name::after{
+  content:none !important;
+  display:none !important;
+}
+#finals-list .order-item.is-predicted.finals-multi-on .order-name::after{
+  content:"  予想技" !important;
+  display:inline-block !important;
+  margin-left:6px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:#d60000;
+  color:#fff;
+  font-size:11px;
+  font-weight:1000;
+  vertical-align:middle;
+}
+
+
+/* ===== v1.58 決勝編成説明を自動反映前提に整理 ===== */
+.auto-finals-note{
+  font-size:15px !important;
+  line-height:1.65 !important;
+  padding:13px 14px !important;
+}
+
+
+/* ===== v1.62 画像保存はシンプル構成固定 ===== */
+
+
+/* ===== 印刷 ===== */
+@media print{
+  .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
+  body{padding-top:0;padding-bottom:0}
+  .order-box{page-break-inside:avoid}
+}
+
+/* ===== 端末向け微調整 ===== */
+@media (max-width:420px){
+  .tech-controls{min-width:auto}
+  .media-dialog{width:min(520px,96vw)}
+}
+</style>
+</head>
+<body>
+
+<!-- 上部固定スコアバー -->
+<div class="total-bar" id="total-bar">
+  <div class="total-box">
+    <div class="total-top-row" id="chips">
+      <div class="total-chip">技数：<span id="selected-count">0</span></div>
+      <div class="total-chip">予選：<span id="pre-total">0</span></div>
+      <div class="total-chip">FMD：<span id="fmd-total">0</span></div>
+      <div class="total-chip">基礎：<span id="base-total">0</span></div>
+    </div>
+    <div class="total-main">総合計：<span id="final-total">0</span></div>
+    <div class="save-status is-clean" id="save-status">端末に自動保存済み</div>
+    <div class="total-buttons">
+      <button type="button" style="background:var(--blue);color:#fff" id="btn-reset"><span>リセット</span></button>
+      <button type="button" style="background:#555;color:#fff" id="btn-print"><span>印刷</span></button>
+      <button type="button" style="background:#00a6d6;color:#fff" id="btn-save-image"><span>画像<br>保存</span></button>
+      <button type="button" style="background:#2f855a;color:#fff" id="btn-share-url"><span>共有<br>URL</span></button>
+      <button type="button" style="background:#6b4eff;color:#fff" id="btn-export"><span>決勝<br>プリセット</span></button>
+      <button type="button" style="background:#0a9f5a;color:#fff" id="btn-prelims-preset-jump"><span>予選<br>プリセット</span></button>
+      <input id="csv-import" type="file" accept=".csv" style="display:none">
+    </div>
+  </div>
+</div>
+
+<h1>オオルリカップ2026 技構成システム</h1>
+
+
+<!-- モード切替 -->
+<div class="mode-bar">
+  <button class="mode-btn active" data-mode="score">決勝スコア</button>
+  <button class="mode-btn" data-mode="finals">決勝編成</button>
+  <button class="mode-btn" data-mode="prelims">予選編成</button>
+</div>
+<div class="current-mode-box" id="current-mode-box">現在：決勝スコアを選択中</div>
+
+<p class="warning" id="warn">⚠ 技は30個までしか選べません</p>
+
+<!-- 決勝スコアモード -->
+<div id="mode-score" class="mode-section active">
+  <details class="section" open>
+    <summary>点数別リスト（決勝スコア）</summary>
+    <div class="section-content" id="tech-list"></div>
+  </details>
+
+  <div class="pre-box">
+    予選点（0〜112点）：
+    <input type="number" id="pre-score" class="pre-input" value="0" min="0" max="112" />
+    <span class="pre-help">（予選点数を記入）</span>
+    <p class="warning" id="pre-warn">⚠ 予選は0〜112点で入力してください。</p>
+  </div>
+
+  <!-- 全体プリセット（2枠） -->
+  <div class="preset-box">
+    <div class="preset-row">
+      <select id="overall-preset-slot">
+        <option value="slot1">全体プリセット①</option>
+        <option value="slot2">全体プリセット②</option>
+      </select>
+      <input id="overall-preset-name" type="text" placeholder="プリセット名">
+      <button id="save-overall-preset">保存</button>
+      <button id="load-overall-preset">読込</button>
+    </div>
+    <div class="preset-hint">決勝スコアのチェック/倍率/予選チェック/編成/予選点を丸ごと保存します。</div>
+  </div>
+</div>
+
+<!-- 決勝編成 -->
+<div id="mode-finals" class="mode-section">
+  <div class="auto-finals-note">
+    決勝画面で「使用」を押すと、この決勝編成へ自動で反映されます。<br>
+    技名や☰を押したまま動かすと、技の順番を並べ替えできます。<br>
+    1.5倍はこの画面でも変更でき、点数にも自動反映されます。
+  </div>
+
+  <div class="predict-box">
+    <div class="predict-title">予想技を作成</div>
+    <p class="predict-note">9月1日以降に追加されそうな技を仮登録できます。最大10個まで作成し、決勝編成へ追加できます。</p>
+    <div class="predict-form">
+      <select id="predict-pt">
+        <option value="0.5">0.5点</option>
+        <option value="1">1点</option>
+        <option value="2">2点</option>
+        <option value="3">3点</option>
+        <option value="4">4点</option>
+        <option value="5">5点</option>
+        <option value="6">6点</option>
+        <option value="7">7点</option>
+        <option value="8">8点</option>
+        <option value="9">9点</option>
+        <option value="10">10点</option>
+      </select>
+      <input id="predict-name" type="text" placeholder="予想技名を入力">
+      <button type="button" id="add-predict-tech">作成</button>
+    </div>
+    <div class="predict-count">予想技リスト：<span id="predict-count">0</span>/10</div>
+    <ul id="predict-list" class="predict-list"></ul>
+  </div>
+
+  <div class="order-box">
+    <div class="order-box-title">決勝編成（<span id="finals-count">0</span>技 / <span id="finals-limit-num">30</span>技）</div>
+    <ul id="finals-list" class="order-list"></ul>
+    <p style="font-size:11px;opacity:.7;margin-top:4px;">選んだ技を一覧表示します ／ ☰または技名を指で押して並べ替え ／ 候補へで別枠保管 ／ ✕は長押し削除</p>
+    <p class="warning inline-warning" id="finals-limit-alert">⚠ 決勝編成が30技を超えています。技選択候補へ移動して30技以内にしてください。</p>
+  </div>
+
+  <div class="order-box candidate-box">
+    <div class="order-box-title">技選択候補（<span id="finals-candidate-count">0</span>/10技）</div>
+    <ul id="finals-candidate-list" class="order-list"></ul>
+    <p class="candidate-note">30技に入れるか迷う技を一時保管できます。候補から「採用」で決勝編成に戻せます。候補欄内もドラッグ＆ドロップで並べ替えできます。</p>
+    <button type="button" class="candidate-sort-btn" id="finals-candidate-sort">候補を点数順に整理</button>
+    <p class="warning inline-warning" id="finals-candidate-warn">⚠ 決勝の技選択候補は10技までです。</p>
+  </div>
+
+  <!-- 決勝プリセット（2枠） -->
+  <div class="preset-box preset-important preset-finals-important" id="finals-preset-anchor">
+    <div class="preset-heading">決勝プリセット</div>
+    <div class="preset-summary" id="finals-preset-summary">保存状況を確認中</div>
+    <div class="preset-row">
+      <select id="finals-preset-slot">
+        <option value="slot1">決勝プリセット①</option>
+        <option value="slot2">決勝プリセット②</option>
+      </select>
+      <input id="finals-preset-name" type="text" placeholder="プリセット名">
+      <button id="save-finals-preset">保存</button>
+      <button id="load-finals-preset">読込</button>
+    </div>
+    <div class="preset-hint">決勝編成リストと1.5倍設定を保存します（最大30技）。</div>
+  </div>
+</div>
+
+<!-- 予選編成 -->
+<div id="mode-prelims" class="mode-section">
+  <p style="font-size:13px;">予選は<strong>12技まで</strong>。第1R6技・第2R6技に分割し、スマホでは☰または技名を指で押して並べ替えできます。ラウンド間の移動もできます。</p>
+  <div class="warning" id="prelimit-warn">⚠ 予選で選べる技は12個までです。</div>
+
+  <details class="section" open>
+    <summary>点数別リスト（使用ボタンを押すと自動で予選へ反映）</summary>
+    <div class="section-content" id="pre-tech-list"></div>
+  </details>
+
+  <div class="auto-prelim-note">予選の使用ボタンを押すと、第1ラウンド・第2ラウンドへ自動で振り分けられます。</div>
+
+  <div class="order-box">
+    <div class="order-box-title">第1ラウンド（<span id="prelims1-count">0</span>技 / <span id="prelims1-limit-num">6</span>技）</div>
+    <ul id="prelims1-list" class="order-list"></ul>
+  </div>
+  <div class="order-box">
+    <div class="order-box-title">第2ラウンド（<span id="prelims2-count">0</span>技 / <span id="prelims2-limit-num">6</span>技）</div>
+    <ul id="prelims2-list" class="order-list"></ul>
+  </div>
+  <p class="warning inline-warning" id="pre-main-limit-alert">⚠ 各ラウンドは6技までです。第1R・第2Rの間で移動し、各6技以内に調整してください。</p>
+
+  <div class="order-box candidate-box">
+    <div class="order-box-title">技選択候補（<span id="pre-candidate-count">0</span>/6技）</div>
+    <ul id="pre-candidate-list" class="order-list"></ul>
+    <p class="candidate-note">12技に入れるか迷う技を一時保管できます。候補から1R/2Rへ戻せます。候補欄内もドラッグ＆ドロップで並べ替えできます。</p>
+    <button type="button" class="candidate-sort-btn" id="pre-candidate-sort">候補を点数順に整理</button>
+    <p class="warning inline-warning" id="pre-candidate-warn">⚠ 予選の技選択候補は6技までです。</p>
+  </div>
+
+  <p class="pre-sum">予選技合計：<span id="pre-tech-total">0</span> 点</p>
+
+  <!-- 予選プリセット（2枠） -->
+  <div class="preset-box preset-important preset-prelims-important" id="prelims-preset-anchor">
+    <div class="preset-heading">予選プリセット</div>
+    <div class="preset-summary" id="prelims-preset-summary">保存状況を確認中</div>
+    <div class="preset-row">
+      <select id="prelims-preset-slot">
+        <option value="slot1">予選プリセット①</option>
+        <option value="slot2">予選プリセット②</option>
+      </select>
+      <input id="prelims-preset-name" type="text" placeholder="プリセット名">
+      <button id="save-prelims-preset">保存</button>
+      <button id="load-prelims-preset">読込</button>
+    </div>
+    <div class="preset-hint">第1R/第2Rの並びを保存します（各最大6技）。</div>
+  </div>
+</div>
+
+<!-- 統合：動画＋判定基準モーダル -->
+<div id="media-modal" class="media-modal">
+  <div class="media-overlay" data-close="1"></div>
+  <div class="media-dialog" role="dialog" aria-modal="true">
+    <div class="media-header">
+      <div class="media-title">
+        <span id="media-name">技名</span>
+        <span class="media-pt-chip" id="media-pt-chip">-点</span>
+      </div>
+      <button type="button" id="media-close">✕</button>
+    </div>
+
+    <div class="media-body">
+      <div class="media-video">
+        <div class="media-player-shell">
+          <div id="yt-player"></div>
+        </div>
+        <div class="media-video-actions">
+          <a class="media-link" id="media-trick-link" href="#" target="_blank" rel="noopener">この技をYouTubeで開く</a>
+          <a class="media-link" id="media-full-link" href="#" target="_blank" rel="noopener">この点数の全動画</a>
+        </div>
+      </div>
+      <div class="media-criteria" id="media-criteria"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ミニメニュー -->
+<div class="mini-nav">
+  <button class="mini-btn active" data-mode="score"><span>決勝</span></button>
+  <button class="mini-btn" data-mode="finals"><span>決勝編成</span></button>
+  <button class="mini-btn" data-mode="prelims"><span>予選</span></button>
+  <button class="mini-btn" data-link="judge"><span>成功基準</span></button>
+  <button class="mini-btn" data-link="official"><span>公式HP</span></button>
+</div>
+
+<!-- トースト -->
+<div class="toast" id="toast"></div>
+
+<!-- 画像書き出し種別選択 -->
+<div class="export-choice-modal" id="export-choice-modal" aria-hidden="true">
+  <div class="export-choice-dialog" role="dialog" aria-modal="true" aria-label="画像保存の種類を選択">
+    <div class="export-choice-header">
+      <h3>画像保存の種類を選択</h3>
+      <p>画像を作成し、画面上にプレビューを表示します。スマホでは保存後に画像を長押しできます。</p>
+    </div>
+    <div class="export-choice-body">
+      <button type="button" class="export-choice-btn" data-export-kind="all">
+        <strong>① 現在の画像内容</strong>
+        <span>決勝編成と予選構成を、まとめて1枚で保存します。</span>
+      </button>
+      <button type="button" class="export-choice-btn" data-export-kind="prelim">
+        <strong>② 予選専用画像</strong>
+        <span>第1ラウンド・第2ラウンドのみを、A4縦で保存します。</span>
+      </button>
+      <button type="button" class="export-choice-btn" data-export-kind="final">
+        <strong>③ 決勝構成専用画像</strong>
+        <span>決勝構成のみを、A4縦で保存します。</span>
+      </button>
+    </div>
+    <div class="export-choice-actions">
+      <button type="button" class="export-choice-close" id="export-choice-close">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 画像保存プレビュー -->
+<div class="image-save-modal" id="image-save-modal" aria-hidden="true">
+  <div class="image-save-dialog" role="dialog" aria-modal="true" aria-label="画像保存プレビュー">
+    <div class="image-save-header">
+      <div>構成画像プレビュー</div>
+      <button type="button" class="image-save-close" id="image-save-close">閉じる</button>
+    </div>
+    <div class="image-save-body">
+      <img id="image-save-preview" alt="保存する技構成画像">
+    </div>
+    <div class="image-save-note">
+      スマホで自動保存できない場合は、この画像を長押しして「写真に保存」または「画像を保存」を選んでください。
+    </div>
+    <div class="image-save-actions">
+      <button type="button" class="image-save-primary" id="image-save-share-again">共有・保存メニュー</button>
+      <a class="image-save-secondary" id="image-save-download" download="ooruricup2026.png">ダウンロード</a>
+      <button type="button" class="image-save-close" id="image-save-close-bottom">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 初回ツアー -->
+<div class="tour" id="tour">
+  <div class="tour-card">
+    <h3>ようこそ！使い方のポイント</h3>
+    <ul>
+      <li>決勝スコアで技を選びつつ、予選は最大12技にチェック。</li>
+      <li>合計は自動保存。次回開いても続きから再開できます。</li>
+      <li>各技の「動画・判定」から区間再生＆判定基準を確認。</li>
+      <li>削除は長押しで誤操作防止。並べ替えはドラッグも可。</li>
+    </ul>
+    <div class="tour-actions">
+      <button id="tour-hide">閉じる</button>
+      <button id="tour-never" style="background:var(--blue);color:#fff">次回から表示しない</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+ async function loadTricks(){
+
+  try{
+
+    const response =
+      await fetch('./data/tricks.json');
+
+    tricks =
+      await response.json();
+
+    console.log(
+      "tricks loaded",
+      tricks
+    );
+
+  }catch(err){
+
+    console.error(
+      "tricks load error",
+      err
+    );
+
+  }
+
+} 
+/* =========================================================
+   0) 点数別 全動画URL
+========================================================= */
+const fullVideoByPoint = {
+  1:"https://youtu.be/-21xaBq6eO0?si=TaHeRTlGXAqChguf",
+  2:"https://youtu.be/KqYhciXs9QQ?si=aYwcpmxiG5PRPeF9",
+  3:"https://youtu.be/7KqlE9a6fe0?si=bxqDRPa6RIdYN9IH",
+  4:"https://youtu.be/MyxnZEb6fQE?si=xB3vu58eQfLlaUbb",
+  5:"https://youtu.be/yPGRWcCYvYA?si=GEEWdeK50L2bu75C",
+  6:"https://youtu.be/JM_Xny9NBQs?si=YQAN_pyz1kE2xOZx",
+  7:"https://youtu.be/YkgL-pkNRR0?si=8Hbi_cxz4v3NPC7M",
+  8:"https://youtu.be/FH46y1E1NfU?si=LzjeyRHy73FXYa9y",
+  9:"https://youtu.be/mkXk2JpGYCo?si=A7wFANhO-UkeGF8j",
+ 10:"https://youtu.be/twdbwAdapjE?si=kRdp82sjUuOBB3bd"
+};
+const videoIdByPoint = {
+  1:"-21xaBq6eO0",
+  2:"KqYhciXs9QQ",
+  3:"7KqlE9a6fe0",
+  4:"MyxnZEb6fQE",
+  5:"yPGRWcCYvYA",
+  6:"JM_Xny9NBQs",
+  7:"YkgL-pkNRR0",
+  8:"FH46y1E1NfU",
+  9:"mkXk2JpGYCo",
+ 10:"twdbwAdapjE"
+};
+
+/* =========================================================
+   1) 技データ（表記統一）
+========================================================= */
+ const tricks = {
+  1:["紐かけ手乗せ","お手玉","どじょうすくい","メリーゴーランド","初詣","手乗せジャンプ","脚下から回す","線香花火","ブーメランキャッチ","ベルト"],
+  2:["つばめ返し","ひばり返し","リフティング","つなわたり","紐のせ","日本一周","ツイスト片道","お手玉足抜き","カメレオン","フック"],
+  3:["トンネルつなわたり","腰かけ","手からメリーゴーランド（3周）","ツイスト往復","トランポリン（3回）","おちょこ","タケコプター","二段ゴマ","サンズ（1回）","燈籠","クロスキャッチ"],
+  4:["指のせ","大車輪","かざぐるま","竜巻","へび（3周）","牛若丸片道","渦潮（上下2回）","メダル","舞妓かけ","コメタ","ムチ1回","胴回し","脚くぐし（1回）","脚回し","空中ブランコ"],
+  5:["砂時計","はやぶさ返し","鯉の滝登り","両手へび","足かけ","空中大車輪","足乗せ","縦へび（3周）","シングルクロック","チョップスティック","リキャプチャー型グリーントライアングル","ゼロスタ","クロスキャッチフォール","ダイレクト綱渡り"],
+  6:["地獄車3周","白刃取り","燕尾返し","オープンウィップ1回","背くぐし1回","トルネード1回","リフティング〜直大車輪","ピルエット（ひものせ〜ひものせ）","ザリガニ釣り","片白刃","登り龍（5周）"],
+  7:["鎖鎌","夜叉車","首切り〜腰切り〜脚切り","忍者","脚くぐしin out","かまいたち3セットin両手へび","レール","むち3","ゼロスタウィップ","リリーススタート","ストリングトルネード","オロチ"],
+  8:["同時2個空中手乗せ","くるりんぱ（3回）","背面ムチ","かまいたち3セット〜太陽系1周","縦ヘビ4周〜灯籠","歯車","二回転白刃取り","砂時計〜裏燈籠","Vレール（2回）","背面チョップスティック","侍ウィップ","侍キャッチ","ダイレクトむち3","へび2往復","脚下オープンウィップ","ニシキヘビ","背面燈籠"],
+  9:["リュウグウノツカイ","ウロボロス","スラックライン","背面オープンウィップ","背面両手へび","サイドワインダー2.0","両面ちょんかけ","夜刀神","クエンティン・ウィップ","渦潮〜燈籠","4DEX","フットクラッチ","フットトス蛇","ダブルピルエット白刃取り","アームグラインドウィップ","背面ダイレクトむち3"],
+ 10:["ダイレク燈籠","2個同時うずしお3回","てじなーにゃむち","ヤトボロス"]
+};
+
+/* =========================================================
+   2) 判定基準データ（あなたの貼付内容を保持）
+   ※必要に応じて今後追加OK
+========================================================= */
+const judgeCriteria = {
+  "紐かけ手乗せ": `【点数】1
+【審査基準】
+・紐のかけ方は問わない
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが手に乗った瞬間`,
+
+  "お手玉": `【点数】1
+【審査基準】
+・右手⇔左手を5回移動する（2.5往復）
+・移動の際、こまは「投げて」移動していること
+　※こまが手の間を滑って移動しているものは失敗
+【成功判定（フィニッシュ）】
+5回目でこまが手に乗った瞬間
+【成功判定（コンボ中）】
+5回目でこまが手に乗った瞬間`,
+
+  "どじょうすくい": `【点数】1
+【審査基準】
+・「カモーン」の掛け声でも OK
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが手に乗った瞬間`,
+
+  "メリーゴーランド": `【点数】1
+【審査基準】
+・3周すること
+・床からスタートし、床でゴールすること
+【成功判定（フィニッシュ／コンボ中）】
+こまが床に回った瞬間`,
+
+  "初詣": `【点数】1
+【審査基準】
+・手を2回叩いていること
+・投げ上げる手とキャッチする手は同じでなくてもよい
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "手乗せジャンプ": `【点数】1
+【審査基準】
+・こまが手に乗った状態で両足が床から離れること
+・ジャンプ後にも手の上でこまが回っていること
+【成功判定（フィニッシュ／コンボ中）】
+ジャンプ後に脚が床についた瞬間`,
+
+  "脚下から回す": `【点数】1
+【スタート技】
+【審査基準】
+・脚の下からこまを回すこと
+・どちらの脚でもよい
+・足が床についていても、宙に浮いていてもよい
+・脚の内側／外側は問わない
+【成功判定（フィニッシュ／コンボ中）】
+こまが床に回った瞬間`,
+
+  "線香花火": `【点数】1
+【審査基準】
+・最後は回転がなくなる状態で終わること
+【成功判定（フィニッシュ／コンボ中）】
+こまが床に落ちた瞬間`,
+
+  "ブーメランキャッチ": `【点数】1
+【スタート技】
+【審査基準】
+・こまから紐が解けて回転がかかっていること
+【成功判定（フィニッシュ／コンボ中）】
+こまをキャッチした瞬間`,
+
+  "ベルト": `【点数】1
+【審査基準】
+・紐2本にこまが均等に乗っていること
+　（綱渡りのように片側に寄っている状態は不可）
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "つばめ返し": `【点数】2
+【スタート技】
+【審査基準】
+・外投げでこまを投げる
+・右手で投げる場合：紐は時計回りに巻く
+・左手で投げる場合：紐は半時計回りに巻く
+・投げた手と同じ手でこまを取る
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "ひばり返し": `【点数】2
+【スタート技】
+【審査基準】
+・外投げでこまを投げる
+・右手で投げる場合：紐は時計回り
+・左手で投げる場合：紐は半時計回り
+・投げた手と逆の手でこまを取る
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "リフティング": `【点数】2
+【スタート技】
+【審査基準】
+・こまを投げ手から直接脚で蹴って浮かせる
+・投げてから手に乗るまでに脚以外の部分に触れない
+・途中で手のひらなどのストールを経由しない
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "つなわたり": `【点数】2
+【審査基準】
+・紐の長さは肩幅以上
+・手から手の間で、こまが紐から離れないこと
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "紐のせ": `【点数】2
+【審査基準】
+・身体の正面で取ること
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "日本一周": `【点数】2
+【審査基準】
+・こまは遠心力と重力によって紐の上に乗っていること
+　（紐のせ状態で一周回るだけは失敗）
+・自分が一周しても良い／背面で紐を持ち替えても良い
+【成功判定（フィニッシュ／コンボ中）】
+こまが床に戻ってきた瞬間`,
+
+  "ツイスト片道": `【点数】2
+【審査基準】
+・動作後に手が身体の正面まで戻ってくること
+・動作中にこまが手から離れないこと
+【成功判定（フィニッシュ／コンボ中）】
+手が身体の正面に戻ってきた瞬間`,
+
+  "お手玉足抜き": `【点数】2
+【審査基準】
+・どちらの脚を使ってもよい
+・こまを投げた手とキャッチする手は同じ手であること
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "カメレオン": `【点数】2
+【審査基準】
+・紐を弾く動きでこまに紐をかける
+・こまを持ち上げる際、手に紐を複数束ねて持たない
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "フック": `【点数】2
+【審査基準】
+・こまは人差し指のみに触れていること
+・曲げた指の腹側（内側）にこまが乗っていること
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "トンネルつなわたり": `【点数】3
+【審査基準】
+・脚の下でつなわたりができていること
+・脚の左右は問わない
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "腰かけ": `【点数】3
+【審査基準】
+・身体の後ろ側で行っていること
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "手からメリーゴーランド（3周）": `【点数】3
+【審査基準】
+・手から直接メリーゴーランドの動きに入る
+・3周すること
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+3周し終わった瞬間`,
+
+  "ツイスト往復": `【点数】3
+【審査基準】
+・片道・往復ともに、毎回手が身体の正面まで戻ってくること
+・動作中にこまが手から離れないこと
+【成功判定（フィニッシュ／コンボ中）】
+手が身体の正面に戻ってきた瞬間`,
+
+  "トランポリン（3回）": `【点数】3
+【審査基準】
+・こまは頭より高く上げる
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "おちょこ": `【点数】3
+【スタート技】
+【審査基準】
+・投げてから手に乗るまでに、手の甲以外の部分に触れない
+【成功判定（フィニッシュ／コンボ中）】
+こまが手の甲に乗った瞬間`,
+
+  "タケコプター": `【点数】3
+【審査基準】
+・頭への乗せ方は問わない
+・頭の上でこまが静止していること（瞬間でも可）
+【成功判定（フィニッシュ／コンボ中）】
+こまが頭の上に乗った瞬間`,
+
+  "二段ゴマ": `【点数】3
+【審査基準】
+・手の上で行うこと
+・こまが重なっている時、2つとも回転していること
+【成功判定（フィニッシュ／コンボ中）】
+こまがこまの上に乗った瞬間`,
+
+  "サンズ（1回）": `【点数】3
+【審査基準】
+・手の間（手の上または下）を一周すること
+【成功判定（フィニッシュ／コンボ中）】
+一周後に紐が地面に対して垂直に向いた瞬間`,
+
+  "燈籠": `【点数】3
+【審査基準】
+・親指以外がこまに触れていないこと
+・乗せ方は問わない
+【成功判定（フィニッシュ／コンボ中）】
+こまが親指の上に乗り、親指のみに触れた瞬間`,
+
+  "クロスキャッチ": `【点数】3
+【審査基準】
+・腕を交差させた時、右手が上になるようにする
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "指のせ": `【点数】4
+【審査基準】
+・水かき部分に乗っていないこと
+・真っ直ぐ伸ばした指の上に乗せる
+・指に当たって弾くだけの状態は失敗
+【成功判定（フィニッシュ／コンボ中）】
+こまが指の上で静止した瞬間`,
+
+  "大車輪": `【点数】4
+【審査基準】
+・こまが身体の周りを一周していること
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが身体の周りを1周し切った瞬間`,
+
+  "かざぐるま": `【点数】4
+【審査基準】
+・手のひらが上を向くこと
+【成功判定（フィニッシュ／コンボ中）】
+手のひらが上を向き、こまが親指と人差し指の間で静止した瞬間`,
+
+  "竜巻": `【点数】4
+【審査基準】
+・大車輪が適切に成立していること
+・こまが身体の周りを2周していること
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが身体の周りを2周し切った瞬間`,
+
+  "へび（3周）": `【点数】4
+【審査基準】
+・こま本体に紐が1周巻かれている
+・腕に紐が3周以上巻かれている
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+3周分回り切った瞬間`,
+
+  "牛若丸片道": `【点数】4
+【審査基準】
+・こまが頭の後ろを通っていること
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "渦潮（上下2回）": `【点数】4
+【審査基準】
+・上下交互に通っていること
+　（上→下→上→下 または 下→上→下→上）
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+2往復した瞬間`,
+
+  "メダル": `【点数】4
+【審査基準】
+・紐の上でこまが静止していること
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐の上で静止した瞬間`,
+
+  "舞妓かけ": `【点数】4
+【審査基準】
+・両手の位置が肩より上にあること
+・頭の後ろでこまを取ること
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "コメタ": `【点数】4
+【審査基準】
+・こまと紐が途中で離れないこと
+・紐を持ち続ける手と、紐を離す手は別の手である
+【成功判定（フィニッシュ／コンボ中）】
+飛んだ紐を手で掴み、こまが紐に乗った瞬間`,
+
+  "ムチ1回": `【点数】4
+【審査基準】
+・紐で輪を作り、肩で持っていること
+・紐を半周以上回してかける
+・サディスティック状態になっていないこと
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "胴回し": `【点数】4
+【審査基準】
+・ハーフターン禁止
+・左右どちらからでも良いが、こまの向きが身体に対して反転しないこと
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "脚くぐし（1回）": `【点数】4
+【審査基準】
+・紐のかけ方が適切であること
+　（紐を上から＝外側からかけているか）
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "脚回し": `【点数】4
+【審査基準】
+・ハーフターン禁止
+・左右どちらからでも良いが、こまの向きが身体に対して反転しないこと
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "空中ブランコ": `【点数】4
+【審査基準】
+・こまと身体の間に紐が位置した状態から始める
+・手より前側にこまが出てから引き上げる
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "砂時計": `【点数】5
+【審査基準】
+・軸の両端以外でこまに触れていないこと
+・こまが裏返った時に、親指がこまから離れていること
+・燈籠から行う
+・片手のみで行う
+【成功判定（フィニッシュ／コンボ中）】
+こまの向きが戻り、親指のみにこまが触れている状態になった瞬間`,
+
+  "はやぶさ返し": `【点数】5
+【審査基準】
+・こまが伝う紐の長さは肩幅以上
+・スタートの手が、もう一方の手より上に位置していること
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "鯉の滝登り": `【点数】5
+【審査基準】
+・こまが伝う紐の長さは「腰から肩」の長さ以上
+【成功判定（フィニッシュ／コンボ中）】
+登ったこまが上の手に触れた瞬間`,
+
+  "両手へび": `【点数】5
+【審査基準】
+・こまに紐が1周巻き付いている
+・腕に紐が5周以上巻き付いている
+・こまは適切に紐を伝っている
+・少なくとも1周は左右両方の腕に巻かれていること
+　（例：右1周＋左4周などOK）
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+5周分回り切った瞬間`,
+
+  "足かけ": `【点数】5
+【審査基準】
+・紐が脚で挟まれている
+・補助手で紐さばきをサポートしてもよい
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "空中大車輪": `【点数】5
+【スタート技】
+【審査基準】
+・手のひらを経由していないこと
+・大車輪が成立していること
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが身体の周りを1周し切った瞬間`,
+
+  "足乗せ": `【点数】5
+【スタート技】
+【審査基準】
+・投げてから足の甲に乗るまでに、身体の膝より上の部分に触れない
+・足の甲にストールされていること
+【成功判定（フィニッシュ／コンボ中）】
+こまが足の甲に乗った瞬間`,
+
+  "縦へび（3周）": `【点数】5
+【審査基準】
+・腕の周りを3周すること
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+3周分回り切った瞬間`,
+
+  "シングルクロック": `【点数】5
+【審査基準】
+・こまが浮いている最中に、紐の回転方向が反転すること
+・サディスティック状態になっていないこと
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "チョップスティック": `【点数】5
+【審査基準】
+・紐の形が適切であること
+・こまは空中に浮いた状態から、チョップスティックの紐の上に乗ること
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "リキャプチャー型グリーントライアングル": `【点数】5
+【審査基準】
+・正しい過程で行うこと
+・途中で違う紐の乗り方をした場合は失敗
+【成功判定（フィニッシュ／コンボ中）】
+グリーントライアングルの形が成立した瞬間`,
+
+  "ゼロスタ": `【点数】5
+【スタート技】
+【審査基準】
+・こまが止まった状態から技に入る
+・ちょんかけ（リジェネ）の要領で紐に乗せる
+・空中に飛ばしてから紐で取る
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "クロスキャッチフォール": `【点数】5
+【スタート技】
+【審査基準】
+・こまが手に乗る際、以下を満たすこと
+　1. 左手と左膝が触れている
+　2. 左手と左膝の間から右手が出ている
+・こまが手に乗った後、掌落としを行う
+【成功判定（フィニッシュ）】
+掌落としの後にこまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "ダイレクト綱渡り": `【点数】5
+【スタート技】
+【審査基準】
+・ひものせ状態にならない（こまの高さが両手の間の高さにならない）
+・こまが紐に乗る際、紐は肩幅以上の幅で持つ
+・こまが左回転の場合、紐の中心より左側で取り、そこから右手に戻る
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "地獄車3周": `【点数】6
+【審査基準】
+・3周は連続で行うこと
+　（1周ごとに止めると失敗）
+【成功判定（フィニッシュ／コンボ中）】
+3周後に紐が地面に対して垂直に向いた瞬間`,
+
+  "白刃取り": `【点数】6
+【審査基準】
+・投げ上げた際、紐から両手が離れていること
+【成功判定（フィニッシュ／コンボ中）】
+浮いた紐を掴んだ瞬間（かつこまが紐に乗っていること）`,
+
+  "燕尾返し": `【点数】6
+【スタート技】
+【審査基準】
+・投げた手で取ること
+・背面で取ること
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "オープンウィップ1回": `【点数】6
+【審査基準】
+・紐は束ねずに持つ
+・サディスティック状態になっていない
+・紐の左手側でこまを取る（リキャプ状態にする）
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "背くぐし1回": `【点数】6
+【審査基準】
+・紐のかけ方が適切であること
+　（紐を上から＝外側からかけているか）
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "トルネード1回": `【点数】6
+【審査基準】
+・空中大車輪のかけ方で始める
+　（手から投げたこまを紐で空中キャッチしてもよい）
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+1周後にこまが紐から離れた瞬間`,
+
+  "リフティング〜直大車輪": `【点数】6
+【スタート技】
+【審査基準】
+・最初のリフティングについて：
+　投げてから紐にかけるまでに脚以外の部分に触れない
+・その後、身体の周りを大車輪で1周する
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが身体の周りを1周し切った瞬間`,
+
+  "ピルエット（ひものせ〜ひものせ）": `【点数】6
+【審査基準】
+・身体の正面でこまを跳ね上げ、一回転し、再び身体の正面で取る
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "ザリガニ釣り": `【点数】6
+【審査基準】
+・チョップスティック状態から始める
+・こまがつり下がっている時、紐は1本だけを掴んでいる
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐の上で保持された瞬間`,
+
+  "片白刃": `【点数】6
+【審査基準】
+・紐は片手で持つ
+・紐を片方だけ離す
+・紐を離した手と、紐を掴み直す手は同じ手である
+【成功判定（フィニッシュ／コンボ中）】
+一度離した紐を同じ手で掴み直し、こまが紐の上に乗っていることが確認された瞬間`,
+
+  "登り龍（5周）": `【点数】6
+【審査基準】
+・こまの回転で紐を巻き込む力で登ること
+・こまを振り回して動かしているものは失敗
+・5周回り切ること
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+5周回り切った瞬間`,
+
+  "鎖鎌": `【点数】7
+【審査基準】
+・紐は片手で輪になっている
+・紐は頭上で回っている
+・紐は3周以上回っている
+・こまが紐にかかった後、こまが身体の周りを1周している
+・サディスティック状態になっていない
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが身体の周りを1周し切った瞬間`,
+
+  "夜叉車": `【点数】7
+【審査基準】
+・5周を淀みなく連続して回す（1周ごとに止めると失敗）
+・体の左右を交互に回している
+・紐が短すぎるものは失敗
+・こまは肘より大きい軌道で振り回す
+【成功判定（フィニッシュ／コンボ中）】
+5周後に紐が地面に対して垂直に向いた瞬間`,
+
+  "首切り〜腰切り〜脚切り": `【点数】7
+【審査基準】
+・紐は片手で束ねた後に放し、片手で掴み直す
+・掴み直す際に、紐に手が一切触れていない時間が存在すること
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+脚切りの後に紐を掴んだ瞬間`,
+
+  "忍者": `【点数】7
+【審査基準】
+・こまが登る際、紐が背面にあること
+・こまが伝う紐の長さは腰から肩の長さ以上
+【成功判定（フィニッシュ／コンボ中）】
+登ったこまが上の手に触れた瞬間`,
+
+  "脚くぐしin out": `【点数】7
+【審査基準】
+・イン→アウトの順に連続して行う
+・インの際はリキャプチャー、アウトの際はドラムビートでかける
+・こまが左回転なら右脚、右回転なら左脚を使う
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "かまいたち3セットin両手へび": `【点数】7
+【審査基準】
+・両手へびは左右合わせて5周する
+・かまいたちは3セット行う
+・かまいたちの直前にメリーゴーランドなど余分なトリックを入れない
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが腕に巻かれた紐を回り切った瞬間`,
+
+  "レール": `【点数】7
+【審査基準】
+・紐の形の作り方は問わない
+・スタートはこまの上から紐をかけて始める
+【成功判定（フィニッシュ）】
+こまが腕に巻かれた紐を回り切って、両腕の間に位置した瞬間
+【成功判定（コンボ中）】
+同上`,
+
+  "むち3": `【点数】7
+【審査基準】
+・紐の片方は手から離れた状態でこまに紐が当たること
+・紐が当たった後、紐を持っている手と同じ手で逆側の紐を掴む
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "ゼロスタウィップ": `【点数】7
+【スタート技】
+【審査基準】
+・こまに回転をかける手と、ウィップをする手が別であること
+・紐を半周以上回してかけている
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "リリーススタート": `【点数】7
+【スタート技】
+【審査基準】
+・こまの軸に紐を半周以上巻きつけてはいけない
+・こまに回転をかける手と、紐を掴む手は同じ手である
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "ストリングトルネード": `【点数】7
+【審査基準】
+・ラップ状態（こまの軸に紐が一周巻かれた状態）で行う
+・こまが紐に重力で乗っていない時間に、紐がこまの周りを1周以上する
+・最後は引き上げて紐でこまをキャッチする
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "オロチ": `【点数】7
+【審査基準】
+・右腕に3回以上、首に1回、左腕に2回以上巻く
+・左腕に3回以上巻いた場合は、2周分通った時点でオロチ成立とみなす
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが腕に巻かれた紐を回り切った瞬間`,
+
+  "同時2個空中手乗せ": `【点数】8
+【スタート技】
+【審査基準】
+・2個のこまのどちらも、紐が解けることで回転が始まっている
+・こまを投げる際は一挙動で行う
+【成功判定（フィニッシュ／コンボ中）】
+2つのこまが回った状態で手に乗った瞬間`,
+
+  "くるりんぱ（3回）": `【点数】8
+【審査基準】
+・紐の巻き方は適切であること
+・連続で3回行う
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+3周後にこまが紐から離れた瞬間`,
+
+  "背面ムチ": `【点数】8
+【審査基準】
+・こまを上げる位置は身体の前側
+・ムチが成立する位置は背面
+・サディスティック状態になっていない
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "かまいたち3セット〜太陽系1周": `【点数】8
+【審査基準】
+・「両手渦潮」になっていないこと
+・かまいたちを3セット適切に行う
+・途中で誤った軌道を通った場合、その時点で失敗
+・太陽系を1周する
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが腕に巻いた紐を周り切った瞬間`,
+
+  "縦ヘビ4周〜灯籠": `【点数】8
+【審査基準】
+・こまの角度が適切（水平になっていない）
+・腕の周りを4周している
+・縦へびと灯籠の間に余分なトリックを入れない
+【成功判定（フィニッシュ／コンボ中）】
+こまが親指の上に乗り、親指のみに触れた瞬間`,
+
+  "歯車": `【点数】8
+【審査基準】
+・紐の軌道が地面に対して垂直になっていない
+　（白刃取りになっているものは不可）
+【成功判定（フィニッシュ／コンボ中）】
+浮いた紐を掴んだ瞬間（かつこまが紐に乗っていること）`,
+
+  "二回転白刃取り": `【点数】8
+【審査基準】
+・紐は2周している
+・投げ上げた際に紐から両手が離れている
+【成功判定（フィニッシュ／コンボ中）】
+浮いた紐を掴んだ瞬間（かつこまが紐に乗っていること）`,
+
+  "砂時計〜裏燈籠": `【点数】8
+【審査基準】
+・軸の両端以外でこまに触れていない
+・こまが裏返った時に親指がこまから離れている
+・裏燈籠の際はこまを一度空中に浮かせる
+【成功判定（フィニッシュ／コンボ中）】
+こまが親指の上に乗り、親指のみに触れた瞬間`,
+
+  "Vレール（2回）": `【点数】8
+【審査基準】
+・紐の形の作り方は問わない
+・スタートは空中大車輪のかけ方で紐をかけて始める
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが腕に巻かれた紐を回り切って、両腕の間に位置した瞬間`,
+
+  "背面チョップスティック": `【点数】8
+【審査基準】
+・紐の形が適切である
+・こまは空中に浮いた状態からチョップスティックの紐の上に乗る
+・背面で行う
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "侍ウィップ": `【点数】8
+【審査基準】
+・一度左手で紐を持つ
+・紐を弾く動きでこまに紐を当て、輪の中にこまを入れる
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "侍キャッチ": `【点数】8
+【スタート技】
+【審査基準】
+・こまが空中に浮いている間に紐で輪を作り、そこにこまを入れる
+・こまが空中から紐にかかるまで、身体に触れない
+・こまは身体の周りを1周している
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが身体の周りを1周し切った瞬間`,
+
+  "ダイレクトむち3": `【点数】8
+【スタート技】
+【審査基準】
+・紐の片方の端が手から離れている間に、紐とこまが触れる
+・片手のみで行う
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "へび2往復": `【点数】8
+【審査基準】
+・こま本体に紐が1周巻かれている
+・腕に紐が3周以上巻かれている
+・2往復目も、へびが3周以上回っている
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが腕に巻かれた紐を回り切った瞬間`,
+
+  "脚下オープンウィップ": `【点数】8
+【審査基準】
+・紐を束ねずに持っている
+・脚の下でこまを取る
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "ニシキヘビ": `【点数】8
+【審査基準】
+・こま本体に紐が1周巻かれている
+・右手1周→首→右手1周の順に紐が巻かれている
+・右手に戻ってきた際、首に巻いた紐の「下」を通る
+　（輪の中を通るのは失敗）
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが腕に巻かれた紐を回り切った瞬間`,
+
+  "背面燈籠": `【点数】8
+【スタート技】
+【審査基準】
+・親指以外がこまに触れていない
+・乗せ方は問わない
+・手のひらを経由しない
+【成功判定（フィニッシュ／コンボ中）】
+こまが親指の上に乗り、親指のみに触れた瞬間`,
+
+  "リュウグウノツカイ": `【点数】9
+【審査基準】
+・紐の身体への巻き方が適切である
+・最後は足の間を後ろからこまを投げ上げる
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+足の間からこまを投げ上げた瞬間`,
+
+  "ウロボロス": `【点数】9
+【審査基準】
+・紐は右手に3回以上、左手に2回以上巻く
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが腕に巻かれた紐を回り切った瞬間`,
+
+  "スラックライン": `【点数】9
+【審査基準】
+・紐2本にこまが均等に乗っている（綱渡りのように片側寄りは不可）
+・こまは空中から紐2本のすき間に入っている
+・こまを空中に投げ上げる場合、紐に乗った状態から投げ上げる
+　（手から直接投げ上げるのは不可）
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが紐2本の間に入った瞬間`,
+
+  "背面オープンウィップ": `【点数】9
+【審査基準】
+・こまを上げる位置は身体の前側
+・ムチが成立する位置は背面
+・紐は束ねずに持つ
+・サディスティック状態になっていない
+・紐の左手側でこまを取る（リキャプ状態）
+・背面で行う
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "背面両手へび": `【点数】9
+【審査基準】
+・紐は右手に3回以上、左手に2回以上巻く
+・背面で行う
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが腕に巻かれた紐を回り切った瞬間`,
+
+  "サイドワインダー2.0": `【点数】9
+【スタート技】
+【審査基準】
+・こまを投げ出して手に戻るまでの間に、腕に紐を2周巻いて形を完成させる
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが腕に巻かれた紐を回り切った瞬間`,
+
+  "両面ちょんかけ": `【点数】9
+【審査基準】
+・右→左の順で行う
+・右側：右手でこまの上から紐をかける
+・左側：左手でこまの上から紐をかける
+・脚の左右は問わない
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "夜刀神": `【点数】9
+【審査基準】
+・紐を適切に巻くこと
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`,
+
+  "クエンティン・ウィップ": `【点数】9
+【審査基準】
+・ウィップの位置が適切である
+・こまは身体の上を通る
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "渦潮〜燈籠": `【点数】9
+【審査基準】
+・渦潮は1往復行う
+・渦潮からこまを空中に浮かせ、直接親指の腹に乗せる
+【成功判定（フィニッシュ／コンボ中）】
+こまが親指の上に乗り、親指のみに触れた瞬間`,
+
+  "4DEX": `【点数】9
+【審査基準】
+・こまの周りを紐が4周している
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "フットクラッチ": `【点数】9
+【審査基準】
+・紐をキャッチする時、脚以外で紐に触れていない
+・紐をキャッチする際には脚で挟む
+　（紐が脚に乗っているだけの状態は不可）
+【成功判定（フィニッシュ／コンボ中）】
+紐を脚で挟んだ瞬間（かつこまが紐に乗っていること）`,
+
+  "フットトス蛇": `【点数】9
+【審査基準】
+・フットストールへの入り方は問わない
+【成功判定（フィニッシュ）】
+こまが手に乗った瞬間
+【成功判定（コンボ中）】
+こまが腕に巻かれた紐を回り切った瞬間`,
+
+  "ダブルピルエット白刃取り": `【点数】9
+【審査基準】
+・投げ上げた際に紐から両手が離れている
+・ピルエットは2周回り切る
+【成功判定（フィニッシュ／コンボ中）】
+浮いた紐を掴んだ瞬間（かつこまが紐に乗っていること）`,
+
+  "アームグラインドウィップ": `【点数】9
+【審査基準】
+・こまは指から前腕の真ん中までの距離を、最低でも走る
+・ウィップは裏かけで行う
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "背面ダイレクトむち3": `【点数】9
+【スタート技】
+【審査基準】
+・紐の片方の端が手から離れている間に、紐とこまが触れる
+・片手のみで行う
+・背面で行う
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "ダイレク燈籠": `【点数】10
+【スタート技】
+【審査基準】
+・つばめ返しから一発で親指の上にこまが乗る
+・親指以外の体の箇所がこまに触れた場合は失敗
+【成功判定（フィニッシュ／コンボ中）】
+こまが親指に乗った瞬間`,
+
+  "2個同時うずしお3回": `【点数】10
+【審査基準】
+・2個のこまを回す方法は問わない
+・上下3回行う
+・手のひらから行う
+【成功判定（フィニッシュ／コンボ中）】
+2つのこまが回った状態で手に乗った瞬間`,
+
+  "てじなーにゃむち": `【点数】10
+【審査基準】
+・こまを跳ね上げた勢いで飛んだ紐を掴み、輪にする
+・輪になった紐にこまが入る
+・こまが浮いてから紐に乗るまで、左手は動かさない
+・右手は水平に動かす
+　（右手を振って紐の軌道を輪のように操作してはいけない）
+【成功判定（フィニッシュ／コンボ中）】
+こまが紐に乗った瞬間`,
+
+  "ヤトボロス": `【点数】10
+【審査基準】
+・紐を適切に巻くこと
+【成功判定（フィニッシュ／コンボ中）】
+こまが手に乗った瞬間`
+};
+
+/* =========================================================
+   3) 個別タイムスタンプ（開始秒）
+========================================================= */
+const trickStartSecondsByPoint = {
+  1: {
+    "紐かけ手乗せ": 4,
+    "お手玉": 18,
+    "どじょうすくい": 26,
+    "メリーゴーランド": 36,
+    "初詣": 44,
+    "手乗せジャンプ": 52,
+    "脚下から回す": 57,
+    "線香花火": 62,
+    "ブーメランキャッチ": 75,
+    "ベルト": 80
+  },
+  2: {
+    "つばめ返し": 5,
+    "ひばり返し": 18,
+    "リフティング": 27,
+    "つなわたり": 36,
+    "紐のせ": 53,
+    "日本一周": 66,
+    "ツイスト片道": 75,
+    "お手玉足抜き": 88,
+    "カメレオン": 102,
+    "フック": 120
+  },
+  3: {
+    "トンネルつなわたり": 5,
+    "腰かけ": 18,
+    "手からメリーゴーランド（3周）": 26,
+    "ツイスト往復": 51,
+    "トランポリン（3回）": 70,
+    "おちょこ": 83,
+    "タケコプター": 94,
+    "二段ゴマ": 109,
+    "サンズ（1回）": 122,
+    "燈籠": 128,
+    "クロスキャッチ": 137
+  },
+  4: {
+    "指のせ": 4,
+    "大車輪": 12,
+    "かざぐるま": 21,
+    "竜巻": 35,
+    "へび（3周）": 47,
+    "牛若丸片道": 63,
+    "渦潮（上下2回）": 81,
+    "メダル": 90,
+    "舞妓かけ": 101,
+    "コメタ": 109,
+    "ムチ1回": 114,
+    "胴回し": 124,
+    "脚くぐし（1回）": 131,
+    "脚回し": 138,
+    "空中ブランコ": 146
+  },
+  5: {
+    "砂時計": 4,
+    "はやぶさ返し": 20,
+    "鯉の滝登り": 33,
+    "両手へび": 46,
+    "足かけ": 65,
+    "空中大車輪": 73,
+    "足乗せ": 81,
+    "縦へび（3周）": 88,
+    "シングルクロック": 97,
+    "チョップスティック": 105,
+    "リキャプチャー型グリーントライアングル": 112,
+    "ゼロスタ": 120,
+    "クロスキャッチフォール": 126,
+    "ダイレクト綱渡り": 134
+  },
+  6: {
+    "地獄車3周": 5,
+    "白刃取り": 15,
+    "燕尾返し": 24,
+    "オープンウィップ1回": 33,
+    "背くぐし1回": 39,
+    "トルネード1回": 50,
+    "リフティング〜直大車輪": 58,
+    "ピルエット（ひものせ〜ひものせ）": 68,
+    "ザリガニ釣り": 74,
+    "片白刃": 83,
+    "登り龍（5周）": 93
+  },
+  7: {
+    "鎖鎌": 4,
+    "夜叉車": 14,
+    "首切り〜腰切り〜脚切り": 27,
+    "忍者": 39,
+    "脚くぐしin out": 52,
+    "かまいたち3セットin両手へび": 60,
+    "レール": 75,
+    "むち3": 90,
+    "ゼロスタウィップ": 103,
+    "リリーススタート": 108,
+    "ストリングトルネード": 117,
+    "オロチ": 126
+  },
+  8: {
+    "同時2個空中手乗せ": 4,
+    "くるりんぱ（3回）": 13,
+    "背面ムチ": 26,
+    "かまいたち3セット〜太陽系1周": 34,
+    "縦ヘビ4周〜灯籠": 47,
+    "歯車": 66,
+    "二回転白刃取り": 79,
+    "砂時計〜裏燈籠": 89,
+    "Vレール（2回）": 101,
+    "背面チョップスティック": 113,
+    "侍ウィップ": 122,
+    "侍キャッチ": 138,
+    "ダイレクトむち3": 147,
+    "へび2往復": 153,
+    "脚下オープンウィップ": 167,
+    "ニシキヘビ": 179,
+    "背面燈籠": 195
+  },
+  9: {
+    "リュウグウノツカイ": 5,
+    "ウロボロス": 25,
+    "スラックライン": 40,
+    "背面オープンウィップ": 52,
+    "背面両手へび": 61,
+    "サイドワインダー2.0": 81,
+    "両面ちょんかけ": 92,
+    "夜刀神": 100,
+    "クエンティン・ウィップ": 112,
+    "渦潮〜燈籠": 125,
+    "4DEX": 137,
+    "フットクラッチ": 146,
+    "フットトス蛇": 162,
+    "ダブルピルエット白刃取り": 181,
+    "アームグラインドウィップ": 195,
+    "背面ダイレクトむち3": 206
+  },
+  10: {
+    "ダイレク燈籠": 5,
+    "2個同時うずしお3回": 17,
+    "てじなーにゃむち": 44,
+    "ヤトボロス": 51
+  }
+};
+
+/* =========================================================
+   4) DOM参照
+========================================================= */
+const totalBar = document.getElementById('total-bar');
+const chipsWrap = document.getElementById('chips');
+const warn = document.getElementById('warn');
+const preWarn = document.getElementById('pre-warn');
+const preInput = document.getElementById('pre-score');
+const selectedSpan = document.getElementById('selected-count');
+const fmdSpan = document.getElementById('fmd-total');
+const baseSpan = document.getElementById('base-total');
+const preSpan = document.getElementById('pre-total');
+const finalSpan = document.getElementById('final-total');
+const searchInput = document.getElementById('trick-search');
+const searchHits = document.getElementById('search-hits');
+const toastEl = document.getElementById('toast');
+
+/* 統合メディアモーダル */
+const mediaModal  = document.getElementById('media-modal');
+const mediaName   = document.getElementById('media-name');
+const mediaPtChip = document.getElementById('media-pt-chip');
+const mediaClose  = document.getElementById('media-close');
+const mediaCriteriaWrap = document.getElementById('media-criteria');
+const mediaTrickLink = document.getElementById('media-trick-link');
+const mediaFullLink  = document.getElementById('media-full-link');
+
+/* =========================================================
+   5) ユーティリティ
+========================================================= */
+const showToast = (msg, ms=1800)=>{
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  setTimeout(()=>toastEl.classList.remove('show'), ms);
+};
+const vibrate = (ms=15)=>{ if(navigator.vibrate) navigator.vibrate(ms); };
+const formatScore = v => Number.isInteger(v)?v:Math.round(v*10)/10;
+
+let presetDirty = false;
+let suppressDirty = false;
+function updateSaveStatus(text){
+  const el = document.getElementById("save-status");
+  if(!el) return;
+  if(text){
+    el.textContent = text;
+    el.classList.toggle("is-dirty", presetDirty);
+    el.classList.toggle("is-clean", !presetDirty);
+    return;
+  }
+  if(presetDirty){
+    el.textContent = "変更あり：プリセット未保存";
+    el.classList.add("is-dirty");
+    el.classList.remove("is-clean");
+  }else{
+    el.textContent = "端末に自動保存済み";
+    el.classList.remove("is-dirty");
+    el.classList.add("is-clean");
+  }
+}
+function markDirty(){
+  if(suppressDirty) return;
+  presetDirty = true;
+  updateSaveStatus();
+}
+function markPresetSaved(label){
+  presetDirty = false;
+  updateSaveStatus(label ? `${label}を保存しました` : "プリセット保存済み");
+}
+
+/* かな正規化（ひら→カタ／濁点記号除去） */
+const kanaNormalize = s => (s||'').toLowerCase()
+  .replace(/[ぁ-ゖ]/g, ch=>String.fromCharCode(ch.charCodeAt(0)+0x60))
+  .replace(/[ﾞﾟ]/g,'');
+
+/* 数字全角/半角ゆれ */
+function toHalfWidthDigits(str){
+  return (str||"").replace(/[０-９]/g, d => String.fromCharCode(d.charCodeAt(0) - 0xFEE0));
+}
+function toFullWidthDigits(str){
+  return (str||"").replace(/[0-9]/g, d => String.fromCharCode(d.charCodeAt(0) + 0xFEE0));
+}
+
+/* へび/ヘビ・むち/ムチ 等の軽微ゆれ */
+function softNameVariants(name){
+  const v = new Set();
+  v.add(name);
+  v.add(toHalfWidthDigits(name));
+  v.add(toFullWidthDigits(name));
+  v.add(name.replace(/へび/g,"ヘビ").replace(/むち/g,"ムチ"));
+  v.add(name.replace(/ヘビ/g,"へび").replace(/ムチ/g,"むち"));
+  v.add(name.replace(/\s+/g,""));
+  return [...v];
+}
+
+/* 開始秒 lookup */
+function lookupStart(startsMap, name){
+  if(!startsMap) return null;
+  for(const cand of softNameVariants(name)){
+    if(startsMap[cand] != null) return startsMap[cand];
+  }
+  return null;
+}
+
+/* 判定基準 lookup */
+function lookupCriteria(name){
+  for(const cand of softNameVariants(name)){
+    if(judgeCriteria[cand]) return judgeCriteria[cand];
+  }
+  return null;
+}
+
+/* =========================================================
+   6) リスト構築
+========================================================= */
+const scoreListWrap = document.getElementById("tech-list");
+const preTechWrap = document.getElementById("pre-tech-list");
+
+function makeScoreItem(pt, name){
+  const item = document.createElement('div');
+  item.className = 'tech-item score-tech-item';
+  item.innerHTML = `
+    <div class="tech-name-cell">
+      <span class="tech-title">${name}</span>
+      <span class="tech-pt-label">${pt}点技</span>
+    </div>
+    <button type="button" class="judge-btn" data-name="${name}" data-pt="${pt}">動画・判定</button>
+    <label class="toggle-btn multi-toggle"><input type="checkbox" class="multi"><span>1.5倍</span></label>
+    <label class="toggle-btn use-toggle"><input type="checkbox" class="chk" data-pt="${pt}" data-name="${name}"><span>使用</span></label>
+    <button type="button" class="candidate-add-btn" data-kind="finals" data-pt="${pt}" data-name="${name}">候補</button>`;
+  return item;
+}
+function makePreItemCheck(pt, name){
+  const item = document.createElement('div');
+  item.className = 'tech-item pre-tech-item';
+  item.innerHTML = `
+    <div class="tech-name-cell">
+      <span class="tech-title">${name}</span>
+      <span class="tech-pt-label">${pt}点技</span>
+    </div>
+    <button type="button" class="judge-btn" data-name="${name}" data-pt="${pt}">動画・判定</button>
+    <label class="toggle-btn pre-toggle"><input type="checkbox" class="pre-chk" data-pt="${pt}" data-name="${name}"><span>使用</span></label>
+    <button type="button" class="candidate-add-btn" data-kind="prelims" data-pt="${pt}" data-name="${name}">候補</button>`;
+  return item;
+}
+
+function makePtSummary(pt){
+  const sum = document.createElement('summary');
+  const arrow = document.createElement('span');
+  arrow.className = 'pt-group-arrow';
+  arrow.textContent = '▼';
+
+  const title = document.createElement('span');
+  title.className = 'section-title pt-'+pt;
+  title.textContent = `${pt}点技`;
+
+  const full = document.createElement('button');
+  full.type = "button";
+  full.className = "full-video-btn";
+  full.dataset.pt = pt;
+  full.textContent = "全動画";
+
+  sum.appendChild(arrow);
+  sum.appendChild(title);
+  sum.appendChild(full);
+  return sum;
+}
+
+function buildLists(){
+  scoreListWrap.innerHTML='';
+  preTechWrap.innerHTML='';
+
+  Object.keys(tricks).forEach(pt=>{
+    /* 決勝側 */
+    const sec1 = document.createElement('details');
+    sec1.className = 'pt-group';
+    sec1.open = true;
+    sec1.appendChild(makePtSummary(pt));
+    tricks[pt].forEach(n=> sec1.appendChild(makeScoreItem(pt, n)));
+    scoreListWrap.appendChild(sec1);
+
+    /* 予選側 */
+    const sec2 = document.createElement('details');
+    sec2.className = 'pt-group';
+    sec2.open = true;
+    sec2.appendChild(makePtSummary(pt));
+    tricks[pt].forEach(n=> sec2.appendChild(makePreItemCheck(pt, n)));
+    preTechWrap.appendChild(sec2);
+  });
+}
+buildLists();
+
+/* 全動画ボタン押下（detailsの開閉を邪魔しない） */
+document.addEventListener("click",(e)=>{
+  const btn = e.target.closest(".full-video-btn");
+  if(!btn) return;
+  e.stopPropagation();
+  const pt = Number(btn.dataset.pt);
+  const url = fullVideoByPoint[pt];
+  if(url) window.open(url, "_blank");
+  else showToast("全動画URLが未登録です");
+});
+
+/* =========================================================
+   7) 判定基準の整形表示
+========================================================= */
+function escapeHtml(s){
+  return (s||"").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+/* 文字列を見やすいブロック構造へ */
+function renderCriteria(text){
+  if(!text) return `<div class="criteria-block"><div class="criteria-empty">この技の判定基準はまだ登録されていません。</div></div>`;
+
+  const lines = text.split(/\r?\n/).map(l=>l.trimEnd());
+  let html = "";
+  let currentSection = null;
+  let bullets = [];
+
+  const flushBullets = ()=>{
+    if(bullets.length){
+      html += `<ul class="criteria-list">` + bullets.map(b=>`<li>${escapeHtml(b.replace(/^・\s*/,""))}</li>`).join("") + `</ul>`;
+      bullets = [];
+    }
+  };
+
+  const openSection = (title)=>{
+    flushBullets();
+    if(title === "点数"){
+      // 点数は特別扱い（次行 or 同行値を拾う）
+      currentSection = "点数";
+      return;
+    }
+    html += `<div class="criteria-section-title">${escapeHtml(title)}</div>`;
+    currentSection = title;
+  };
+
+  let pointValue = null;
+
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i].trim();
+    if(!line) continue;
+
+    const m = line.match(/^【(.+?)】\s*(.*)$/);
+    if(m){
+      const title = m[1].trim();
+      const rest  = (m[2]||"").trim();
+
+      if(title === "点数"){
+        pointValue = rest || pointValue;
+        currentSection = "点数";
+      }else{
+        openSection(title);
+        if(rest){
+          // 同行に本文がある場合
+          html += `<div class="criteria-plain">${escapeHtml(rest)}</div>`;
+        }
+      }
+      continue;
+    }
+
+    if(currentSection === "点数" && pointValue == null){
+      pointValue = line;
+      continue;
+    }
+
+    if(line.startsWith("・")){
+      bullets.push(line);
+      continue;
+    }
+
+    if(line.startsWith("※") || line.startsWith("　※")){
+      flushBullets();
+      html += `<div class="criteria-note">${escapeHtml(line.replace(/^　/,""))}</div>`;
+      continue;
+    }
+
+    flushBullets();
+    html += `<div class="criteria-plain">${escapeHtml(line)}</div>`;
+  }
+  flushBullets();
+
+  // 点数ブロックを先頭に合成
+  let head = "";
+  if(pointValue != null){
+    head = `
+      <div class="criteria-head">
+        <span class="criteria-tag">点数</span>
+        <span class="criteria-value">${escapeHtml(String(pointValue))}</span>
+      </div>
+    `;
+  }
+
+  return `<div class="criteria-block">${head}${html || `<div class="criteria-empty">判定基準テキストが空です。</div>`}</div>`;
+}
+
+/* =========================================================
+   8) 個別動画セグメント取得
+========================================================= */
+function getSegment(pt, name){
+  const list = tricks[pt] || [];
+  const startsMap = trickStartSecondsByPoint[pt] || {};
+  const videoId = videoIdByPoint[pt];
+
+  const startV = lookupStart(startsMap, name);
+  const start = (startV != null) ? Number(startV) : null;
+
+  // 次の技の開始を end にする
+  let end = null;
+  const idx = list.indexOf(name);
+  if(idx >= 0 && idx < list.length - 1){
+    const nextName = list[idx+1];
+    const nextStartV = lookupStart(startsMap, nextName);
+    if(nextStartV != null && start != null && Number(nextStartV) > start){
+      end = Number(nextStartV);
+    }
+  }
+
+  return { videoId, start, end };
+}
+
+/* =========================================================
+   9) YouTube IFrame API（区間再生）
+========================================================= */
+let ytPlayer = null;
+let ytReady = false;
+let endTimer = null;
+let currentSegment = null;
+
+(function loadYT(){
+  const tag = document.createElement("script");
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(tag);
+})();
+
+window.onYouTubeIframeAPIReady = function(){
+  ytReady = true;
+};
+
+function ensurePlayer(videoId){
+  return new Promise(resolve=>{
+    const make = ()=>{
+      if(ytPlayer){
+        resolve(ytPlayer);
+        return;
+      }
+      ytPlayer = new YT.Player("yt-player", {
+        videoId: videoId || videoIdByPoint[1],
+        playerVars: {
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1
+        },
+        events: {
+          onReady: ()=>resolve(ytPlayer)
+        }
+      });
+    };
+
+    if(ytReady && window.YT && window.YT.Player){
+      make();
+    }else{
+      const t = setInterval(()=>{
+        if(ytReady && window.YT && window.YT.Player){
+          clearInterval(t);
+          make();
+        }
+      }, 80);
+    }
+  });
+}
+
+function clearEndTimer(){
+  if(endTimer){
+    clearTimeout(endTimer);
+    endTimer = null;
+  }
+}
+
+function playSegment(seg){
+  currentSegment = seg;
+  const { videoId, start, end } = seg;
+
+  ensurePlayer(videoId).then(p=>{
+    clearEndTimer();
+
+    if(start != null){
+      // endSeconds は API が無視するケースがあるので保険タイマー併用
+      p.loadVideoById({
+        videoId,
+        startSeconds: start,
+        endSeconds: end != null ? end : undefined
+      });
+    }else{
+      p.loadVideoById({ videoId });
+    }
+
+    // 保険タイマー
+    if(start != null && end != null){
+      const ms = Math.max(500, (end - start) * 1000);
+      endTimer = setTimeout(()=>{
+        try{ p.pauseVideo(); }catch{}
+      }, ms);
+    }
+  });
+}
+
+/* =========================================================
+   10) 統合モーダル open/close
+========================================================= */
+function openMediaModal(pt, name){
+  mediaName.textContent = name;
+  mediaPtChip.textContent = `${pt}点`;
+
+  // 判定基準
+  const critText = lookupCriteria(name);
+  mediaCriteriaWrap.innerHTML = renderCriteria(critText);
+
+  // リンク
+  const baseVid = videoIdByPoint[pt];
+  const startsMap = trickStartSecondsByPoint[pt];
+  const start = lookupStart(startsMap, name);
+  const trickUrl = baseVid
+    ? `https://youtu.be/${baseVid}${start!=null ? `?t=${start}` : ""}`
+    : "#";
+  mediaTrickLink.href = trickUrl;
+  mediaFullLink.href = fullVideoByPoint[pt] || "#";
+
+  // 動画
+  const seg = getSegment(pt, name);
+  if(!seg.videoId){
+    showToast("この点数の動画IDが未登録です");
+  }else{
+    playSegment(seg);
+  }
+
+  mediaModal.style.display = "flex";
+}
+
+function closeMediaModal(){
+  mediaModal.style.display = "none";
+  clearEndTimer();
+  try{ ytPlayer && ytPlayer.pauseVideo(); }catch{}
+}
+
+/* 判定/動画ボタン */
+document.addEventListener("click",(e)=>{
+  const btn = e.target.closest(".judge-btn");
+  if(btn){
+    const name = btn.dataset.name;
+    const pt = Number(btn.dataset.pt);
+    openMediaModal(pt, name);
+    return;
+  }
+  if(e.target === mediaClose || e.target?.dataset?.close === "1"){
+    closeMediaModal();
+  }
+});
+
+/* Escape で閉じる */
+document.addEventListener("keydown",(e)=>{
+  if(e.key === "Escape" && mediaModal.style.display === "flex"){
+    closeMediaModal();
+  }
+});
+
+/* =========================================================
+   11) 計算
+========================================================= */
+function getPreScore(){
+  let v=parseFloat(preInput.value);
+  if(isNaN(v)) v=0;
+  let c=Math.min(Math.max(0,v),112);
+  if(c!==v){ preInput.value=c; preWarn.style.display="block"; }
+  else preWarn.style.display="none";
+  return c;
+}
+let lastThreshold = 0;
+
+function updateBarColor(total){
+  const chipEls = chipsWrap.querySelectorAll('.total-chip');
+
+  if(total>=2000){
+    totalBar.style.background = "black";
+    finalSpan.style.color = "#fff";
+    chipEls.forEach(c => c.style.color = "#fff");
+
+    const ids = ["selected-count","pre-total","fmd-total","base-total"];
+    ids.forEach(id=>{
+      const chip = document.getElementById(id)?.closest(".total-chip");
+      if(chip) chip.style.color = "#000";
+    });
+  } else {
+    finalSpan.style.color = "#000";
+    chipEls.forEach(c => c.style.color = "#000");
+
+    if(total>=1900) totalBar.style.background = "#d60000";
+    else if(total>=1800) totalBar.style.background = "#6f2dbd";
+    else if(total>=1700) totalBar.style.background = "#ff7a00";
+    else if(total>=1600) totalBar.style.background = "dodgerblue";
+    else if(total>=1500) totalBar.style.background = "#3dbb3d";
+    else totalBar.style.background = "rgba(240,240,240,.96)";
+  }
+
+  const thresholds=[1500,1600,1700,1800,1900,2000];
+  const crossed = thresholds.find(t=> total>=t && lastThreshold < t);
+  if(crossed!=null){
+    finalSpan.classList.remove('pop'); void finalSpan.offsetWidth; finalSpan.classList.add('pop');
+    vibrate(18);
+    showToast(`${crossed}点ライン突破！`);
+    lastThreshold = crossed;
+  }
+  if(total < thresholds[0]) lastThreshold = 0;
+}
+
+function calcTotal(){
+  let fmd=0,base=0;
+
+  const checkedCount = document.querySelectorAll(".chk:checked").length;
+  const finalsCount = finalsList?.querySelectorAll(".order-item").length || 0;
+  const useFinalsList = finalsList?.dataset?.authoritative === "1" && finalsCount > 0;
+
+  // 技数表示の基準：
+  // ・決勝編成へ追加更新する前は、決勝画面で選択中の技数
+  // ・一度追加更新した後は、決勝編成リスト内の実際の技数
+  // これにより、追加更新ボタンを押した後は必ず決勝編成の技数と一致する。
+  const displayCount = useFinalsList ? finalsCount : checkedCount;
+
+  if(useFinalsList){
+    const entries = serializeOrderList(finalsList);
+    fmd = calcOrderSquareScore(entries);
+    base = calcOrderBaseScore(entries);
+  }else{
+    const items=document.querySelectorAll("#mode-score .tech-item");
+    items.forEach(it=>{
+      const chk=it.querySelector(".chk");
+      const multi=it.querySelector(".multi");
+      if(chk && chk.checked){
+        const b=Number(chk.dataset.pt);
+        let val=b*b;
+        if(multi && multi.checked) val*=1.5;
+        fmd+=val; base+=b;
+      }
+    });
+  }
+
+  warn.style.display = displayCount>30 ? "block" : "none";
+
+  const pre=getPreScore();
+  const total=fmd+base+pre;
+
+  selectedSpan.textContent=displayCount;
+  fmdSpan.textContent=formatScore(fmd);
+  baseSpan.textContent=formatScore(base);
+  preSpan.textContent=formatScore(pre);
+  finalSpan.textContent=formatScore(total);
+
+  updateBarColor(total);
+  syncToggleButtonStates();
+  saveState();
+}
+
+/* ボタン型チェックの見た目同期 */
+function syncToggleButtonStates(){
+  document.querySelectorAll(".toggle-btn").forEach(label=>{
+    const input = label.querySelector('input[type="checkbox"]');
+    if(input){
+      label.classList.toggle("selected", !!input.checked);
+    }
+  });
+
+  // 初期化の早い段階でも落ちないよう、const変数ではなくDOMから取得する。
+  // v1.54でここが初期化前のfinalsCandidateList/preCandidateListを参照し、
+  // 全ボタンが反応しなくなる原因になっていた。
+  const finalCandListEl = document.getElementById("finals-candidate-list");
+  const preCandListEl = document.getElementById("pre-candidate-list");
+
+  document.querySelectorAll('.candidate-add-btn[data-kind="finals"]').forEach(btn=>{
+    const txt = orderText(btn.dataset.pt, btn.dataset.name);
+    btn.classList.toggle("selected", finalCandListEl ? listContainsText(finalCandListEl, txt) : false);
+  });
+  document.querySelectorAll('.candidate-add-btn[data-kind="prelims"]').forEach(btn=>{
+    const txt = orderText(btn.dataset.pt, btn.dataset.name);
+    btn.classList.toggle("selected", preCandListEl ? listContainsText(preCandListEl, txt) : false);
+  });
+}
+
+/* 監視 */
+function bindRecalc(){
+  document.querySelectorAll(".chk,.multi,.pre-chk").forEach(el=>{
+    el.addEventListener("change", ()=>{
+      calcTotal();
+      syncToggleButtonStates();
+    });
+  });
+  syncToggleButtonStates();
+}
+bindRecalc();
+preInput.addEventListener("input", calcTotal);
+
+/* 決勝チェック制限 */
+document.addEventListener('change', e=>{
+  if(e.target.classList.contains('chk')){
+    const chk = e.target;
+    const pt = chk.dataset.pt;
+    const name = chk.dataset.name;
+    const txt = orderText(pt, name);
+    const existing = [...finalsList.querySelectorAll(".order-item")].find(li=>getItemText(li) === txt);
+
+    finalsList.dataset.authoritative = "1";
+
+    if(chk.checked){
+      if(!existing && finalsList.querySelectorAll(".order-item").length >= 30){
+        chk.checked=false;
+        syncToggleButtonStates();
+        showToast("決勝は30技までです");
+        rebuildFinalsList();
+        return;
+      }
+      removeOrderTextFromList(finalsCandidateList, txt);
+      const multi = chk.closest('.tech-item')?.querySelector('.multi')?.checked || false;
+      if(existing){
+        existing.dataset.multi = multi ? "1" : "0";
+        existing.classList.toggle("finals-multi-on", multi);
+      }else{
+        finalsList.appendChild(orderLiTemplate(pt, name, multi));
+      }
+    }else{
+      removeOrderTextFromList(finalsList, txt);
+      const multi = chk.closest('.tech-item')?.querySelector('.multi');
+      if(multi) multi.checked = false;
+    }
+    rebuildFinalsList();
+    return;
+  }
+
+  if(e.target.classList.contains('multi')){
+    const item = e.target.closest('.tech-item');
+    const chk = item?.querySelector('.chk');
+    if(!chk || !chk.checked){
+      syncToggleButtonStates();
+      calcTotal();
+      return;
+    }
+    const txt = orderText(chk.dataset.pt, chk.dataset.name);
+    const existing = [...finalsList.querySelectorAll(".order-item")].find(li=>getItemText(li) === txt);
+    if(existing){
+      existing.dataset.multi = e.target.checked ? "1" : "0";
+      existing.classList.toggle("finals-multi-on", e.target.checked);
+    }
+    rebuildFinalsList();
+  }
+});
+
+/* =========================================================
+   12) 予選 検索（削除済み）
+========================================================= */
+function applySearch(){
+  document.querySelectorAll("#pre-tech-list .tech-item").forEach(item=>{
+    item.classList.remove("search-hit");
+  });
+}
+if(searchInput){
+  searchInput.addEventListener('input', applySearch);
+}
+
+/* =========================================================
+   13) 決勝編成
+========================================================= */
+const finalsList=document.getElementById("finals-list");
+const finalsCountSpan=document.getElementById("finals-count");
+const finalsLimitAlert=document.getElementById("finals-limit-alert");
+const finalsCandidateList=document.getElementById("finals-candidate-list");
+const finalsCandidateCountSpan=document.getElementById("finals-candidate-count");
+const finalsCandidateWarn=document.getElementById("finals-candidate-warn");
+const finalsLimitNum=document.getElementById("finals-limit-num");
+const predictPt=document.getElementById("predict-pt");
+const predictName=document.getElementById("predict-name");
+const predictList=document.getElementById("predict-list");
+const predictCount=document.getElementById("predict-count");
+
+function orderText(pt,name){
+  return `[${pt}点] ${name}`;
+}
+function getItemText(li){
+  return li?.querySelector('.order-name')?.textContent || "";
+}
+function listContainsText(list, txt){
+  return [...list.querySelectorAll('.order-name')].some(n=>n.textContent===txt);
+}
+function removeOrderTextFromList(list, txt){
+  let removed = false;
+  [...list.querySelectorAll('.order-item')].forEach(li=>{
+    if(getItemText(li) === txt){
+      li.remove();
+      removed = true;
+    }
+  });
+  return removed;
+}
+function isFinalUseChecked(pt, name){
+  return !!document.querySelector(`.chk[data-name="${CSS.escape(String(name))}"][data-pt="${pt}"]:checked`);
+}
+function isPreUseChecked(pt, name){
+  return !!document.querySelector(`.pre-chk[data-name="${CSS.escape(String(name))}"][data-pt="${pt}"]:checked`);
+}
+
+function findPreTechCheck(pt, name){
+  return [...document.querySelectorAll(".pre-chk")].find(chk=>
+    chk.dataset.pt == String(pt) && chk.dataset.name === String(name)
+  ) || null;
+}
+
+function setPreTechChecked(pt, name, checked){
+  const chk = findPreTechCheck(pt, name);
+  if(!chk) return;
+  chk.checked = !!checked;
+  syncToggleButtonStates();
+}
+
+function syncPreChecksFromLists(){
+  document.querySelectorAll(".pre-chk").forEach(chk=>{ chk.checked=false; });
+  [...list1.querySelectorAll(".order-name"), ...list2.querySelectorAll(".order-name")].forEach(n=>{
+    const info = parseOrderText(n.textContent);
+    if(info) setPreTechChecked(info.pt, info.name, true);
+  });
+  syncToggleButtonStates();
+}
+
+function moveItem(list, li, dir){
+  if(dir==='up' && li.previousElementSibling) li.parentNode.insertBefore(li, li.previousElementSibling);
+  if(dir==='down' && li.nextElementSibling) li.parentNode.insertBefore(li.nextElementSibling, li);
+}
+
+function bindLongPressDelete(btn, doDelete, hint="長押しで削除"){
+  let timer = null;
+  let fired = false;
+
+  const clear = ()=>{
+    if(timer){
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+
+  const start = (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    fired = false;
+    clear();
+    timer = setTimeout(()=>{
+      timer = null;
+      fired = true;
+      doDelete();
+    }, 650);
+  };
+
+  const end = (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(timer){
+      clear();
+      showToast(hint, 800);
+    }
+    setTimeout(()=>{ fired = false; }, 80);
+  };
+
+  btn.addEventListener("pointerdown", start);
+  btn.addEventListener("pointerup", end);
+  btn.addEventListener("pointerleave", end);
+  btn.addEventListener("pointercancel", end);
+  btn.addEventListener("click", e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(!fired) showToast(hint, 800);
+  });
+}
+
+function enforceFinalLimit(){
+  const items = [...finalsList.querySelectorAll(".order-item")];
+  if(items.length <= 30) return true;
+
+  items.slice(30).forEach(li=>{
+    const info = parseOrderText(getItemText(li));
+    if(info && li.dataset.predicted !== "1") uncheckFinalTech(info.pt, info.name);
+    li.remove();
+  });
+  finalsLimitAlert.style.display = "block";
+  showToast("決勝は30技までです。30技を超えた分は追加しませんでした。");
+  return false;
+}
+
+function getPreMainCount(){
+  return list1.querySelectorAll(".order-item").length + list2.querySelectorAll(".order-item").length;
+}
+
+function enforcePreLimit(){
+  let ok = true;
+
+  const moveExtraToCandidate = (list, limit)=>{
+    const items = [...list.querySelectorAll(".order-item")];
+    items.slice(limit).forEach(li=>{
+      const info = parseOrderText(getItemText(li));
+      li.remove();
+      if(info){
+        setPreTechChecked(info.pt, info.name, false);
+        if(preCandidateList.querySelectorAll(".order-item").length < 6 && !listContainsText(preCandidateList, orderText(info.pt, info.name))){
+          preCandidateList.appendChild(preCandidateLiTemplate(info.pt, info.name));
+        }
+      }
+      ok = false;
+    });
+  };
+
+  moveExtraToCandidate(list1, 6);
+  moveExtraToCandidate(list2, 6);
+
+  const all = [...list1.querySelectorAll(".order-item"), ...list2.querySelectorAll(".order-item")];
+  all.slice(12).forEach(li=>{
+    const info = parseOrderText(getItemText(li));
+    li.remove();
+    if(info){
+      setPreTechChecked(info.pt, info.name, false);
+      if(preCandidateList.querySelectorAll(".order-item").length < 6 && !listContainsText(preCandidateList, orderText(info.pt, info.name))){
+        preCandidateList.appendChild(preCandidateLiTemplate(info.pt, info.name));
+      }
+    }
+    ok = false;
+  });
+
+  if(!ok){
+    preMainLimitAlert.style.display = "block";
+    showToast("予選は合計12技・各ラウンド6技までです。超過分は候補へ移動しました。");
+  }
+  return ok;
+}
+
+function findFinalTechItem(pt, name){
+  const ptStr = String(pt);
+  return [...document.querySelectorAll("#mode-score .tech-item")].find(item=>{
+    const chk = item.querySelector(".chk");
+    return chk && chk.dataset.pt == ptStr && chk.dataset.name === String(name);
+  }) || null;
+}
+
+function uncheckFinalTech(pt, name){
+  const item = findFinalTechItem(pt, name);
+  if(!item) return;
+  const chk = item.querySelector(".chk");
+  const mul = item.querySelector(".multi");
+  if(chk) chk.checked = false;
+  if(mul) mul.checked = false;
+  syncToggleButtonStates();
+}
+
+function setFinalTechChecked(pt, name, checked, multi=false){
+  const item = findFinalTechItem(pt, name);
+  if(!item) return;
+  const chk = item.querySelector(".chk");
+  const mul = item.querySelector(".multi");
+  if(chk) chk.checked = !!checked;
+  if(mul && checked) mul.checked = !!multi;
+  if(mul && !checked) mul.checked = false;
+  syncToggleButtonStates();
+}
+
+function syncFinalsMultiVisuals(){
+  [...finalsList.querySelectorAll(".order-item")].forEach(li=>{
+    const on = li.dataset.multi === "1";
+    li.classList.toggle("finals-multi-on", on);
+    const btn = li.querySelector('[data-act="multi"]');
+    if(btn) btn.classList.toggle("selected", on);
+  });
+}
+
+function syncScoreChecksFromFinals(){
+  document.querySelectorAll("#mode-score .chk").forEach(chk=>{ chk.checked=false; });
+  document.querySelectorAll("#mode-score .multi").forEach(mul=>{ mul.checked=false; });
+
+  [...finalsList.querySelectorAll(".order-item")].forEach(li=>{
+    const info = parseOrderText(getItemText(li));
+    if(!info) return;
+    const item = findFinalTechItem(info.pt, info.name);
+    if(!item) return;
+    const chk = item.querySelector(".chk");
+    const mul = item.querySelector(".multi");
+    if(chk) chk.checked = true;
+    if(mul) mul.checked = li.dataset.multi === "1";
+  });
+  syncFinalsMultiVisuals();
+  syncToggleButtonStates();
+}
+
+function sortCandidateListByPoint(list, afterSort){
+  const items = [...list.querySelectorAll('.order-item')];
+  items.sort((a,b)=>{
+    const A = parseOrderText(getItemText(a)) || {pt:0,name:""};
+    const B = parseOrderText(getItemText(b)) || {pt:0,name:""};
+    if(Number(B.pt) !== Number(A.pt)) return Number(B.pt) - Number(A.pt);
+    return String(A.name).localeCompare(String(B.name), "ja");
+  });
+  items.forEach(li=>list.appendChild(li));
+  if(typeof afterSort === "function") afterSort();
+  showToast("候補欄を点数順に整理しました");
+}
+
+function bindCandidateDnd(list, onEnd){
+  if(window.Sortable){
+    new Sortable(list, {
+      animation: 160,
+      handle: ".drag-handle, .order-name",
+      ghostClass: "sortable-ghost",
+      chosenClass: "sortable-chosen",
+      dragClass: "sortable-drag",
+      forceFallback: true,
+      fallbackOnBody: true,
+      delayOnTouchOnly: true,
+      delay: 120,
+      touchStartThreshold: 4,
+      onEnd: ()=>{
+        if(typeof onEnd === "function") onEnd();
+        showToast("候補欄の順番を変更しました", 900);
+      }
+    });
+    return;
+  }
+
+  let dragEl=null;
+  list.addEventListener('dragstart',e=>{
+    dragEl=e.target.closest('.order-item');
+    if(dragEl) dragEl.classList.add('dragging');
+  });
+  list.addEventListener('dragend',()=>{
+    if(dragEl){
+      dragEl.classList.remove('dragging');
+      dragEl=null;
+      if(typeof onEnd === "function") onEnd();
+    }
+  });
+  list.addEventListener('dragover',e=>{
+    e.preventDefault();
+    const after=[...list.querySelectorAll('.order-item:not(.dragging)')].find(el=>{
+      const rect=el.getBoundingClientRect();
+      return e.clientY < rect.top + rect.height/2;
+    });
+    if(!dragEl) return;
+    if(after) list.insertBefore(dragEl, after); else list.appendChild(dragEl);
+  });
+}
+
+function rebuildFinalsList(){
+  const count = finalsList.querySelectorAll('.order-item').length;
+  const candCount = finalsCandidateList.querySelectorAll('.order-item').length;
+  finalsCountSpan.textContent=count;
+  finalsCandidateCountSpan.textContent=candCount;
+  syncFinalsMultiVisuals();
+
+  const overFinals = count > 30;
+  finalsCountSpan.classList.toggle("limit-over", overFinals);
+  if(finalsLimitNum) finalsLimitNum.classList.toggle("limit-over", overFinals);
+  finalsLimitAlert.style.display = overFinals ? 'block' : 'none';
+
+  finalsCandidateWarn.style.display = candCount>10 ? 'block' : 'none';
+
+  syncFinalsMultiVisuals();
+  syncToggleButtonStates();
+  calcTotal();
+  saveState();
+}
+
+function orderLiTemplate(pt,name,multi=false,predicted=false){
+  const li=document.createElement('li');
+  li.className='order-item'; li.draggable=true;
+  if(multi) li.classList.add("finals-multi-on");
+  if(predicted) li.classList.add("is-predicted");
+  li.dataset.pt = String(pt);
+  li.dataset.name = String(name);
+  li.dataset.multi = multi ? "1" : "0";
+  li.dataset.predicted = predicted ? "1" : "0";
+  li.innerHTML=`
+    <span class="drag-handle" aria-label="並び替え">☰</span>
+    <span class="order-name">${orderText(pt,name)}</span>
+    <div class="order-controls">
+      <button class="order-btn final-multi-btn ${multi ? 'selected' : ''}" data-act="multi">1.5倍</button>
+      <button class="order-btn order-btn-cand" data-act="cand">候補へ</button>
+      <button class="order-btn order-btn-del" data-act="del">✕</button>
+    </div>`;
+  const delBtn = li.querySelector('[data-act="del"]');
+
+  const doDel=()=>{
+    if(!li.isConnected) return;
+    if(li.dataset.predicted !== "1"){
+      const info = parseOrderText(getItemText(li));
+      if(info) uncheckFinalTech(info.pt, info.name);
+    }
+    li.remove();
+    rebuildFinalsList();
+    showToast("削除しました");
+  };
+
+  bindLongPressDelete(delBtn, doDel);
+  return li;
+}
+
+function finalCandidateLiTemplate(pt,name){
+  const li=document.createElement('li');
+  li.className='order-item'; li.draggable=true;
+  li.innerHTML=`
+    <span class="drag-handle" aria-hidden="true">◎</span>
+    <span class="order-name">${orderText(pt,name)}</span>
+    <div class="order-controls">
+      <button class="order-btn order-btn-main" data-act="main">採用</button>
+      <button class="order-btn order-btn-del" data-act="del">✕</button>
+    </div>`;
+  const delBtn = li.querySelector('[data-act="del"]');
+  const doDel=()=>{ if(!li.isConnected) return; li.remove(); rebuildFinalsList(); showToast("候補から削除しました"); };
+  bindLongPressDelete(delBtn, doDel);
+  return li;
+}
+
+function serializePredictedList(){
+  return [...predictList.querySelectorAll(".predict-item")].map(li=>({
+    pt:Number(li.dataset.pt),
+    name:li.dataset.name
+  }));
+}
+
+function updatePredictCount(){
+  if(predictCount) predictCount.textContent = predictList.querySelectorAll(".predict-item").length;
+}
+
+function predictedLiTemplate(pt,name){
+  const li=document.createElement("li");
+  li.className="predict-item";
+  li.dataset.pt=String(pt);
+  li.dataset.name=String(name);
+  li.innerHTML=`
+    <div class="predict-name">${orderText(pt,name)}</div>
+    <div class="predict-actions">
+      <button type="button" class="predict-add-final">追加</button>
+      <button type="button" class="predict-del">削除</button>
+    </div>`;
+  return li;
+}
+
+function addPredictedTech(pt,name){
+  const cleanName = String(name||"").trim();
+  if(!cleanName){ showToast("予想技名を入力してください"); return false; }
+  if(predictList.querySelectorAll(".predict-item").length >= 10){
+    showToast("予想技リストは10個までです");
+    return false;
+  }
+  const txt = orderText(pt, cleanName);
+  const exists = [...predictList.querySelectorAll(".predict-item")].some(li=>orderText(li.dataset.pt, li.dataset.name) === txt);
+  if(exists){ showToast("同じ予想技はすでにあります"); return false; }
+  predictList.appendChild(predictedLiTemplate(pt, cleanName));
+  updatePredictCount();
+  saveState();
+  showToast("予想技を作成しました");
+  return true;
+}
+
+function addPredictedToFinals(pt,name){
+  const txt = orderText(pt,name);
+  if(listContainsText(finalsList, txt)){
+    showToast("この予想技はすでに決勝編成にあります");
+    return false;
+  }
+  if(finalsList.querySelectorAll(".order-item").length >= 30){
+    finalsLimitAlert.style.display='block';
+    showToast("決勝編成は30技までです");
+    return false;
+  }
+  finalsList.dataset.authoritative = "1";
+  finalsList.appendChild(orderLiTemplate(pt,name,false,true));
+  rebuildFinalsList();
+  showToast("予想技を決勝編成に追加しました");
+  return true;
+}
+
+document.getElementById("add-predict-tech").addEventListener("click",()=>{
+  if(addPredictedTech(predictPt.value, predictName.value)){
+    predictName.value="";
+  }
+});
+predictName.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    e.preventDefault();
+    document.getElementById("add-predict-tech").click();
+  }
+});
+predictList.addEventListener("click",e=>{
+  const li=e.target.closest(".predict-item");
+  if(!li) return;
+  if(e.target.classList.contains("predict-add-final")){
+    addPredictedToFinals(li.dataset.pt, li.dataset.name);
+  }
+  if(e.target.classList.contains("predict-del")){
+    if(confirm("この予想技を削除しますか？")){
+      li.remove();
+      updatePredictCount();
+      saveState();
+      showToast("予想技を削除しました");
+    }
+  }
+});
+
+function addFinalCandidate(pt,name){
+  const txt = orderText(pt,name);
+  if(isFinalUseChecked(pt, name) || listContainsText(finalsList, txt)){
+    removeOrderTextFromList(finalsCandidateList, txt);
+    rebuildFinalsList();
+    showToast("使用中の技は候補に追加できません。使用を取り消してから候補に入れてください");
+    return false;
+  }
+  if(listContainsText(finalsCandidateList, txt)){
+    showToast("同じ技はすでに登録されています");
+    return false;
+  }
+  if(finalsCandidateList.querySelectorAll('.order-item').length >= 10){
+    finalsCandidateWarn.style.display='block';
+    showToast("決勝の技選択候補は10技までです");
+    return false;
+  }
+  finalsCandidateList.appendChild(finalCandidateLiTemplate(pt,name));
+  rebuildFinalsList();
+  showToast("決勝の技選択候補に追加しました");
+  return true;
+}
+
+const loadFinalsBtn = document.getElementById("load-finals-btn");
+if(loadFinalsBtn){
+  loadFinalsBtn.addEventListener("click",()=>{
+    rebuildFinalsList();
+    showToast("決勝編成は自動反映されています");
+  });
+}
+
+finalsList.addEventListener("click",e=>{
+  if(!e.target.classList.contains("order-btn")) return;
+  finalsList.dataset.authoritative = "1";
+  const act=e.target.dataset.act; const li=e.target.closest(".order-item");
+
+  if(act==="multi"){
+    const next = li.dataset.multi !== "1";
+    li.dataset.multi = next ? "1" : "0";
+    e.target.classList.toggle("selected", next);
+    li.classList.toggle("finals-multi-on", next);
+    syncScoreChecksFromFinals();
+    calcTotal();
+    saveState();
+    showToast(next ? "1.5倍を適用しました" : "1.5倍を解除しました", 900);
+    return;
+  }
+
+  if(act==="cand"){
+    const info=parseOrderText(getItemText(li));
+    if(!info) return;
+    if(finalsCandidateList.querySelectorAll('.order-item').length >= 10){
+      finalsCandidateWarn.style.display='block';
+      showToast("決勝の技選択候補は10技までです");
+      return;
+    }
+    if(li.dataset.predicted !== "1"){
+      uncheckFinalTech(info.pt, info.name);
+    }
+    li.remove();
+    finalsCandidateList.appendChild(finalCandidateLiTemplate(info.pt, info.name));
+  }
+  rebuildFinalsList();
+});
+
+finalsCandidateList.addEventListener('click',e=>{
+  if(!e.target.classList.contains('order-btn')) return;
+  const act=e.target.dataset.act; const li=e.target.closest('.order-item');
+  if(act==='up' || act==='down') moveItem(finalsCandidateList, li, act);
+  else if(act==='main'){
+    const info=parseOrderText(getItemText(li));
+    if(!info) return;
+    if(finalsList.querySelectorAll('.order-item').length >= 30){
+      finalsLimitAlert.style.display='block';
+      showToast('決勝は30技までです');
+      return;
+    }
+    li.remove();
+    finalsList.dataset.authoritative = "1";
+    setFinalTechChecked(info.pt, info.name, true, false);
+    finalsList.appendChild(orderLiTemplate(info.pt, info.name));
+  }else if(act==='del'){
+    showToast('削除は長押しで実行');
+    return;
+  }
+  rebuildFinalsList();
+});
+
+/* DnD（決勝） */
+function bindFinalsDnd(){
+  if(window.Sortable){
+    new Sortable(finalsList, {
+      animation: 160,
+      handle: ".drag-handle, .order-name",
+      ghostClass: "sortable-ghost",
+      chosenClass: "sortable-chosen",
+      dragClass: "sortable-drag",
+      forceFallback: true,
+      fallbackOnBody: true,
+      delayOnTouchOnly: true,
+      delay: 120,
+      touchStartThreshold: 4,
+      onEnd: ()=>{
+        finalsList.dataset.authoritative = "1";
+        rebuildFinalsList();
+        showToast("決勝構成の順番を変更しました", 900);
+      }
+    });
+    return;
+  }
+
+  let dragEl=null;
+  finalsList.addEventListener('dragstart',e=>{ dragEl=e.target; dragEl.classList.add('dragging'); });
+  finalsList.addEventListener('dragend',()=>{ if(dragEl){dragEl.classList.remove('dragging'); dragEl=null; finalsList.dataset.authoritative = "1"; rebuildFinalsList(); }});
+  finalsList.addEventListener('dragover',e=>{
+    e.preventDefault();
+    const after = [...finalsList.querySelectorAll('.order-item:not(.dragging)')].find(el=>{
+      const rect=el.getBoundingClientRect();
+      return e.clientY < rect.top + rect.height/2;
+    });
+    if(!dragEl) return;
+    if(after) finalsList.insertBefore(dragEl, after); else finalsList.appendChild(dragEl);
+  });
+}
+bindFinalsDnd();
+bindCandidateDnd(finalsCandidateList, rebuildFinalsList);
+document.getElementById("finals-candidate-sort").addEventListener("click",()=>{
+  sortCandidateListByPoint(finalsCandidateList, rebuildFinalsList);
+});
+
+document.addEventListener('click',e=>{
+  const btn = e.target.closest('.candidate-add-btn[data-kind="finals"]');
+  if(!btn) return;
+  const txt = orderText(btn.dataset.pt, btn.dataset.name);
+  if(listContainsText(finalsCandidateList, txt)){
+    removeOrderTextFromList(finalsCandidateList, txt);
+    rebuildFinalsList();
+    showToast("候補から外しました");
+    return;
+  }
+  if(isFinalUseChecked(btn.dataset.pt, btn.dataset.name)){
+    removeOrderTextFromList(finalsCandidateList, txt);
+    rebuildFinalsList();
+    showToast("使用中の技は候補に追加できません。使用を取り消してから候補に入れてください");
+    return;
+  }
+  addFinalCandidate(btn.dataset.pt, btn.dataset.name);
+});
+
+/* =========================================================
+   14) 予選 編成
+========================================================= */
+const preLimitWarn=document.getElementById("prelimit-warn");
+const applyPreBtn=document.getElementById("apply-prelims-btn"); // v1.52ではボタン非表示・未使用
+const list1=document.getElementById("prelims1-list");
+const list2=document.getElementById("prelims2-list");
+const preCandidateList=document.getElementById("pre-candidate-list");
+const preCandidateCountSpan=document.getElementById("pre-candidate-count");
+const preCandidateWarn=document.getElementById("pre-candidate-warn");
+const preMainLimitAlert=document.getElementById("pre-main-limit-alert");
+const c1=document.getElementById("prelims1-count");
+const c2=document.getElementById("prelims2-count");
+const pre1LimitNum=document.getElementById("prelims1-limit-num");
+const pre2LimitNum=document.getElementById("prelims2-limit-num");
+const preSum=document.getElementById("pre-tech-total");
+
+document.addEventListener('change', e=>{
+  if(e.target.classList.contains('pre-chk')){
+    if(e.target.checked){
+      const checked = [...document.querySelectorAll(".pre-chk:checked")];
+      if(checked.length > 12){
+        e.target.checked=false;
+        preLimitWarn.style.display="block";
+        syncToggleButtonStates();
+        showToast("予選は合計12技までです");
+        autoSyncPreListsFromChecks();
+        updatePreSummary();
+        return;
+      }
+      const txt = orderText(e.target.dataset.pt, e.target.dataset.name);
+      removeOrderTextFromList(preCandidateList, txt);
+    }else{
+      preLimitWarn.style.display="none";
+    }
+    autoSyncPreListsFromChecks();
+    updatePreSummary();
+    syncToggleButtonStates();
+    saveState();
+  }
+});
+
+function mkPreOrderItem(pt,name,round){
+  const li=document.createElement('li');
+  li.className='order-item'; li.draggable=true;
+  const label=round===1?"2R▶":"◀1R"; const move=round===1?"to2":"to1";
+  li.innerHTML=`
+    <span class="drag-handle" aria-label="並び替え">☰</span>
+    <span class="order-name">${orderText(pt,name)}</span>
+    <div class="order-controls">
+      <button class="order-btn" data-act="up">↑</button>
+      <button class="order-btn" data-act="down">↓</button>
+      <button class="order-btn order-btn-move" data-act="${move}">${label}</button>
+      <button class="order-btn order-btn-cand" data-act="cand">候補へ</button>
+      <button class="order-btn order-btn-del" data-act="del">✕</button>
+    </div>`;
+  const delBtn=li.querySelector('[data-act="del"]');
+  const doDel=()=>{
+    if(!li.isConnected) return;
+    const info=parseOrderText(getItemText(li));
+    if(info) setPreTechChecked(info.pt, info.name, false);
+    li.remove();
+    updatePreSummary();
+    showToast("削除しました");
+  };
+  bindLongPressDelete(delBtn, doDel);
+  return li;
+}
+
+function autoSyncPreListsFromChecks(){
+  const checkedEntries = [...document.querySelectorAll(".pre-chk:checked")].map(chk=>({
+    pt: chk.dataset.pt,
+    name: chk.dataset.name,
+    key: orderText(chk.dataset.pt, chk.dataset.name)
+  })).slice(0,12);
+
+  const checkedKeys = new Set(checkedEntries.map(d=>d.key));
+
+  // 既に編成済みの技は、現在の並び順をできるだけ維持する
+  const currentEntries = [...list1.querySelectorAll(".order-item"), ...list2.querySelectorAll(".order-item")]
+    .map(li=>{
+      const info = parseOrderText(getItemText(li));
+      return info ? {pt:String(info.pt), name:info.name, key:orderText(info.pt, info.name)} : null;
+    })
+    .filter(Boolean)
+    .filter(d=>checkedKeys.has(d.key));
+
+  const used = new Set(currentEntries.map(d=>d.key));
+  const additions = checkedEntries.filter(d=>!used.has(d.key));
+  const finalEntries = [...currentEntries, ...additions].slice(0,12);
+
+  // 万一12個を超えるチェックが残った場合は外す
+  const finalKeys = new Set(finalEntries.map(d=>d.key));
+  document.querySelectorAll(".pre-chk:checked").forEach(chk=>{
+    const key = orderText(chk.dataset.pt, chk.dataset.name);
+    if(!finalKeys.has(key)) chk.checked = false;
+  });
+
+  list1.innerHTML="";
+  list2.innerHTML="";
+  finalEntries.forEach((d,i)=>{
+    if(i < 6) list1.appendChild(mkPreOrderItem(d.pt, d.name, 1));
+    else list2.appendChild(mkPreOrderItem(d.pt, d.name, 2));
+  });
+
+  pruneCandidateDuplicates(list1, preCandidateList);
+  pruneCandidateDuplicates(list2, preCandidateList);
+  syncToggleButtonStates();
+}
+
+function preCandidateLiTemplate(pt,name){
+  const li=document.createElement('li');
+  li.className='order-item'; li.draggable=true;
+  li.innerHTML=`
+    <span class="drag-handle" aria-hidden="true">◎</span>
+    <span class="order-name">${orderText(pt,name)}</span>
+    <div class="order-controls">
+      <button class="order-btn" data-act="up">↑</button>
+      <button class="order-btn" data-act="down">↓</button>
+      <button class="order-btn order-btn-round" data-act="r1">1R</button>
+      <button class="order-btn order-btn-round" data-act="r2">2R</button>
+      <button class="order-btn order-btn-del" data-act="del">✕</button>
+    </div>`;
+  const delBtn=li.querySelector('[data-act="del"]');
+  const doDel=()=>{ if(!li.isConnected) return; li.remove(); updatePreSummary(); showToast("候補から削除しました"); };
+  bindLongPressDelete(delBtn, doDel);
+  return li;
+}
+
+function addPreCandidate(pt,name){
+  const txt = orderText(pt,name);
+  if(isPreUseChecked(pt, name) || listContainsText(list1, txt) || listContainsText(list2, txt)){
+    removeOrderTextFromList(preCandidateList, txt);
+    updatePreSummary();
+    showToast("予選で使用中の技は候補に追加できません。予選を取り消してから候補に入れてください");
+    return false;
+  }
+  if(listContainsText(preCandidateList, txt)){
+    showToast("同じ技はすでに登録されています");
+    return false;
+  }
+  if(preCandidateList.querySelectorAll('.order-item').length >= 6){
+    preCandidateWarn.style.display='block';
+    showToast("予選の技選択候補は6技までです");
+    return false;
+  }
+  preCandidateList.appendChild(preCandidateLiTemplate(pt,name));
+  updatePreSummary();
+  showToast("予選の技選択候補に追加しました");
+  return true;
+}
+
+if(applyPreBtn){
+  applyPreBtn.addEventListener("click",()=>{
+    autoSyncPreListsFromChecks();
+    updatePreSummary();
+    calcTotal();
+    showToast(`予選へ反映しました（第1R ${list1.querySelectorAll('.order-item').length}技 / 第2R ${list2.querySelectorAll('.order-item').length}技）`);
+  });
+}
+
+function swapMove(li, to2){
+  const info=parseOrderText(getItemText(li)); if(!info) return;
+  const target = to2 ? list2 : list1;
+  li.remove();
+  target.appendChild(mkPreOrderItem(info.pt,info.name,to2?2:1));
+
+  const over = target.querySelectorAll('.order-item').length > 6;
+  if(over){
+    preMainLimitAlert.style.display='block';
+    showToast(to2 ? '第2ラウンドが6技を超えています。調整してください。' : '第1ラウンドが6技を超えています。調整してください。');
+  }
+}
+
+function preListHandler(e){
+  if(!e.target.classList.contains("order-btn")) return;
+  const act=e.target.dataset.act; const li=e.target.closest(".order-item");
+  if(act==="up" || act==="down") moveItem(li.parentNode, li, act);
+  else if(act==="del") { showToast("削除は長押しで実行"); return; }
+  else if(act==="to2") swapMove(li, true);
+  else if(act==="to1") swapMove(li, false);
+  else if(act==="cand"){
+    const info=parseOrderText(getItemText(li));
+    if(!info) return;
+    if(preCandidateList.querySelectorAll('.order-item').length >= 6){
+      preCandidateWarn.style.display='block';
+      showToast("予選の技選択候補は6技までです");
+      return;
+    }
+    setPreTechChecked(info.pt, info.name, false);
+    li.remove();
+    preCandidateList.appendChild(preCandidateLiTemplate(info.pt, info.name));
+  }
+  updatePreSummary();
+}
+
+preCandidateList.addEventListener('click',e=>{
+  if(!e.target.classList.contains('order-btn')) return;
+  const act=e.target.dataset.act; const li=e.target.closest('.order-item');
+  if(act==='up' || act==='down') moveItem(preCandidateList, li, act);
+  else if(act==='r1' || act==='r2'){
+    const info=parseOrderText(getItemText(li));
+    if(!info) return;
+    const target = act==='r1' ? list1 : list2;
+    if(getPreMainCount() >= 12){
+      preMainLimitAlert.style.display='block';
+      showToast('予選は合計12技までです');
+      return;
+    }
+    if(target.querySelectorAll('.order-item').length >= 6){
+      preMainLimitAlert.style.display='block';
+      showToast(act==='r1' ? '第1ラウンドは6技までです' : '第2ラウンドは6技までです');
+      return;
+    }
+    li.remove();
+    setPreTechChecked(info.pt, info.name, true);
+    target.appendChild(mkPreOrderItem(info.pt, info.name, act==='r1' ? 1 : 2));
+  }else if(act==='del'){
+    showToast('削除は長押しで実行');
+    return;
+  }
+  updatePreSummary();
+});
+
+/* DnD（予選） */
+function bindDnd(list){
+  if(window.Sortable){
+    new Sortable(list, {
+      group: "prelims-rounds",
+      animation: 160,
+      handle: ".drag-handle, .order-name",
+      ghostClass: "sortable-ghost",
+      chosenClass: "sortable-chosen",
+      dragClass: "sortable-drag",
+      forceFallback: true,
+      fallbackOnBody: true,
+      delayOnTouchOnly: true,
+      delay: 120,
+      touchStartThreshold: 4,
+      onEnd: ()=>{
+        updatePreSummary();
+        const n1 = list1.querySelectorAll(".order-item").length;
+        const n2 = list2.querySelectorAll(".order-item").length;
+        if(n1 > 6 || n2 > 6){
+          showToast("各ラウンド6技以内に調整してください", 1200);
+        }else{
+          showToast("予選構成の順番を変更しました", 900);
+        }
+      },
+      onAdd: ()=>{
+        updatePreSummary();
+        const n1 = list1.querySelectorAll(".order-item").length;
+        const n2 = list2.querySelectorAll(".order-item").length;
+        if(n1 > 6 || n2 > 6){
+          showToast("各ラウンド6技以内に調整してください", 1200);
+        }else{
+          showToast("ラウンド間で技を移動しました", 900);
+        }
+      }
+    });
+    return;
+  }
+
+  let dragging=null;
+  list.addEventListener('dragstart',e=>{ dragging=e.target; dragging.classList.add('dragging'); });
+  list.addEventListener('dragend',()=>{ if(dragging){ dragging.classList.remove('dragging'); dragging=null; updatePreSummary(); }});
+  list.addEventListener('dragover',e=>{
+    e.preventDefault();
+    const after=[...list.querySelectorAll('.order-item:not(.dragging)')].find(el=>{
+      const r=el.getBoundingClientRect(); return e.clientY < r.top + r.height/2;
+    });
+    if(dragging){
+      if(after) list.insertBefore(dragging,after); else list.appendChild(dragging);
+    }
+  });
+}
+[list1,list2].forEach(bindDnd);
+bindCandidateDnd(preCandidateList, updatePreSummary);
+document.getElementById("pre-candidate-sort").addEventListener("click",()=>{
+  sortCandidateListByPoint(preCandidateList, updatePreSummary);
+});
+
+list1.addEventListener("click",preListHandler);
+list2.addEventListener("click",preListHandler);
+
+document.addEventListener('click',e=>{
+  const btn = e.target.closest('.candidate-add-btn[data-kind="prelims"]');
+  if(!btn) return;
+  if(isPreUseChecked(btn.dataset.pt, btn.dataset.name)){
+    const txt = orderText(btn.dataset.pt, btn.dataset.name);
+    removeOrderTextFromList(preCandidateList, txt);
+    updatePreSummary();
+    showToast("予選で使用中の技は候補に追加できません。予選を取り消してから候補に入れてください");
+    return;
+  }
+  addPreCandidate(btn.dataset.pt, btn.dataset.name);
+});
+
+function updatePreSummary(){
+  const sumNode = nodes=>{
+    let s=0; nodes.forEach(n=>{ const m=n.textContent.match(/^\[(.+?)点]/); if(m) s+=Number(m[1]); });
+    return s;
+  };
+  const sumChecked = ()=>{
+    let s=0;
+    document.querySelectorAll(".pre-chk:checked").forEach(chk=>{ s += Number(chk.dataset.pt || 0); });
+    return s;
+  };
+
+  const n1=list1.querySelectorAll(".order-name");
+  const n2=list2.querySelectorAll(".order-name");
+  const totalMain = n1.length + n2.length;
+  c1.textContent=n1.length; c2.textContent=n2.length;
+
+  const overR1 = n1.length > 6;
+  const overR2 = n2.length > 6;
+  const overTotal = totalMain > 12;
+
+  c1.classList.toggle("limit-over", overR1);
+  c2.classList.toggle("limit-over", overR2);
+  if(pre1LimitNum) pre1LimitNum.classList.toggle("limit-over", overR1);
+  if(pre2LimitNum) pre2LimitNum.classList.toggle("limit-over", overR2);
+
+  // 予選技合計は、使用ボタンで選択した瞬間にリアルタイム増減。
+  // プリセット読込などでチェックがまだ無い場合は、編成リストから補完する。
+  const checkedCount = document.querySelectorAll(".pre-chk:checked").length;
+  preSum.textContent = checkedCount ? formatScore(sumChecked()) : formatScore(sumNode(n1)+sumNode(n2));
+
+  preCandidateCountSpan.textContent = preCandidateList.querySelectorAll('.order-item').length;
+  preMainLimitAlert.style.display = (overR1 || overR2 || overTotal) ? 'block' : 'none';
+  preCandidateWarn.style.display = preCandidateList.querySelectorAll('.order-item').length>6 ? 'block' : 'none';
+  saveState();
+}
+
+/* =========================================================
+   15) モード切替 & ミニメニュー
+========================================================= */
+const modeButtons=document.querySelectorAll(".mode-btn");
+const miniButtons=document.querySelectorAll(".mini-btn");
+const sections={
+  score:document.getElementById("mode-score"),
+  finals:document.getElementById("mode-finals"),
+  prelims:document.getElementById("mode-prelims")
+};
+function updateCurrentModeBox(mode){
+  const el = document.getElementById("current-mode-box");
+  if(!el) return;
+  const labels = {
+    score:"現在：決勝スコアを選択中",
+    finals:"現在：決勝編成を調整中",
+    prelims:"現在：予選構成を作成中"
+  };
+  el.textContent = labels[mode] || "";
+}
+
+function setMode(mode){
+  Object.keys(sections).forEach(k=> sections[k].classList.toggle("active",k===mode));
+  modeButtons.forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
+  miniButtons.forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
+  updateCurrentModeBox(mode);
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+modeButtons.forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
+miniButtons.forEach(btn=>{
+  const mode=btn.dataset.mode, link=btn.dataset.link;
+  if(mode) btn.addEventListener("click",()=>setMode(mode));
+  if(link==="judge") btn.addEventListener("click",()=>window.open("https://drive.google.com/file/d/107A2MhR43epd7evpE5uHPbtyjd0BvZiS/view","_blank"));
+  if(link==="official") btn.addEventListener("click",()=>window.open("https://spingear.jp/index.php?dispatch=pages.view&page_id=140","_blank"));
+});
+
+/* =========================================================
+   16) 共有URL / 画像保存
+========================================================= */
+function getCurrentPresetLabel(kind){
+  const slotEl = document.getElementById(`${kind}-preset-slot`);
+  const nameEl = document.getElementById(`${kind}-preset-name`);
+  const slot = slotEl?.value || "slot1";
+  const name = nameEl?.value?.trim();
+  if(name) return name;
+  const base = kind === "finals" ? "決勝プリセット" : kind === "prelims" ? "予選プリセット" : "全体プリセット";
+  return `${base}${slot === "slot1" ? "①" : "②"}`;
+}
+
+function getOrderTexts(list){
+  return [...list.querySelectorAll(".order-name")].map(n=>n.textContent);
+}
+
+function parseOrderText(txt){
+  const m = String(txt||"").match(/^\[(.+?)点]\s*(.+)$/);
+  return m ? {pt:Number(m[1]), name:m[2]} : null;
+}
+
+function normalizeScoreItem(item){
+  if(typeof item === "string") return parseOrderText(item);
+  if(item && typeof item === "object") return {pt:Number(item.pt), name:item.name, multi:!!item.multi};
+  return null;
+}
+
+function calcOrderSquareScore(items){
+  return items.map(normalizeScoreItem).filter(Boolean).reduce((sum,item)=>sum + item.pt * item.pt * (item.multi ? 1.5 : 1), 0);
+}
+
+function calcOrderBaseScore(items){
+  return items.map(normalizeScoreItem).filter(Boolean).reduce((sum,item)=>sum + item.pt, 0);
+}
+
+function pointKey(pt){
+  return String(pt);
+}
+
+function trickCodeFromPtName(pt, name){
+  const key = pointKey(pt);
+  const arr = tricks[key] || tricks[Number(key)] || [];
+  const idx = arr.indexOf(name);
+  if(idx >= 0) return [Number(key), idx];
+  return [Number(key), name];
+}
+
+function trickCodeFromOrderText(txt){
+  const parsed = parseOrderText(txt);
+  if(!parsed) return null;
+  return trickCodeFromPtName(parsed.pt, parsed.name);
+}
+
+function trickFromCode(code){
+  if(!Array.isArray(code) || code.length < 2) return null;
+  const pt = code[0];
+  const ref = code[1];
+  if(typeof ref === "number"){
+    const arr = tricks[pointKey(pt)] || tricks[Number(pt)] || [];
+    const name = arr[ref];
+    if(name) return {pt, name};
+    return null;
+  }
+  return {pt, name:String(ref)};
+}
+
+function orderTextsToCodes(list){
+  return getOrderTexts(list).map(trickCodeFromOrderText).filter(Boolean);
+}
+
+function orderItemsToCodes(list){
+  return [...list.querySelectorAll(".order-item")].map(li=>{
+    const code = trickCodeFromOrderText(getItemText(li));
+    if(!code) return null;
+    if(li.dataset.multi === "1") code[2] = 1;
+    if(li.dataset.predicted === "1") code[3] = 1;
+    return code;
+  }).filter(Boolean);
+}
+
+function collectShortShareState(){
+  return {
+    v:3,
+    p:+preInput.value || 0,
+    c:[...document.querySelectorAll(".chk:checked")].map(c=>{
+      const base = trickCodeFromPtName(c.dataset.pt, c.dataset.name);
+      const multi = c.closest('.tech-item')?.querySelector('.multi')?.checked ? 1 : 0;
+      return [base[0], base[1], multi];
+    }),
+    q:[...document.querySelectorAll(".pre-chk:checked")].map(c=>trickCodeFromPtName(c.dataset.pt, c.dataset.name)),
+    f:orderItemsToCodes(finalsList),
+    fc:orderTextsToCodes(finalsCandidateList),
+    y:serializePredictedList().map(d=>trickCodeFromPtName(d.pt, d.name)),
+    r1:orderTextsToCodes(list1),
+    r2:orderTextsToCodes(list2),
+    pc:orderTextsToCodes(preCandidateList)
+  };
+}
+
+function collectCompactState(){
+  // 共有URLを短くするため、技名ではなく「点数＋技リスト内番号」を中心に保存します。
+  return collectShortShareState();
+}
+
+function applyShortShareState(data){
+  if(!data || data.v !== 3) return false;
+
+  document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
+  list1.innerHTML="";
+  list2.innerHTML="";
+  preCandidateList.innerHTML="";
+  finalsList.dataset.authoritative = "1";
+  finalsList.innerHTML="";
+  finalsCandidateList.innerHTML="";
+  preInput.value = data.p ?? 0;
+
+  (data.c||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(!item) return;
+    const chk=[...document.querySelectorAll(`.chk[data-name="${CSS.escape(item.name)}"][data-pt="${item.pt}"]`)][0];
+    if(chk){
+      chk.checked=true;
+      const mul=chk.closest('.tech-item')?.querySelector('.multi');
+      if(mul) mul.checked=!!code[2];
+    }
+  });
+
+  (data.q||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(!item) return;
+    const chk=[...document.querySelectorAll(`.pre-chk[data-name="${CSS.escape(item.name)}"][data-pt="${item.pt}"]`)][0];
+    if(chk) chk.checked=true;
+  });
+
+  if((data.f||[]).length) finalsList.dataset.authoritative = "1";
+  (data.f||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) finalsList.appendChild(orderLiTemplate(item.pt, item.name, !!code[2], !!code[3]));
+  });
+  (data.fc||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) finalsCandidateList.appendChild(finalCandidateLiTemplate(item.pt, item.name));
+  });
+  predictList.innerHTML="";
+  (data.y||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) predictList.appendChild(predictedLiTemplate(item.pt, item.name));
+  });
+  updatePredictCount();
+  (data.r1||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) list1.appendChild(mkPreOrderItem(item.pt, item.name, 1));
+  });
+  (data.r2||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) list2.appendChild(mkPreOrderItem(item.pt, item.name, 2));
+  });
+  (data.pc||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item) preCandidateList.appendChild(preCandidateLiTemplate(item.pt, item.name));
+  });
+
+  calcTotal();
+  syncPreChecksFromLists();
+  updatePreSummary();
+  updatePredictCount();
+  rebuildFinalsList();
+  saveState();
+  return true;
+}
+
+function applyCompactState(data){
+  if(!data || typeof data !== "object") return false;
+
+  // v3は短縮共有URL用
+  if(data.v === 3) return applyShortShareState(data);
+
+  // 旧共有URLとの互換性を維持
+  document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
+  list1.innerHTML="";
+  list2.innerHTML="";
+  preCandidateList.innerHTML="";
+  finalsList.innerHTML="";
+  finalsCandidateList.innerHTML="";
+  predictList.innerHTML="";
+  preInput.value = data.pre ?? 0;
+
+  (data.checks||[]).forEach(item=>{
+    const chk=[...document.querySelectorAll(`.chk[data-name="${CSS.escape(item.n)}"][data-pt="${item.p}"]`)][0];
+    if(chk){
+      chk.checked=true;
+      const mul=chk.closest('.tech-item')?.querySelector('.multi');
+      if(mul) mul.checked=!!item.m;
+    }
+  });
+
+  (data.prechecks||[]).forEach(item=>{
+    const chk=[...document.querySelectorAll(`.pre-chk[data-name="${CSS.escape(item.n)}"][data-pt="${item.p}"]`)][0];
+    if(chk) chk.checked=true;
+  });
+
+  if((data.finals||[]).length) finalsList.dataset.authoritative = "1";
+  (data.finals||[]).forEach(txt=>{
+    const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
+    if(m) finalsList.appendChild(orderLiTemplate(m[1], m[2]));
+  });
+  (data.predicted||[]).forEach(d=>{
+    if(d && d.name) predictList.appendChild(predictedLiTemplate(d.pt, d.name));
+  });
+  updatePredictCount();
+  (data.finalsCand||[]).forEach(txt=>{
+    const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
+    if(m) finalsCandidateList.appendChild(finalCandidateLiTemplate(m[1], m[2]));
+  });
+  (data.p1||[]).forEach(txt=>{
+    const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
+    if(m) list1.appendChild(mkPreOrderItem(m[1],m[2],1));
+  });
+  (data.p2||[]).forEach(txt=>{
+    const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
+    if(m) list2.appendChild(mkPreOrderItem(m[1],m[2],2));
+  });
+  (data.preCand||[]).forEach(txt=>{
+    const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
+    if(m) preCandidateList.appendChild(preCandidateLiTemplate(m[1], m[2]));
+  });
+
+  calcTotal();
+  syncPreChecksFromLists();
+  updatePreSummary();
+  rebuildFinalsList();
+  saveState();
+  return true;
+}
+
+function base64UrlEncode(str){
+  return btoa(unescape(encodeURIComponent(str)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function base64UrlDecode(encoded){
+  let s = String(encoded || "").replace(/-/g, "+").replace(/_/g, "/");
+  while(s.length % 4) s += "=";
+  return decodeURIComponent(escape(atob(s)));
+}
+
+function encodeShareData(data){
+  return base64UrlEncode(JSON.stringify(data));
+}
+
+function decodeShareData(encoded){
+  return JSON.parse(base64UrlDecode(encoded));
+}
+
+function createShareUrl(){
+  const data = collectCompactState();
+  const encoded = encodeShareData(data);
+  return `${location.origin}${location.pathname}?s=${encoded}`;
+}
+
+function restoreSharedStateIfNeeded(){
+  const params = new URLSearchParams(location.search);
+  const shortShare = params.get("s");
+  const oldShare = params.get("share");
+  const share = shortShare || oldShare;
+  if(!share) return false;
+  try{
+    const data = decodeShareData(share);
+    const ok = applyCompactState(data);
+    if(ok) showToast("共有された構成を読み込みました");
+    return ok;
+  }catch(err){
+    console.error("share restore error", err);
+    showToast("共有URLの読み込みに失敗しました");
+    return false;
+  }
+}
+
+async function copyShareUrl(){
+  const url = createShareUrl();
+  try{
+    await navigator.clipboard.writeText(url);
+    showToast("短縮共有URLをコピーしました");
+  }catch{
+    window.prompt("共有URLをコピーしてください", url);
+  }
+}
+
+document.getElementById("btn-share-url").addEventListener("click", copyShareUrl);
+
+function getExportData(){
+  const finalEntries = serializeOrderList(finalsList);
+  const finals = finalEntries.map(d=>`${orderText(d.pt, d.name)}${d.predicted ? "（予想技）" : ""}${d.multi ? "（1.5倍）" : ""}`);
+  const finalsCand = getOrderTexts(finalsCandidateList);
+  const p1 = getOrderTexts(list1);
+  const p2 = getOrderTexts(list2);
+  const preCand = getOrderTexts(preCandidateList);
+  const now = new Date().toLocaleString();
+  const shareUrl = createShareUrl();
+  const finalScore = calcOrderSquareScore(finalEntries);
+  const baseScore = calcOrderBaseScore(finalEntries);
+  const prelimScore = calcOrderBaseScore([...p1, ...p2]);
+  return {
+    finals, finalsCand, p1, p2, preCand, now, shareUrl, finalScore, baseScore, prelimScore,
+    overallTotal: finalSpan.textContent,
+    preInput: preSpan.textContent,
+    presetLabel: getCurrentPresetLabel("overall")
+  };
+}
+
+function getExportQrInfo(){
+  const pageUrl = location.origin + location.pathname;
+  return {
+    url: pageUrl,
+    note: "QRコードからオオルリカップ2026自動構成システムを開く事が出来ます。構成共有は上部の共有URLボタンをご利用ください。"
+  };
+}
+
+function buildExportSheet(kind="all"){
+  const data = getExportData();
+  const {finals, finalsCand, p1, p2, preCand, now, finalScore, baseScore, prelimScore, overallTotal, preInput, presetLabel} = data;
+  const qrInfo = getExportQrInfo();
+
+  const host = document.createElement("div");
+  host.className = "export-sheet-host";
+
+  const sheet = document.createElement("div");
+  sheet.className = `export-sheet export-sheet--${kind}${kind !== "all" ? " export-sheet--a4" : ""}`;
+
+  const formatExportTechniqueText = (t)=>{
+    const s = String(t || "");
+    return s.replace(/^(\[[^\]]+\])(\S)/, "$1 $2");
+  };
+
+  const listHtml = (items, opts={})=>{
+    if(!items.length) return `<div class="export-empty">未設定</div>`;
+    const cols = opts.cols === 2 ? ' is-two-col' : '';
+    const extraClass = opts.className || '';
+
+    const renderRow = (t,i)=>{
+      const predictedClass = String(t).includes("（予想技）") ? " is-predicted" : "";
+      return `<div class="export-list-row${predictedClass}"><div class="export-list-num">${i+1}.</div><div class="export-list-text">${escapeHtml(formatExportTechniqueText(t))}</div></div>`;
+    };
+
+    if(opts.cols === 2){
+      const cut = Math.ceil(items.length / 2);
+      const left = items.slice(0, cut);
+      const right = items.slice(cut);
+      return `<div class="export-list${cols}${extraClass}">`
+        + `<div class="export-col export-col--left">` + left.map((t,i)=>renderRow(t,i)).join("") + `</div>`
+        + `<div class="export-col export-col--right">` + right.map((t,i)=>renderRow(t,i + cut)).join("") + `</div>`
+        + `</div>`;
+    }
+
+    return `<div class="export-list${cols}${extraClass}">` + items.map((t,i)=>renderRow(t,i)).join("") + `</div>`;
+  };
+
+  if(kind === "prelim"){
+    sheet.innerHTML = `
+      <h1>オオルリカップ2026</h1>
+      <div class="export-subtitle">予選構成シート</div>
+      <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(presetLabel)}</div>
+      <div class="export-score-row">
+        <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
+        <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
+        <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
+        <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
+      </div>
+      <div class="export-grid">
+        <div class="export-block export-block--main">
+          <h2>第1ラウンド</h2>
+          ${listHtml(p1)}
+        </div>
+        <div class="export-block export-block--main">
+          <h2>第2ラウンド</h2>
+          ${listHtml(p2)}
+        </div>
+      </div>
+      <div class="export-footer">
+        <div class="export-note">${escapeHtml(qrInfo.note)}</div>
+        <div class="export-qr-area">
+          <div id="export-qr"></div>
+          <div>大会システム</div>
+        </div>
+      </div>
+    `;
+  }else if(kind === "final"){
+    sheet.innerHTML = `
+      <h1>オオルリカップ2026</h1>
+      <div class="export-subtitle">決勝構成シート</div>
+      <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(presetLabel)}</div>
+      <div class="export-score-row">
+        <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
+        <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
+        <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
+        <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
+      </div>
+      <div class="export-grid">
+        <div class="export-block export-block--main">
+          <h2>決勝構成</h2>
+          ${listHtml(finals, {cols:2, className:" export-list--finals-two-col"})}
+        </div>
+      </div>
+      <div class="export-footer">
+        <div class="export-note">${escapeHtml(qrInfo.note)}</div>
+        <div class="export-qr-area">
+          <div id="export-qr"></div>
+          <div>大会システム</div>
+        </div>
+      </div>
+    `;
+  }else{
+    sheet.innerHTML = `
+      <h1>オオルリカップ2026</h1>
+      <div class="export-subtitle">技構成シート</div>
+      <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(presetLabel)}</div>
+      <div class="export-score-row">
+        <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
+        <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
+        <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
+        <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
+      </div>
+      <div class="export-grid">
+        <div class="export-block export-block--main">
+          <h2>決勝編成</h2>
+          ${listHtml(finals, {cols:2, className:" export-list--finals-two-col"})}
+        </div>
+        <div>
+          <div class="export-block export-block--main" style="margin-bottom:14px;">
+            <h2>予選 第1ラウンド</h2>
+            ${listHtml(p1)}
+          </div>
+          <div class="export-block export-block--main" style="margin-bottom:14px;">
+            <h2>予選 第2ラウンド</h2>
+            ${listHtml(p2)}
+          </div>
+        </div>
+      </div>
+      <div class="export-footer">
+        <div class="export-note">${escapeHtml(qrInfo.note)}</div>
+        <div class="export-qr-area">
+          <div id="export-qr"></div>
+          <div>大会システム</div>
+        </div>
+      </div>
+    `;
+  }
+
+  host.appendChild(sheet);
+  document.body.appendChild(host);
+
+  const qrTarget = sheet.querySelector("#export-qr");
+  if(window.QRCode){
+    new QRCode(qrTarget, {
+      text: qrInfo.url,
+      width: 92,
+      height: 92,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }else{
+    qrTarget.innerHTML = `<div style="font-size:11px;color:#777;">QR生成ライブラリ未読込</div>`;
+  }
+
+  return {host, sheet};
+}
+
+function canvasToBlob(canvas, type="image/png", quality){
+  return new Promise(resolve=>{
+    canvas.toBlob(blob=>resolve(blob), type, quality);
+  });
+}
+
+function isMobileDevice(){
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || "");
+}
+
+let latestImageBlob = null;
+let latestImageFile = null;
+let latestImageUrl = null;
+
+function makeImageFileName(kind="all"){
+  const date = new Date().toISOString().slice(0,10);
+  const suffixMap = {
+    all: "all",
+    prelim: "prelim",
+    final: "final"
+  };
+  return `ooruricup2026_${suffixMap[kind] || kind}_${date}.png`;
+}
+
+function revokeLatestImageUrl(){
+  if(latestImageUrl){
+    URL.revokeObjectURL(latestImageUrl);
+    latestImageUrl = null;
+  }
+}
+
+function showImageSavePreview(blob, fileName){
+  latestImageBlob = blob;
+  latestImageFile = new File([blob], fileName, {type:"image/png"});
+  revokeLatestImageUrl();
+  latestImageUrl = URL.createObjectURL(blob);
+
+  const modal = document.getElementById("image-save-modal");
+  const preview = document.getElementById("image-save-preview");
+  const download = document.getElementById("image-save-download");
+
+  preview.src = latestImageUrl;
+  download.href = latestImageUrl;
+  download.download = fileName;
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeImageSavePreview(){
+  const modal = document.getElementById("image-save-modal");
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function openExportChoiceModal(){
+  const modal = document.getElementById("export-choice-modal");
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeExportChoiceModal(){
+  const modal = document.getElementById("export-choice-modal");
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden", "true");
+}
+
+async function shareLatestImage(){
+  if(!latestImageFile){
+    showToast("先に画像を作成してください");
+    return false;
+  }
+
+  const shareData = {
+    title:"オオルリカップ2026 技構成シート",
+    text:"オオルリカップ2026の技構成シートです。",
+    files:[latestImageFile]
+  };
+
+  if(navigator.share && navigator.canShare && navigator.canShare(shareData)){
+    try{
+      await navigator.share(shareData);
+      showToast("共有・保存メニューを開きました");
+      return true;
+    }catch(err){
+      console.warn("share cancelled or failed", err);
+      return false;
+    }
+  }
+
+  return false;
+}
+
+async function saveOrShareCanvasImage(canvas, kind="all"){
+  const blob = await canvasToBlob(canvas, "image/png");
+  if(!blob){
+    throw new Error("PNG画像の生成に失敗しました");
+  }
+
+  const fileName = makeImageFileName(kind);
+  showImageSavePreview(blob, fileName);
+
+  if(isMobileDevice()){
+    const shared = await shareLatestImage();
+    if(!shared){
+      showToast("画像を長押しして保存できます", 2600);
+    }
+    return;
+  }
+
+  showToast("画像プレビューを作成しました");
+}
+
+function getImageExportScale(kind){
+  if(isMobileDevice()) return 1.35;
+  if(kind === "final") return 1.45;
+  if(kind === "all") return 1.45;
+  return 1.55;
+}
+
+async function generateCompositionImage(kind="all"){
+  const btn = document.getElementById("btn-save-image");
+  if(!window.html2canvas){
+    showToast("画像保存ライブラリを読み込めませんでした");
+    return;
+  }
+
+  closeExportChoiceModal();
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = "作成<br>中";
+  showToast("画像を作成しています。30技の場合は少し時間がかかります", 2400);
+
+  const {host, sheet} = buildExportSheet(kind);
+  try{
+    await new Promise(resolve=>setTimeout(resolve,240));
+    const canvas = await html2canvas(sheet, {
+      scale: getImageExportScale(kind),
+      backgroundColor: "#ffffff",
+      useCORS: true,
+      logging: false,
+      removeContainer: true,
+      windowWidth: sheet.scrollWidth,
+      windowHeight: sheet.scrollHeight
+    });
+    await saveOrShareCanvasImage(canvas, kind);
+  }catch(err){
+    console.error("image export error", err);
+    showToast("画像保存に失敗しました");
+  }finally{
+    host.remove();
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+function saveCompositionImage(){
+  openExportChoiceModal();
+}
+
+document.getElementById("btn-save-image").addEventListener("click", saveCompositionImage);
+document.getElementById("export-choice-close").addEventListener("click", closeExportChoiceModal);
+document.getElementById("export-choice-modal").addEventListener("click", e=>{
+  if(e.target.id === "export-choice-modal") closeExportChoiceModal();
+});
+document.querySelectorAll("[data-export-kind]").forEach(btn=>{
+  btn.addEventListener("click", ()=>generateCompositionImage(btn.dataset.exportKind));
+});
+document.getElementById("image-save-close").addEventListener("click", closeImageSavePreview);
+document.getElementById("image-save-close-bottom").addEventListener("click", closeImageSavePreview);
+document.getElementById("image-save-modal").addEventListener("click", e=>{
+  if(e.target.id === "image-save-modal") closeImageSavePreview();
+});
+document.getElementById("image-save-share-again").addEventListener("click", async()=>{
+  const shared = await shareLatestImage();
+  if(!shared) showToast("この端末では共有メニューを開けません。画像を長押しして保存してください", 2800);
+});
+
+function presetScoreSuffix(pack, kind){
+  if(!pack) return "";
+  if(pack.score != null) return `（${formatScore(pack.score)}点）`;
+  if(kind === "finals"){
+    const data = Array.isArray(pack.data) ? pack.data : (pack.data?.main || []);
+    if(data.length){
+      const score = data.reduce((sum,d)=>sum + Number(d.pt||0) * Number(d.pt||0) * (d.multi ? 1.5 : 1), 0);
+      return `（${formatScore(score)}点）`;
+    }
+  }
+  if(kind === "prelims" && pack.data){
+    const r1 = pack.data.r1 || [];
+    const r2 = pack.data.r2 || [];
+    const score = [...r1,...r2].reduce((sum,d)=>sum + Number(d.pt||0), 0);
+    return score ? `（${formatScore(score)}点）` : "";
+  }
+  if(kind === "overall" && pack.data){
+    const checks = pack.data.checks || [];
+    const pre = Number(pack.data.pre || 0);
+    let fmd=0, base=0;
+    checks.forEach(c=>{
+      if(c.u){
+        const p=Number(c.p||0);
+        let v=p*p;
+        if(c.m) v*=1.5;
+        fmd+=v;
+        base+=p;
+      }
+    });
+    return `（${formatScore(fmd+base+pre)}点）`;
+  }
+  return "";
+}
+
+function updatePresetOptionLabels(kind){
+  const store = loadPresetStore();
+  const sel = document.getElementById(`${kind}-preset-slot`);
+  if(!sel) return;
+  [...sel.options].forEach(opt=>{
+    const slot = opt.value;
+    const mark = slot === "slot1" ? "①" : "②";
+    const base = kind === "finals" ? "決勝プリセット" : kind === "prelims" ? "予選プリセット" : "全体プリセット";
+    const pack = store[kind]?.[slot];
+    const name = pack?.name?.trim() || `${base}${mark}`;
+    opt.textContent = `${name}${presetScoreSuffix(pack, kind)}`;
+  });
+}
+
+function getPresetSummaryText(kind){
+  const store = loadPresetStore();
+  const slots = ["slot1","slot2"];
+  const base = kind === "finals" ? "決勝" : "予選";
+  return slots.map((slot,idx)=>{
+    const pack = store[kind]?.[slot];
+    const mark = idx === 0 ? "①" : "②";
+    const name = pack?.name?.trim() || `${base}プリセット${mark}`;
+    if(kind === "finals"){
+      const data = Array.isArray(pack?.data) ? pack.data : (pack?.data?.main || []);
+      const count = data.length;
+      const score = data.reduce((sum,d)=>sum + Number(d.pt||0) * Number(d.pt||0) * (d.multi ? 1.5 : 1), 0);
+      return `${mark} ${name}：${count}技 / ${formatScore(score)}点`;
+    }
+    if(kind === "prelims"){
+      const r1 = pack?.data?.r1 || [];
+      const r2 = pack?.data?.r2 || [];
+      const count = r1.length + r2.length;
+      const score = [...r1,...r2].reduce((sum,d)=>sum + Number(d.pt||0), 0);
+      return `${mark} ${name}：${count}技 / ${formatScore(score)}点`;
+    }
+    return `${mark} ${name}`;
+  }).join("　｜　");
+}
+
+function updatePresetSummaries(){
+  const finals = document.getElementById("finals-preset-summary");
+  const prelims = document.getElementById("prelims-preset-summary");
+  if(finals) finals.textContent = getPresetSummaryText("finals");
+  if(prelims) prelims.textContent = getPresetSummaryText("prelims");
+}
+
+function updateAllPresetOptionLabels(){
+  ["finals","prelims","overall"].forEach(updatePresetOptionLabels);
+  updatePresetSummaries();
+}
+
+/* =========================================================
+   16) リセット / 印刷
+========================================================= */
+document.getElementById("btn-reset").addEventListener("click",()=>{
+  if(!confirm("すべての選択・編成・候補をリセットします。よろしいですか？")) return;
+  document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
+  preInput.value=0; warn.style.display="none"; preWarn.style.display="none"; preLimitWarn.style.display="none";
+  list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsList.dataset.authoritative=""; finalsCandidateList.innerHTML=""; predictList.innerHTML=""; updatePredictCount();
+  if(searchInput) searchInput.value=""; applySearch();
+  localStorage.removeItem("tsubame2025");
+  updatePredictCount();
+  calcTotal(); updatePreSummary(); rebuildFinalsList();
+  presetDirty = false;
+  updateSaveStatus("初期化しました");
+  showToast("初期化しました");
+});
+
+document.getElementById("btn-print").addEventListener("click",()=>{
+  const finals=[...finalsList.querySelectorAll(".order-item")].map(li=>{
+    const txt = li.querySelector(".order-name")?.textContent || "";
+    return txt + (li.dataset.predicted==="1" ? "（予想技）" : "") + (li.dataset.multi==="1" ? "（1.5倍）" : "");
+  });
+  const finalCands=[...finalsCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent);
+  const p1=[...list1.querySelectorAll(".order-name")].map(n=>n.textContent);
+  const p2=[...list2.querySelectorAll(".order-name")].map(n=>n.textContent);
+  const preCands=[...preCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent);
+  const now = new Date().toLocaleString();
+  const block = (title, arr)=>`<div class="block"><h2>${title}</h2>${arr.length? "<ol>"+arr.map(t=>"<li>"+t+"</li>").join("")+"</ol>" : "<div class='empty'>未設定</div>"}</div>`;
+  const w=window.open("","_blank"); if(!w) return;
+  w.document.write(`
+  <html><head><meta charset="UTF-8">
+  <style>
+    body{font-family:sans-serif;padding:20px}
+    h1{font-size:20px;margin:0}
+    .meta{font-size:12px;color:#555;margin-bottom:8px}
+    h2{font-size:16px;margin-top:16px}
+    ol{padding-left:20px}
+    li{margin-bottom:4px;font-size:14px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .block{break-inside:avoid;border:1px solid #dbeafe;border-radius:10px;padding:10px;margin-bottom:10px}
+    .empty{font-size:13px;color:#777}
+  </style></head><body>
+  <h1>オオルリカップ2026 技構成シート</h1>
+  <div class="meta">作成日時：${now} ／ 合計：${finalSpan.textContent}点 ／ 予選：${preSpan.textContent}点</div>
+  <div class="grid">
+    <div>
+      ${block("決勝編成", finals)}
+      ${block("決勝 技選択候補", finalCands)}
+    </div>
+    <div>
+      ${block("予選 第1ラウンド", p1)}
+      ${block("予選 第2ラウンド", p2)}
+      ${block("予選 技選択候補", preCands)}
+    </div>
+  </div>
+  
+<script>
+/* ===== PWAテスト登録 v1.66-test ===== */
+(function(){
+  if(!("serviceWorker" in navigator)) return;
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("./service-worker.js", {scope:"./"})
+      .then(function(reg){
+        if(reg && reg.update) reg.update();
+        console.log("PWA TEST service worker registered", reg.scope);
+      })
+      .catch(function(err){
+        console.warn("PWA TEST service worker registration failed", err);
+      });
+  });
+})();
+</script>
+
+</body></html>`);
+  w.document.close(); w.print();
+});
+
+/* =========================================================
+   17) CSV 入出力
+========================================================= */
+function exportCSV(){
+  const rows=[["type","name","point","mult15","round","order"]];
+
+  [...finalsList.querySelectorAll(".order-item")].forEach((li,i)=>{
+    const n=li.querySelector(".order-name");
+    const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
+    rows.push(["final", m[2], m[1], li.dataset.multi==="1" ? 1.5 : "", li.dataset.predicted==="1" ? "predicted" : "", i+1]);
+  });
+  [...finalsCandidateList.querySelectorAll(".order-item .order-name")].forEach((n,i)=>{
+    const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
+    rows.push(["final_candidate", m[2], m[1], "", "", i+1]);
+  });
+  serializePredictedList().forEach((d,i)=>{
+    rows.push(["predicted_final", d.name, d.pt, "", "", i+1]);
+  });
+  [...list1.querySelectorAll(".order-name")].forEach((n,i)=>{
+    const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
+    rows.push(["prelim", m[2], m[1], "", 1, i+1]);
+  });
+  [...list2.querySelectorAll(".order-name")].forEach((n,i)=>{
+    const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
+    rows.push(["prelim", m[2], m[1], "", 2, i+1]);
+  });
+  [...preCandidateList.querySelectorAll(".order-name")].forEach((n,i)=>{
+    const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
+    rows.push(["prelim_candidate", m[2], m[1], "", "candidate", i+1]);
+  });
+
+  document.querySelectorAll(".chk").forEach(chk=>{
+    if(chk.checked){
+      const name=chk.dataset.name, pt=chk.dataset.pt;
+      const mul=chk.closest('.tech-item').querySelector('.multi')?.checked ? 1.5 : "";
+      rows.push(["score_checked", name, pt, mul, "", ""]);
+    }
+  });
+
+  const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const a=document.createElement('a'); a.href=url; a.download='ooruricup2026_export.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+function jumpToPresetAnchor(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.scrollIntoView({behavior:"smooth", block:"center"});
+  el.classList.add("pop");
+  setTimeout(()=>el.classList.remove("pop"), 450);
+}
+
+function switchModeAndJump(mode, anchorId){
+  const modeButton = document.querySelector(`.mode-btn[data-mode="${mode}"]`);
+  if(modeButton){
+    modeButton.click();
+  }else{
+    document.querySelectorAll(".mode-section").forEach(sec=>sec.classList.remove("active"));
+    document.getElementById(`mode-${mode}`)?.classList.add("active");
+  }
+
+  setTimeout(()=>jumpToPresetAnchor(anchorId), 160);
+}
+
+document.getElementById("btn-export").addEventListener("click",()=>{
+  switchModeAndJump("finals", "finals-preset-anchor");
+});
+document.getElementById("btn-prelims-preset-jump").addEventListener("click",()=>{
+  switchModeAndJump("prelims", "prelims-preset-anchor");
+});
+
+document.getElementById("csv-import").addEventListener("change",async(e)=>{
+  const f=e.target.files?.[0]; if(!f) return;
+  const text = await f.text();
+  const lines = text.split(/\r?\n/).filter(Boolean);
+  const parseCsvLine = (line)=> line.match(/("([^"]|"")*"|[^,]+)/g)?.map(s=>s.replace(/^"|"$/g,'').replace(/""/g,'"'))||[];
+  const header = parseCsvLine(lines.shift() || "");
+  const idx=(k)=>header.indexOf(k);
+
+  document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
+  list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsCandidateList.innerHTML="";
+
+  for(const line of lines){
+    const cols=parseCsvLine(line);
+    const type=cols[idx("type")]; const name=cols[idx("name")]; const point=cols[idx("point")];
+
+    if(type==="final"){
+      finalsList.dataset.authoritative = "1";
+      const mul = cols[idx("mult15")];
+      finalsList.appendChild(orderLiTemplate(point,name, !!mul, cols[idx("round")] === "predicted"));
+    }else if(type==="final_candidate"){
+      finalsCandidateList.appendChild(finalCandidateLiTemplate(point,name));
+    }else if(type==="predicted_final"){
+      predictList.appendChild(predictedLiTemplate(point,name));
+    }else if(type==="prelim"){
+      const rnd = Number(cols[idx("round")])===2;
+      (rnd?list2:list1).appendChild(mkPreOrderItem(point,name, rnd?2:1));
+    }else if(type==="prelim_candidate"){
+      preCandidateList.appendChild(preCandidateLiTemplate(point,name));
+    }else if(type==="score_checked"){
+      const chk=[...document.querySelectorAll(`.chk[data-name="${CSS.escape(name)}"][data-pt="${point}"]`)][0];
+      if(chk){
+        chk.checked=true;
+        const mul=cols[idx("mult15")];
+        if(mul){ chk.closest('.tech-item').querySelector('.multi').checked=true; }
+      }
+    }
+  }
+  calcTotal(); updatePreSummary(); rebuildFinalsList();
+  showToast("CSVを取り込みました");
+});
+
+/* =========================================================
+   18) 自動保存（現行状態）
+========================================================= */
+function saveState(){
+  const state={
+    pre: +preInput.value,
+    checks: [...document.querySelectorAll(".chk")].map(c=>({
+      n:c.dataset.name,
+      p:+c.dataset.pt,
+      u:c.checked,
+      m:c.closest('.tech-item')?.querySelector('.multi')?.checked||false
+    })),
+    prechecks: [...document.querySelectorAll(".pre-chk")].map(c=>({
+      n:c.dataset.name,
+      p:+c.dataset.pt,
+      u:c.checked
+    })),
+    finals: serializeOrderList(finalsList),
+    finalCands: [...finalsCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent),
+    predicted: serializePredictedList(),
+    p1: [...list1.querySelectorAll(".order-name")].map(n=>n.textContent),
+    p2: [...list2.querySelectorAll(".order-name")].map(n=>n.textContent),
+    preCands: [...preCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent),
+  };
+  localStorage.setItem("tsubame2025", JSON.stringify(state));
+  markDirty();
+}
+
+function loadState(){
+  const raw=localStorage.getItem("tsubame2025"); if(!raw) return;
+  try{
+    suppressDirty = true;
+    const s=JSON.parse(raw);
+    preInput.value = s.pre ?? 0;
+
+    document.querySelectorAll(".chk").forEach(c=>{
+      const f=s.checks?.find(x=>x.n===c.dataset.name && x.p==c.dataset.pt);
+      if(f){
+        c.checked=!!f.u;
+        const mul=c.closest('.tech-item')?.querySelector('.multi');
+        if(mul) mul.checked=!!f.m;
+      }
+    });
+
+    document.querySelectorAll(".pre-chk").forEach(c=>{
+      const f=s.prechecks?.find(x=>x.n===c.dataset.name && x.p==c.dataset.pt);
+      if(f){ c.checked=!!f.u; }
+    });
+
+    finalsList.innerHTML="";
+    finalsCandidateList.innerHTML="";
+    predictList.innerHTML="";
+    (s.finals||[]).forEach(entry=>{
+      if(typeof entry === "string"){
+        const m=entry.match(/^\[(.+?)点]\s*(.+)$/);
+        if(m) finalsList.appendChild(orderLiTemplate(m[1], m[2]));
+      }else if(entry && entry.name){
+        finalsList.appendChild(orderLiTemplate(entry.pt, entry.name, !!entry.multi, !!entry.predicted));
+      }
+    });
+    if((s.finals||[]).length) finalsList.dataset.authoritative = "1";
+    (s.predicted||[]).forEach(d=>{
+      if(d && d.name) predictList.appendChild(predictedLiTemplate(d.pt, d.name));
+    });
+    updatePredictCount();
+    (s.finalCands||[]).forEach(txt=>{
+      const m=txt.match(/^\[(.+?)点]\s*(.+)$/);
+      if(m) finalsCandidateList.appendChild(finalCandidateLiTemplate(m[1], m[2]));
+    });
+
+    list1.innerHTML="";
+    preCandidateList.innerHTML="";
+    (s.p1||[]).forEach(txt=>{
+      const m=txt.match(/^\[(.+?)点]\s*(.+)$/);
+      if(m) list1.appendChild(mkPreOrderItem(m[1],m[2],1));
+    });
+
+    list2.innerHTML="";
+    (s.p2||[]).forEach(txt=>{
+      const m=txt.match(/^\[(.+?)点]\s*(.+)$/);
+      if(m) list2.appendChild(mkPreOrderItem(m[1],m[2],2));
+    });
+    (s.preCands||[]).forEach(txt=>{
+      const m=txt.match(/^\[(.+?)点]\s*(.+)$/);
+      if(m) preCandidateList.appendChild(preCandidateLiTemplate(m[1], m[2]));
+    });
+
+    rebuildFinalsList(); syncPreChecksFromLists();
+  updatePreSummary();
+    presetDirty = false;
+    updateSaveStatus();
+  }catch{} finally{
+    suppressDirty = false;
+  }
+}
+
+/* =========================================================
+   19) 2枠・名前付きプリセットシステム
+========================================================= */
+const PRESET_V2_KEY = "tsubame2025_named_presets_v2";
+
+/* 旧キー（存在すればslot1に移行） */
+const FINAL_PRESET_KEY_OLD   = "tsubame2025_final_preset";
+const PRE_PRESET_KEY_OLD     = "tsubame2025_pre_preset";
+const OVERALL_PRESET_KEY_OLD = "tsubame2025_overall_preset";
+
+function defaultPresetStore(){
+  return {
+    finals: {
+      slot1:{ name:"", data:[] },
+      slot2:{ name:"", data:[] }
+    },
+    prelims: {
+      slot1:{ name:"", data:{r1:[], r2:[]} },
+      slot2:{ name:"", data:{r1:[], r2:[]} }
+    },
+    overall: {
+      slot1:{ name:"", data:null },
+      slot2:{ name:"", data:null }
+    }
+  };
+}
+
+function loadPresetStore(){
+  const raw = localStorage.getItem(PRESET_V2_KEY);
+  if(!raw){
+    const s = defaultPresetStore();
+    localStorage.setItem(PRESET_V2_KEY, JSON.stringify(s));
+    return s;
+  }
+  try{
+    const s = JSON.parse(raw);
+    return Object.assign(defaultPresetStore(), s);
+  }catch{
+    const s = defaultPresetStore();
+    localStorage.setItem(PRESET_V2_KEY, JSON.stringify(s));
+    return s;
+  }
+}
+function savePresetStore(store){
+  localStorage.setItem(PRESET_V2_KEY, JSON.stringify(store));
+}
+
+/* 旧データ移行 */
+function migrateOldPresetsIfNeeded(){
+  const store = loadPresetStore();
+
+  if(store.finals.slot1.data.length === 0){
+    const raw = localStorage.getItem(FINAL_PRESET_KEY_OLD);
+    if(raw){
+      try{
+        const data = JSON.parse(raw);
+        store.finals.slot1.data = Array.isArray(data) ? data : [];
+        store.finals.slot1.name = store.finals.slot1.name || "旧：決勝プリセット";
+      }catch{}
+    }
+  }
+  if(!store.prelims.slot1.data?.r1?.length && !store.prelims.slot1.data?.r2?.length){
+    const raw = localStorage.getItem(PRE_PRESET_KEY_OLD);
+    if(raw){
+      try{
+        const data = JSON.parse(raw);
+        if(data && typeof data === "object"){
+          store.prelims.slot1.data = { r1:data.r1||[], r2:data.r2||[] };
+          store.prelims.slot1.name = store.prelims.slot1.name || "旧：予選プリセット";
+        }
+      }catch{}
+    }
+  }
+  if(!store.overall.slot1.data){
+    const raw = localStorage.getItem(OVERALL_PRESET_KEY_OLD);
+    if(raw){
+      try{
+        const data = JSON.parse(raw);
+        store.overall.slot1.data = data;
+        store.overall.slot1.name = store.overall.slot1.name || "旧：全体プリセット";
+      }catch{}
+    }
+  }
+
+  savePresetStore(store);
+}
+migrateOldPresetsIfNeeded();
+
+/* 決勝/予選の保存用シリアライズ */
+function serializeOrderList(list){
+  return [...list.querySelectorAll('.order-item')].map(li=>{
+    const n = li.querySelector('.order-name');
+    const m=n?.textContent.match(/^\[(.+?)点]\s*(.+)$/);
+    return m ? {pt:Number(m[1]), name:m[2], multi: li.dataset.multi === "1", predicted: li.dataset.predicted === "1"} : null;
+  }).filter(Boolean);
+}
+
+/* セレクトと名前入力の同期 */
+function syncPresetNameUI(kind){
+  const store = loadPresetStore();
+  const sel = document.getElementById(`${kind}-preset-slot`);
+  const nameInput = document.getElementById(`${kind}-preset-name`);
+  const slot = sel.value;
+  nameInput.value = store[kind][slot].name || "";
+  updatePresetOptionLabels(kind);
+}
+["finals","prelims","overall"].forEach(kind=>{
+  document.getElementById(`${kind}-preset-slot`).addEventListener("change",()=>syncPresetNameUI(kind));
+  syncPresetNameUI(kind);
+});
+
+/* ===== 決勝プリセット ===== */
+document.getElementById("save-finals-preset").addEventListener("click",()=>{
+  const main = serializeOrderList(finalsList);
+  const cand = serializeOrderList(finalsCandidateList);
+  if(!main.length && !cand.length){ showToast("保存する決勝構成がありません"); return; }
+
+  const store = loadPresetStore();
+  const slot = document.getElementById("finals-preset-slot").value;
+  const nm = document.getElementById("finals-preset-name").value.trim() || (slot==="slot1"?"決勝プリセット①":"決勝プリセット②");
+
+  const score = main.slice(0,30).reduce((sum,d)=>sum + (Number(d.pt||0) * Number(d.pt||0) * (d.multi ? 1.5 : 1)), 0);
+  store.finals[slot] = { name:nm, score, data:{ main:main.slice(0,30), cand:cand.slice(0,10), predicted: serializePredictedList().slice(0,10) } };
+  savePresetStore(store);
+  updateAllPresetOptionLabels();
+  markPresetSaved("決勝プリセット");
+  showToast(`決勝プリセットを保存しました（${nm}／${main.length}技／${formatScore(score)}点）`);
+});
+
+document.getElementById("load-finals-preset").addEventListener("click",()=>{
+  const store = loadPresetStore();
+  const slot = document.getElementById("finals-preset-slot").value;
+  const pack = store.finals[slot];
+
+  if(!pack?.data){ showToast("保存済みの決勝構成がありません"); return; }
+  const main = Array.isArray(pack.data) ? pack.data : (pack.data.main || []);
+  const cand = Array.isArray(pack.data) ? [] : (pack.data.cand || []);
+  const predicted = Array.isArray(pack.data) ? [] : (pack.data.predicted || []);
+  if(!main.length && !cand.length){ showToast("保存済みの決勝構成がありません"); return; }
+
+  finalsList.innerHTML="";
+  finalsCandidateList.innerHTML="";
+  predictList.innerHTML="";
+  main.slice(0,30).forEach(d=> finalsList.appendChild(orderLiTemplate(d.pt, d.name, !!d.multi, !!d.predicted)));
+  cand.slice(0,10).forEach(d=> finalsCandidateList.appendChild(finalCandidateLiTemplate(d.pt, d.name)));
+  predicted.slice(0,10).forEach(d=> predictList.appendChild(predictedLiTemplate(d.pt, d.name)));
+  updatePredictCount();
+  rebuildFinalsList();
+  document.getElementById("finals-preset-name").value = pack.name || "";
+  updateAllPresetOptionLabels();
+  presetDirty = false;
+  updateSaveStatus("決勝プリセット読込済み");
+  showToast(`決勝構成を反映しました（${pack.name||"無名"}）`);
+});
+
+/* ===== 予選プリセット ===== */
+document.getElementById("save-prelims-preset").addEventListener("click",()=>{
+  const r1 = serializeOrderList(list1);
+  const r2 = serializeOrderList(list2);
+  const cand = serializeOrderList(preCandidateList);
+  if(!r1.length && !r2.length && !cand.length){ showToast("保存する予選構成がありません"); return; }
+
+  const store = loadPresetStore();
+  const slot = document.getElementById("prelims-preset-slot").value;
+  const nm = document.getElementById("prelims-preset-name").value.trim() || (slot==="slot1"?"予選プリセット①":"予選プリセット②");
+
+  const score = [...r1.slice(0,6), ...r2.slice(0,6)].reduce((sum,d)=>sum + Number(d.pt||0), 0);
+  store.prelims[slot] = {
+    name:nm,
+    score,
+    data:{ r1:r1.slice(0,6), r2:r2.slice(0,6), cand:cand.slice(0,10) }
+  };
+  savePresetStore(store);
+  updateAllPresetOptionLabels();
+  markPresetSaved("予選プリセット");
+  showToast(`予選プリセットを保存しました（${nm}／${r1.length + r2.length}技／${formatScore(score)}点）`);
+});
+
+document.getElementById("load-prelims-preset").addEventListener("click",()=>{
+  const store = loadPresetStore();
+  const slot = document.getElementById("prelims-preset-slot").value;
+  const pack = store.prelims[slot];
+
+  if(!pack?.data){ showToast("保存済みの予選構成がありません"); return; }
+  const r1 = pack.data.r1 || [];
+  const r2 = pack.data.r2 || [];
+  const cand = pack.data.cand || [];
+  if(!r1.length && !r2.length && !cand.length){ showToast("保存済みの予選構成がありません"); return; }
+
+  list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML="";
+  r1.slice(0,6).forEach(d=> list1.appendChild(mkPreOrderItem(d.pt, d.name, 1)));
+  r2.slice(0,6).forEach(d=> list2.appendChild(mkPreOrderItem(d.pt, d.name, 2)));
+  cand.slice(0,10).forEach(d=> preCandidateList.appendChild(preCandidateLiTemplate(d.pt, d.name)));
+  syncPreChecksFromLists();
+  updatePreSummary();
+  document.getElementById("prelims-preset-name").value = pack.name || "";
+  updateAllPresetOptionLabels();
+  presetDirty = false;
+  updateSaveStatus("予選プリセット読込済み");
+  showToast(`予選構成を反映しました（${pack.name||"無名"}）`);
+});
+
+/* ===== 全体プリセット ===== */
+document.getElementById("save-overall-preset").addEventListener("click",()=>{
+  saveState();
+  const raw = localStorage.getItem("tsubame2025");
+  if(!raw){ showToast("保存する構成がありません"); return; }
+
+  const store = loadPresetStore();
+  const slot = document.getElementById("overall-preset-slot").value;
+  const nm = document.getElementById("overall-preset-name").value.trim() || (slot==="slot1"?"全体プリセット①":"全体プリセット②");
+
+  try{
+    const parsed = JSON.parse(raw);
+    const score = Number(finalSpan.textContent) || 0;
+    store.overall[slot] = { name:nm, score, data: parsed };
+    savePresetStore(store);
+    updateAllPresetOptionLabels();
+    markPresetSaved("全体プリセット");
+    showToast(`全体プリセットを保存しました（${nm}／${formatScore(score)}点）`);
+  }catch{
+    showToast("全体プリセットの保存に失敗しました");
+  }
+});
+
+document.getElementById("load-overall-preset").addEventListener("click",()=>{
+  const store = loadPresetStore();
+  const slot = document.getElementById("overall-preset-slot").value;
+  const pack = store.overall[slot];
+
+  if(!pack?.data){ showToast("保存済みの全体構成がありません"); return; }
+
+  try{
+    document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
+    list1.innerHTML=""; list2.innerHTML=""; finalsList.innerHTML="";
+    localStorage.setItem("tsubame2025", JSON.stringify(pack.data));
+    loadState();
+    calcTotal();
+    updatePreSummary();
+    rebuildFinalsList();
+    document.getElementById("overall-preset-name").value = pack.name || "";
+    updateAllPresetOptionLabels();
+    presetDirty = false;
+    updateSaveStatus("全体プリセット読込済み");
+    showToast(`全体構成を反映しました（${pack.name||"無名"}）`);
+  }catch{
+    showToast("全体プリセットの読込に失敗しました");
+  }
+});
+
+/* =========================================================
+   20) ツアー
+========================================================= */
+const tour=document.getElementById('tour');
+const tourHide=()=>tour.style.display='none';
+const tourNever=()=>{ localStorage.setItem('tsubame2025_tour','1'); tourHide(); };
+document.getElementById('tour-hide').addEventListener('click',tourHide);
+document.getElementById('tour-never').addEventListener('click',tourNever);
+if(!localStorage.getItem('tsubame2025_tour')){
+  setTimeout(()=>{ tour.style.display='flex'; }, 300);
+}
+
+/* =========================================================
+   21) PWA 簡易対応
+========================================================= */
+(function(){
+  const manifest = {
+    name:"オオルリカップ2026 技構成システム",
+    short_name:"Ooruri2026",
+    start_url:"./",
+    display:"standalone",
+    background_color:"#f6faff",
+    theme_color:"#0a84ff"
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel="manifest"; link.href=url; document.head.appendChild(link);
+})();
+
+if('serviceWorker' in navigator){
+  const swCode = `
+  const CACHE='ooruricup2026-v1-1';
+  self.addEventListener('install',e=>{
+    e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])));
+    self.skipWaiting();
+  });
+  self.addEventListener('activate',e=>{
+    e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+    self.clients.claim();
+  });
+  self.addEventListener('fetch',e=>{
+    const url=new URL(e.request.url);
+    if(url.origin===location.origin){
+      e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+        const clone=res.clone(); caches.open(CACHE).then(c=>c.put(e.request,clone)); return res;
+      }).catch(()=>caches.match('./'))));
+    }
+  });`;
+  const blob = new Blob([swCode], {type:'text/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl);
+}
+
+/* =========================================================
+   22) 起動処理
+========================================================= */
+window.addEventListener("DOMContentLoaded",()=>{
+  window.scrollTo({top:0, behavior:"auto"});
+  if(!restoreSharedStateIfNeeded()){
+    loadState();
+  }
+  calcTotal();
+  updatePreSummary();
+  rebuildFinalsList();
+
+  // プリセット名UI初期同期
+  ["finals","prelims","overall"].forEach(kind=>syncPresetNameUI(kind));
+  updateAllPresetOptionLabels();
+  updateCurrentModeBox("score");
+  presetDirty = false;
+  updateSaveStatus();
+});
+</script>
+</body>
+</html>
