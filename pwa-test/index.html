@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<!-- OoruriCup2026 PWA TEST v1.66 -->
+<!-- OoruriCup2026 PWA TEST v1.67 -->
 <html lang="ja">
 <head>
-  <!-- PWAテスト対応 v1.66-test -->
+  <!-- PWAテスト対応 v1.67-test -->
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#0b4aa6">
   <meta name="application-name" content="オオルリ2026 TEST">
@@ -6265,25 +6265,7 @@ document.getElementById("btn-print").addEventListener("click",()=>{
       ${block("予選 技選択候補", preCands)}
     </div>
   </div>
-  
-<script>
-/* ===== PWAテスト登録 v1.66-test ===== */
-(function(){
-  if(!("serviceWorker" in navigator)) return;
-  window.addEventListener("load", function(){
-    navigator.serviceWorker.register("./service-worker.js", {scope:"./"})
-      .then(function(reg){
-        if(reg && reg.update) reg.update();
-        console.log("PWA TEST service worker registered", reg.scope);
-      })
-      .catch(function(err){
-        console.warn("PWA TEST service worker registration failed", err);
-      });
-  });
-})();
-</script>
-
-</body></html>`);
+  </body></html>`);
   w.document.close(); w.print();
 });
 
@@ -6819,5 +6801,23 @@ window.addEventListener("DOMContentLoaded",()=>{
   updateSaveStatus();
 });
 </script>
+
+<script>
+/* ===== PWAテスト登録 v1.67-test ===== */
+(function(){
+  if(!("serviceWorker" in navigator)) return;
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("./service-worker.js", {scope:"./"})
+      .then(function(reg){
+        if(reg && reg.update) reg.update();
+        console.log("PWA TEST service worker registered", reg.scope);
+      })
+      .catch(function(err){
+        console.warn("PWA TEST service worker registration failed", err);
+      });
+  });
+})();
+</script>
+
 </body>
 </html>

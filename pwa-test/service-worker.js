@@ -1,18 +1,23 @@
-/* オオルリカップ2026 PWA TEST Service Worker v1.66 */
-const CACHE_NAME = "ooruricup2026-pwa-test-v1-66";
+/* オオルリカップ2026 PWA TEST Service Worker v1.67 */
+const CACHE_NAME = "ooruricup2026-pwa-test-v1-67";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png"
+  "./icons/icon-maskable-512.png",
+  "./data/tricks.json",
+  "./data/settings.json"
 ];
 
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
+      .then(cache => cache.addAll(APP_SHELL).catch(err => {
+        console.warn("cache addAll partial failure", err);
+        return Promise.all(APP_SHELL.map(url => cache.add(url).catch(() => null)));
+      }))
       .then(() => self.skipWaiting())
   );
 });
@@ -33,7 +38,6 @@ self.addEventListener("fetch", event => {
 
   const url = new URL(req.url);
 
-  // PWAテスト版のページ本体は network first。更新を反映しやすくする。
   if (req.mode === "navigate" || url.pathname.endsWith("/pwa-test/index.html")) {
     event.respondWith(
       fetch(req)
@@ -47,7 +51,6 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // data/tricks.json は親フォルダのものを読む可能性もあるため network first。
   if (url.pathname.includes("/data/") || url.pathname.endsWith(".json")) {
     event.respondWith(
       fetch(req)
