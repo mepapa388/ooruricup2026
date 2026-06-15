@@ -1,0 +1,22 @@
+{
+  "competition":"オオルリカップ2026",
+  "version":"1.0.0",
+
+  "prelim":{
+    "rounds":2,
+    "perRound":6
+  },
+
+  "final":{
+    "maxTricks":30,
+    "scoreMode":"square"
+  },
+
+  "presetCount":3,
+
+  "features":{
+    "imageExport":true,
+    "qrShare":true,
+    "urlShare":true
+  }
+}
