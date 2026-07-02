@@ -2356,6 +2356,26 @@ h1{
 /* ===== v1.62 画像保存はシンプル構成固定 ===== */
 
 
+
+/* ===== v1.68 予想技フラグ保持・候補欄表示 ===== */
+#finals-candidate-list .order-item.is-predicted .order-name,
+#finals-list .order-item.is-predicted .order-name{
+  color:#d60000 !important;
+  font-weight:1000 !important;
+}
+#finals-candidate-list .order-item.is-predicted .order-name::after{
+  content:"  予想技";
+  display:inline-block;
+  margin-left:6px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:#d60000;
+  color:#fff;
+  font-size:11px;
+  font-weight:1000;
+  vertical-align:middle;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -4754,6 +4774,11 @@ function bindCandidateDnd(list, onEnd){
       dragClass: "sortable-drag",
       forceFallback: true,
       fallbackOnBody: true,
+      scroll: true,
+      bubbleScroll: true,
+      scrollSensitivity: 110,
+      scrollSpeed: 18,
+      forceAutoScrollFallback: true,
       delayOnTouchOnly: true,
       delay: 120,
       touchStartThreshold: 4,
@@ -4842,9 +4867,13 @@ function orderLiTemplate(pt,name,multi=false,predicted=false){
   return li;
 }
 
-function finalCandidateLiTemplate(pt,name){
+function finalCandidateLiTemplate(pt,name,predicted=false){
   const li=document.createElement('li');
   li.className='order-item'; li.draggable=true;
+  li.dataset.pt = String(pt);
+  li.dataset.name = String(name);
+  li.dataset.predicted = predicted ? "1" : "0";
+  if(predicted) li.classList.add("is-predicted");
   li.innerHTML=`
     <span class="drag-handle" aria-hidden="true">◎</span>
     <span class="order-name">${orderText(pt,name)}</span>
@@ -5001,11 +5030,12 @@ finalsList.addEventListener("click",e=>{
       showToast("決勝の技選択候補は10技までです");
       return;
     }
-    if(li.dataset.predicted !== "1"){
+    const wasPredicted = li.dataset.predicted === "1" || li.classList.contains("is-predicted");
+    if(!wasPredicted){
       uncheckFinalTech(info.pt, info.name);
     }
     li.remove();
-    finalsCandidateList.appendChild(finalCandidateLiTemplate(info.pt, info.name));
+    finalsCandidateList.appendChild(finalCandidateLiTemplate(info.pt, info.name, wasPredicted));
   }
   rebuildFinalsList();
 });
@@ -5022,10 +5052,13 @@ finalsCandidateList.addEventListener('click',e=>{
       showToast('決勝は30技までです');
       return;
     }
+    const wasPredicted = li.dataset.predicted === "1" || li.classList.contains("is-predicted");
     li.remove();
     finalsList.dataset.authoritative = "1";
-    setFinalTechChecked(info.pt, info.name, true, false);
-    finalsList.appendChild(orderLiTemplate(info.pt, info.name));
+    if(!wasPredicted){
+      setFinalTechChecked(info.pt, info.name, true, false);
+    }
+    finalsList.appendChild(orderLiTemplate(info.pt, info.name, false, wasPredicted));
   }else if(act==='del'){
     showToast('削除は長押しで実行');
     return;
@@ -5044,6 +5077,11 @@ function bindFinalsDnd(){
       dragClass: "sortable-drag",
       forceFallback: true,
       fallbackOnBody: true,
+      scroll: true,
+      bubbleScroll: true,
+      scrollSensitivity: 110,
+      scrollSpeed: 18,
+      forceAutoScrollFallback: true,
       delayOnTouchOnly: true,
       delay: 120,
       touchStartThreshold: 4,
@@ -5330,6 +5368,11 @@ function bindDnd(list){
       dragClass: "sortable-drag",
       forceFallback: true,
       fallbackOnBody: true,
+      scroll: true,
+      bubbleScroll: true,
+      scrollSensitivity: 110,
+      scrollSpeed: 18,
+      forceAutoScrollFallback: true,
       delayOnTouchOnly: true,
       delay: 120,
       touchStartThreshold: 4,
@@ -6215,32 +6258,81 @@ document.getElementById("btn-reset").addEventListener("click",()=>{
 });
 
 document.getElementById("btn-print").addEventListener("click",()=>{
+  const escapePrint = (s)=>String(s ?? "").replace(/[&<>"']/g, ch=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[ch]));
+
   const finals=[...finalsList.querySelectorAll(".order-item")].map(li=>{
     const txt = li.querySelector(".order-name")?.textContent || "";
     return txt + (li.dataset.predicted==="1" ? "（予想技）" : "") + (li.dataset.multi==="1" ? "（1.5倍）" : "");
   });
-  const finalCands=[...finalsCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent);
+  const finalCands=[...finalsCandidateList.querySelectorAll(".order-item")].map(li=>{
+    const txt = li.querySelector(".order-name")?.textContent || "";
+    return txt + (li.dataset.predicted==="1" || li.classList.contains("is-predicted") ? "（予想技）" : "");
+  });
   const p1=[...list1.querySelectorAll(".order-name")].map(n=>n.textContent);
   const p2=[...list2.querySelectorAll(".order-name")].map(n=>n.textContent);
   const preCands=[...preCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent);
   const now = new Date().toLocaleString();
-  const block = (title, arr)=>`<div class="block"><h2>${title}</h2>${arr.length? "<ol>"+arr.map(t=>"<li>"+t+"</li>").join("")+"</ol>" : "<div class='empty'>未設定</div>"}</div>`;
-  const w=window.open("","_blank"); if(!w) return;
+  const block = (title, arr)=>`
+    <div class="block">
+      <h2>${escapePrint(title)}</h2>
+      ${arr.length ? "<ol>"+arr.map(t=>"<li>"+escapePrint(t)+"</li>").join("")+"</ol>" : "<div class='empty'>未設定</div>"}
+    </div>`;
+  const w=window.open("","_blank");
+  if(!w){
+    showToast("ポップアップがブロックされました");
+    return;
+  }
   w.document.write(`
   <html><head><meta charset="UTF-8">
+  <title>オオルリカップ2026 技構成シート</title>
   <style>
-    body{font-family:sans-serif;padding:20px}
+    body{font-family:sans-serif;padding:20px;color:#111}
     h1{font-size:20px;margin:0}
     .meta{font-size:12px;color:#555;margin-bottom:8px}
     h2{font-size:16px;margin-top:16px}
     ol{padding-left:20px}
-    li{margin-bottom:4px;font-size:14px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .block{break-inside:avoid;border:1px solid #dbeafe;border-radius:10px;padding:10px;margin-bottom:10px}
+    li{margin-bottom:4px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .block{border:1px solid #ddd;border-radius:10px;padding:12px;margin-bottom:10px}
     .empty{font-size:13px;color:#777}
+    .print-actions{
+      position:sticky;
+      top:0;
+      z-index:10;
+      display:flex;
+      gap:10px;
+      margin:0 0 14px;
+      padding:10px;
+      background:#f4f8ff;
+      border:1px solid #cfe3ff;
+      border-radius:12px;
+    }
+    .print-actions button{
+      border:none;
+      border-radius:10px;
+      padding:10px 14px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .print-actions .again{background:#0a84ff;color:#fff}
+    .print-actions .close{background:#555;color:#fff}
+    @media print{
+      .print-actions{display:none!important}
+      body{padding:0}
+    }
   </style></head><body>
+  <div class="print-actions">
+    <button class="again" onclick="window.print()">もう一度印刷</button>
+    <button class="close" onclick="window.close()">閉じて元の画面へ戻る</button>
+  </div>
   <h1>オオルリカップ2026 技構成シート</h1>
-  <div class="meta">作成日時：${now} ／ 合計：${finalSpan.textContent}点 ／ 予選：${preSpan.textContent}点</div>
+  <div class="meta">作成日時：${escapePrint(now)} ／ 合計：${escapePrint(finalSpan.textContent)}点 ／ 予選：${escapePrint(preSpan.textContent)}点</div>
   <div class="grid">
     <div>
       ${block("決勝編成", finals)}
@@ -6253,7 +6345,9 @@ document.getElementById("btn-print").addEventListener("click",()=>{
     </div>
   </div>
   </body></html>`);
-  w.document.close(); w.print();
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(), 300);
 });
 
 /* =========================================================
@@ -6386,7 +6480,14 @@ function saveState(){
       u:c.checked
     })),
     finals: serializeOrderList(finalsList),
-    finalCands: [...finalsCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent),
+    finalCands: [...finalsCandidateList.querySelectorAll(".order-item")].map(li=>{
+      const info = parseOrderText(getItemText(li));
+      return info ? {
+        pt: Number(info.pt),
+        name: info.name,
+        predicted: li.dataset.predicted === "1" || li.classList.contains("is-predicted")
+      } : null;
+    }).filter(Boolean),
     predicted: serializePredictedList(),
     p1: [...list1.querySelectorAll(".order-name")].map(n=>n.textContent),
     p2: [...list2.querySelectorAll(".order-name")].map(n=>n.textContent),
@@ -6433,9 +6534,13 @@ function loadState(){
       if(d && d.name) predictList.appendChild(predictedLiTemplate(d.pt, d.name));
     });
     updatePredictCount();
-    (s.finalCands||[]).forEach(txt=>{
-      const m=txt.match(/^\[(.+?)点]\s*(.+)$/);
-      if(m) finalsCandidateList.appendChild(finalCandidateLiTemplate(m[1], m[2]));
+    (s.finalCands||[]).forEach(entry=>{
+      if(typeof entry === "string"){
+        const m=entry.match(/^\[(.+?)点]\s*(.+)$/);
+        if(m) finalsCandidateList.appendChild(finalCandidateLiTemplate(m[1], m[2], false));
+      }else if(entry && entry.name){
+        finalsCandidateList.appendChild(finalCandidateLiTemplate(entry.pt, entry.name, !!entry.predicted));
+      }
     });
 
     list1.innerHTML="";
@@ -6787,6 +6892,125 @@ window.addEventListener("DOMContentLoaded",()=>{
   presetDirty = false;
   updateSaveStatus();
 });
+
+
+
+/* ===== v1.69 ドラッグ中スクロール位置調整：画面端ではなく操作エリア手前で反応 ===== */
+(function(){
+  let lastY = null;
+  let timer = null;
+
+  function isSortingNow(){
+    return !!document.querySelector(".sortable-chosen,.sortable-drag,.order-item.dragging");
+  }
+
+  function clamp(n,min,max){
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function getActiveOrderList(){
+    const el = document.querySelector(".sortable-chosen,.sortable-drag,.order-item.dragging");
+    if(!el) return null;
+    return el.closest?.(".order-list") || null;
+  }
+
+  function canScroll(el, dy){
+    if(!el) return false;
+    if(dy < 0) return el.scrollTop > 0;
+    if(dy > 0) return el.scrollTop + el.clientHeight < el.scrollHeight - 2;
+    return false;
+  }
+
+  function getTopTriggerY(){
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+
+    // 上部固定バーの下端
+    const totalBar = document.getElementById("total-bar");
+    const totalBottom = totalBar ? Math.max(0, totalBar.getBoundingClientRect().bottom) : 0;
+
+    // 「決勝スコア / 決勝編成 / 予選編成」ボタン付近。
+    // 画面内に見えている場合は、このボタン列の下端あたりから上スクロールを開始する。
+    const modeBar = document.querySelector(".mode-bar");
+    const modeRect = modeBar ? modeBar.getBoundingClientRect() : null;
+    if(modeRect && modeRect.bottom > 0 && modeRect.top < vh){
+      return clamp(modeRect.bottom + 28, totalBottom + 40, vh * 0.42);
+    }
+
+    // ボタン列が画面外にある場合でも、上部固定バーより少し下で反応させる。
+    return clamp(totalBottom + 120, 120, vh * 0.38);
+  }
+
+  function getBottomTriggerY(){
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+
+    // 下部ナビの上端。ここに近づいたら下スクロールを開始する。
+    const miniNav = document.querySelector(".mini-nav");
+    const navTop = miniNav ? miniNav.getBoundingClientRect().top : vh;
+
+    // 下部ボタンとの切れ目より少し上で反応させる。
+    return clamp(navTop - 95, vh * 0.58, vh - 72);
+  }
+
+  function scrollActiveListOrWindow(dy){
+    const list = getActiveOrderList();
+
+    // まず編成リスト自体がスクロールできるなら、リスト内をスクロール。
+    if(list && canScroll(list, dy)){
+      list.scrollTop += dy;
+      return;
+    }
+
+    // リストが限界なら、画面全体をスクロール。
+    window.scrollBy({top:dy, left:0, behavior:"auto"});
+  }
+
+  function start(){
+    if(timer) return;
+    timer = setInterval(()=>{
+      if(lastY == null || !isSortingNow()) return;
+
+      const topLine = getTopTriggerY();
+      const bottomLine = getBottomTriggerY();
+
+      let dy = 0;
+      if(lastY < topLine){
+        const strength = clamp((topLine - lastY) / 90, 0.35, 1.4);
+        dy = -Math.round(18 * strength);
+      }else if(lastY > bottomLine){
+        const strength = clamp((lastY - bottomLine) / 90, 0.35, 1.4);
+        dy = Math.round(18 * strength);
+      }
+
+      if(dy) scrollActiveListOrWindow(dy);
+    }, 16);
+  }
+
+  function stop(){
+    lastY = null;
+    if(timer){
+      clearInterval(timer);
+      timer = null;
+    }
+  }
+
+  document.addEventListener("pointermove", e=>{
+    if(!isSortingNow()) return;
+    lastY = e.clientY;
+    start();
+  }, {passive:true});
+
+  document.addEventListener("touchmove", e=>{
+    if(!isSortingNow() || !e.touches || !e.touches.length) return;
+    lastY = e.touches[0].clientY;
+    start();
+  }, {passive:true});
+
+  ["pointerup","pointercancel","touchend","touchcancel","mouseup","dragend"].forEach(ev=>{
+    document.addEventListener(ev, stop, {passive:true});
+  });
+})();
+
+
 </script>
 </body>
 </html>
