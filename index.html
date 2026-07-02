@@ -2376,6 +2376,67 @@ h1{
   vertical-align:middle;
 }
 
+
+/* ===== v1.70 選手情報入力・出力 ===== */
+.player-info-box{
+  margin:8px 0 12px;
+  padding:10px 12px;
+  border:1px solid #cfe3ff;
+  border-radius:14px;
+  background:#f7fbff;
+  display:grid;
+  grid-template-columns:minmax(140px,220px) 1fr;
+  gap:10px;
+  align-items:end;
+}
+.player-field{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  font-size:12px;
+  font-weight:900;
+  color:#0b4aa6;
+}
+.player-field input{
+  width:100%;
+  min-height:38px;
+  padding:8px 10px;
+  border:1px solid #bcd6ff;
+  border-radius:10px;
+  background:#fff;
+  font-size:16px;
+  font-weight:700;
+  color:#111;
+}
+.player-field input:focus{
+  outline:none;
+  border-color:#0a84ff;
+  box-shadow:0 0 0 3px rgba(10,132,255,.14);
+}
+.export-player-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:8px 0 12px;
+}
+.export-player-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 11px;
+  border-radius:999px;
+  background:#fff7e6;
+  border:1px solid #f2d39a;
+  color:#5c3a00;
+  font-size:15px;
+  font-weight:800;
+}
+@media (max-width:520px){
+  .player-info-box{
+    grid-template-columns:1fr;
+  }
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -2416,6 +2477,18 @@ h1{
 </div>
 
 <h1>オオルリカップ2026 技構成システム</h1>
+
+<!-- v1.70 選手情報入力 -->
+<div class="player-info-box">
+  <label class="player-field">
+    <span>エントリーNo.</span>
+    <input id="entry-no" type="text" inputmode="numeric" placeholder="例：12">
+  </label>
+  <label class="player-field player-field-name">
+    <span>選手名</span>
+    <input id="player-name" type="text" placeholder="選手名を入力">
+  </label>
+</div>
 
 
 <!-- モード切替 -->
@@ -5800,6 +5873,30 @@ async function copyShareUrl(){
 
 document.getElementById("btn-share-url").addEventListener("click", copyShareUrl);
 
+function getPlayerInfo(){
+  const entryNo = document.getElementById("entry-no")?.value?.trim() || "";
+  const playerName = document.getElementById("player-name")?.value?.trim() || "";
+  return { entryNo, playerName };
+}
+
+function playerInfoOutputHtml(){
+  const info = getPlayerInfo();
+  return `
+    <div class="export-player-row">
+      <div class="export-player-chip">エントリーNo.：${escapeHtml(info.entryNo || "—")}</div>
+      <div class="export-player-chip">選手名：${escapeHtml(info.playerName || "—")}</div>
+    </div>
+  `;
+}
+
+["entry-no","player-name"].forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener("input", ()=>{
+    try{ saveState(); }catch(e){}
+  });
+});
+
 function getExportData(){
   const finalEntries = serializeOrderList(finalsList);
   const finals = finalEntries.map(d=>`${orderText(d.pt, d.name)}${d.predicted ? "（予想技）" : ""}${d.multi ? "（1.5倍）" : ""}`);
@@ -5812,8 +5909,11 @@ function getExportData(){
   const finalScore = calcOrderSquareScore(finalEntries);
   const baseScore = calcOrderBaseScore(finalEntries);
   const prelimScore = calcOrderBaseScore([...p1, ...p2]);
+  const playerInfo = getPlayerInfo();
   return {
     finals, finalsCand, p1, p2, preCand, now, shareUrl, finalScore, baseScore, prelimScore,
+    entryNo: playerInfo.entryNo,
+    playerName: playerInfo.playerName,
     overallTotal: finalSpan.textContent,
     preInput: preSpan.textContent,
     presetLabel: getCurrentPresetLabel("overall")
@@ -5830,7 +5930,7 @@ function getExportQrInfo(){
 
 function buildExportSheet(kind="all"){
   const data = getExportData();
-  const {finals, finalsCand, p1, p2, preCand, now, finalScore, baseScore, prelimScore, overallTotal, preInput, presetLabel} = data;
+  const {finals, finalsCand, p1, p2, preCand, now, finalScore, baseScore, prelimScore, overallTotal, preInput, presetLabel, entryNo, playerName} = data;
   const qrInfo = getExportQrInfo();
 
   const host = document.createElement("div");
@@ -5872,6 +5972,7 @@ function buildExportSheet(kind="all"){
       <h1>オオルリカップ2026</h1>
       <div class="export-subtitle">予選構成シート</div>
       <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(presetLabel)}</div>
+      ${playerInfoOutputHtml()}
       <div class="export-score-row">
         <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
@@ -5901,6 +6002,7 @@ function buildExportSheet(kind="all"){
       <h1>オオルリカップ2026</h1>
       <div class="export-subtitle">決勝構成シート</div>
       <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(presetLabel)}</div>
+      ${playerInfoOutputHtml()}
       <div class="export-score-row">
         <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
@@ -5926,6 +6028,7 @@ function buildExportSheet(kind="all"){
       <h1>オオルリカップ2026</h1>
       <div class="export-subtitle">技構成シート</div>
       <div class="export-meta">作成日時：${escapeHtml(now)} ／ 構成名：${escapeHtml(presetLabel)}</div>
+      ${playerInfoOutputHtml()}
       <div class="export-score-row">
         <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
@@ -6246,6 +6349,10 @@ function updateAllPresetOptionLabels(){
 document.getElementById("btn-reset").addEventListener("click",()=>{
   if(!confirm("すべての選択・編成・候補をリセットします。よろしいですか？")) return;
   document.querySelectorAll(".chk,.multi,.pre-chk").forEach(c=>c.checked=false);
+  const entryInput = document.getElementById("entry-no");
+  const playerInput = document.getElementById("player-name");
+  if(entryInput) entryInput.value="";
+  if(playerInput) playerInput.value="";
   preInput.value=0; warn.style.display="none"; preWarn.style.display="none"; preLimitWarn.style.display="none";
   list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsList.dataset.authoritative=""; finalsCandidateList.innerHTML=""; predictList.innerHTML=""; updatePredictCount();
   if(searchInput) searchInput.value=""; applySearch();
@@ -6278,6 +6385,8 @@ document.getElementById("btn-print").addEventListener("click",()=>{
   const p2=[...list2.querySelectorAll(".order-name")].map(n=>n.textContent);
   const preCands=[...preCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent);
   const now = new Date().toLocaleString();
+  const playerInfo = getPlayerInfo();
+  const playerLine = `エントリーNo.：${playerInfo.entryNo || "—"} ／ 選手名：${playerInfo.playerName || "—"}`;
   const block = (title, arr)=>`
     <div class="block">
       <h2>${escapePrint(title)}</h2>
@@ -6294,7 +6403,8 @@ document.getElementById("btn-print").addEventListener("click",()=>{
   <style>
     body{font-family:sans-serif;padding:20px;color:#111}
     h1{font-size:20px;margin:0}
-    .meta{font-size:12px;color:#555;margin-bottom:8px}
+    .meta{font-size:12px;color:#555;margin-bottom:4px}
+    .player-meta{font-size:15px;font-weight:700;color:#111;margin:0 0 10px;padding:8px 10px;border:1px solid #ddd;border-radius:10px;background:#fff7e6}
     h2{font-size:16px;margin-top:16px}
     ol{padding-left:20px}
     li{margin-bottom:4px}
@@ -6333,6 +6443,7 @@ document.getElementById("btn-print").addEventListener("click",()=>{
   </div>
   <h1>オオルリカップ2026 技構成シート</h1>
   <div class="meta">作成日時：${escapePrint(now)} ／ 合計：${escapePrint(finalSpan.textContent)}点 ／ 予選：${escapePrint(preSpan.textContent)}点</div>
+  <div class="player-meta">${escapePrint(playerLine)}</div>
   <div class="grid">
     <div>
       ${block("決勝編成", finals)}
@@ -6466,7 +6577,10 @@ document.getElementById("csv-import").addEventListener("change",async(e)=>{
    18) 自動保存（現行状態）
 ========================================================= */
 function saveState(){
+  const playerInfo = getPlayerInfo();
   const state={
+    entryNo: playerInfo.entryNo,
+    playerName: playerInfo.playerName,
     pre: +preInput.value,
     checks: [...document.querySelectorAll(".chk")].map(c=>({
       n:c.dataset.name,
@@ -6502,6 +6616,10 @@ function loadState(){
   try{
     suppressDirty = true;
     const s=JSON.parse(raw);
+    const entryInput = document.getElementById("entry-no");
+    const playerInput = document.getElementById("player-name");
+    if(entryInput) entryInput.value = s.entryNo ?? "";
+    if(playerInput) playerInput.value = s.playerName ?? "";
     preInput.value = s.pre ?? 0;
 
     document.querySelectorAll(".chk").forEach(c=>{
