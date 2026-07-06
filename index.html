@@ -514,7 +514,7 @@ button{border:none;border-radius:8px;cursor:pointer}
   padding:6px 12px 14px 12px;
 }
 
-/* 判定基準の見やすい整形 */
+/* 審査基準・成功判定の見やすい整形 */
 .criteria-block{
   border:1px solid var(--line);
   background:#fff;
@@ -2377,6 +2377,30 @@ h1{
 }
 
 
+
+/* ===== v1.71 外部技データ状態表示 ===== */
+.data-status{
+  margin:6px 0 12px;
+  padding:8px 11px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.45;
+  border:1px solid #d9e8ff;
+  background:#f7fbff;
+  color:#265b95;
+}
+.data-status.is-external{
+  background:#f0fff7;
+  border-color:#bdeccf;
+  color:#17683b;
+}
+.data-status.is-fallback{
+  background:#fffaf0;
+  border-color:#f1d79b;
+  color:#745100;
+}
+
 /* ===== v1.70 選手情報入力・出力 ===== */
 .player-info-box{
   margin:8px 0 12px;
@@ -2489,6 +2513,7 @@ h1{
     <input id="player-name" type="text" placeholder="選手名を入力">
   </label>
 </div>
+<div class="data-status" id="official-data-status">技データ：読込準備中</div>
 
 
 <!-- モード切替 -->
@@ -2570,11 +2595,11 @@ h1{
   </div>
 
   <div class="order-box candidate-box">
-    <div class="order-box-title">技選択候補（<span id="finals-candidate-count">0</span>/10技）</div>
+    <div class="order-box-title">技選択候補（<span id="finals-candidate-count">0</span>/40技）</div>
     <ul id="finals-candidate-list" class="order-list"></ul>
     <p class="candidate-note">30技に入れるか迷う技を一時保管できます。候補から「採用」で決勝編成に戻せます。候補欄内もドラッグ＆ドロップで並べ替えできます。</p>
     <button type="button" class="candidate-sort-btn" id="finals-candidate-sort">候補を点数順に整理</button>
-    <p class="warning inline-warning" id="finals-candidate-warn">⚠ 決勝の技選択候補は10技までです。</p>
+    <p class="warning inline-warning" id="finals-candidate-warn">⚠ 決勝の技選択候補は40技までです。</p>
   </div>
 
   <!-- 決勝プリセット（2枠） -->
@@ -2617,11 +2642,11 @@ h1{
   <p class="warning inline-warning" id="pre-main-limit-alert">⚠ 各ラウンドは6技までです。第1R・第2Rの間で移動し、各6技以内に調整してください。</p>
 
   <div class="order-box candidate-box">
-    <div class="order-box-title">技選択候補（<span id="pre-candidate-count">0</span>/6技）</div>
+    <div class="order-box-title">技選択候補（<span id="pre-candidate-count">0</span>/10技）</div>
     <ul id="pre-candidate-list" class="order-list"></ul>
     <p class="candidate-note">12技に入れるか迷う技を一時保管できます。候補から1R/2Rへ戻せます。候補欄内もドラッグ＆ドロップで並べ替えできます。</p>
     <button type="button" class="candidate-sort-btn" id="pre-candidate-sort">候補を点数順に整理</button>
-    <p class="warning inline-warning" id="pre-candidate-warn">⚠ 予選の技選択候補は6技までです。</p>
+    <p class="warning inline-warning" id="pre-candidate-warn">⚠ 予選の技選択候補は10技までです。</p>
   </div>
 
   <p class="pre-sum">予選技合計：<span id="pre-tech-total">0</span> 点</p>
@@ -2751,35 +2776,164 @@ h1{
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
- async function loadTricks(){
+/* =========================================================
+   v1.72 外部技データ読み込み
+   9月1日の正式技一覧・動画・審査基準・成功判定は data/official_tricks_2026.json を差し替える
+========================================================= */
+const OFFICIAL_TRICK_DATA_PATH = "./data/official_tricks_2026.json";
+let officialDataInfo = {
+  loaded:false,
+  source:"内蔵データ",
+  version:"built-in",
+  updated:""
+};
 
-  try{
+function extractYouTubeId(url){
+  const s = String(url || "").trim();
+  if(!s) return "";
+  const m = s.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : s;
+}
 
-    const response =
-      await fetch('./data/tricks.json');
+function firstDefinedValue(obj, keys){
+  for(const key of keys){
+    if(obj && obj[key] != null && String(obj[key]).trim() !== "") return obj[key];
+  }
+  return "";
+}
 
-    tricks =
-      await response.json();
+function buildJudgingTextFromOfficialItem(item, pt){
+  // v1.72正式形式：
+  // reviewCriteria / 審査基準
+  // successJudgment / 成功判定
+  const legacyCriteria = firstDefinedValue(item, ["criteria", "judgeCriteria", "判定基準"]);
+  if(legacyCriteria) return String(legacyCriteria);
 
-    console.log(
-      "tricks loaded",
-      tricks
-    );
+  const reviewCriteria = firstDefinedValue(item, ["reviewCriteria", "shinsaCriteria", "審査基準"]);
+  const successJudgment = firstDefinedValue(item, ["successJudgment", "successCriteria", "成功判定"]);
 
-  }catch(err){
+  const parts = [`【点数】${pt}`];
 
-    console.error(
-      "tricks load error",
-      err
-    );
-
+  if(reviewCriteria){
+    const reviewText = String(reviewCriteria).trim();
+    parts.push(reviewText.includes("【審査基準】") ? reviewText : `【審査基準】\n${reviewText}`);
   }
 
-} 
+  if(successJudgment){
+    const successText = String(successJudgment).trim();
+    parts.push(successText.includes("【成功判定") ? successText : `【成功判定】\n${successText}`);
+  }
+
+  return parts.join("\n");
+}
+
+function updateOfficialDataStatus(){
+  const el = document.getElementById("official-data-status");
+  if(!el) return;
+  const label = officialDataInfo.loaded
+    ? `外部データ読込済み：${officialDataInfo.version || "official_tricks_2026.json"}${officialDataInfo.updated ? " / 更新 " + officialDataInfo.updated : ""}`
+    : "内蔵データで動作中（data/official_tricks_2026.json が未読込）";
+  el.textContent = `技データ：${label}`;
+  el.classList.toggle("is-external", !!officialDataInfo.loaded);
+  el.classList.toggle("is-fallback", !officialDataInfo.loaded);
+}
+
+function applyOfficialTrickData(data){
+  if(!data || typeof data !== "object") throw new Error("技データ形式が不正です");
+
+  // 新形式：points[点数].tricks[]
+  if(data.points && typeof data.points === "object"){
+    const nextTricks = {};
+    const nextCriteria = {};
+    const nextStarts = {};
+    const nextFullVideos = {};
+    const nextVideoIds = {};
+
+    Object.keys(data.points).sort((a,b)=>Number(a)-Number(b)).forEach(ptKey=>{
+      const pointBlock = data.points[ptKey] || {};
+      const pt = String(pointBlock.point ?? ptKey);
+      const trickItems = Array.isArray(pointBlock.tricks) ? pointBlock.tricks : [];
+
+      nextTricks[pt] = [];
+      nextStarts[pt] = {};
+      nextFullVideos[pt] = String(pointBlock.fullVideoUrl || pointBlock.fullVideo || "");
+      nextVideoIds[pt] = String(pointBlock.videoId || extractYouTubeId(nextFullVideos[pt]) || "");
+
+      trickItems
+        .slice()
+        .sort((a,b)=>Number(a.order ?? 9999)-Number(b.order ?? 9999))
+        .forEach(item=>{
+          const name = String(item.name || "").trim();
+          if(!name) return;
+          nextTricks[pt].push(name);
+          const judgingText = buildJudgingTextFromOfficialItem(item, pt);
+          if(judgingText) nextCriteria[name] = judgingText;
+          if(item.start !== "" && item.start != null && !Number.isNaN(Number(item.start))){
+            nextStarts[pt][name] = Number(item.start);
+          }
+        });
+    });
+
+    tricks = nextTricks;
+    judgeCriteria = nextCriteria;
+    trickStartSecondsByPoint = nextStarts;
+    fullVideoByPoint = nextFullVideos;
+    videoIdByPoint = nextVideoIds;
+    officialDataInfo = {
+      loaded:true,
+      source:OFFICIAL_TRICK_DATA_PATH,
+      version:data.version || data.name || "official_tricks_2026.json",
+      updated:data.updated || ""
+    };
+    return true;
+  }
+
+  // 旧形式・簡易形式にも対応
+  if(data.tricks && typeof data.tricks === "object") tricks = data.tricks;
+  if(data.judgeCriteria && typeof data.judgeCriteria === "object") judgeCriteria = data.judgeCriteria;
+  if(data.criteria && typeof data.criteria === "object") judgeCriteria = data.criteria;
+  if(data.reviewCriteria && typeof data.reviewCriteria === "object"){
+    const merged = {};
+    Object.keys(data.reviewCriteria).forEach(name=>{
+      const reviewText = String(data.reviewCriteria[name] || "").trim();
+      const successText = String((data.successJudgment && data.successJudgment[name]) || "").trim();
+      const parts = [`【点数】`, reviewText ? `【審査基準】\n${reviewText}` : "", successText ? `【成功判定】\n${successText}` : ""].filter(Boolean);
+      merged[name] = parts.join("\n");
+    });
+    judgeCriteria = merged;
+  }
+  if(data.trickStartSecondsByPoint && typeof data.trickStartSecondsByPoint === "object") trickStartSecondsByPoint = data.trickStartSecondsByPoint;
+  if(data.timestamps && typeof data.timestamps === "object") trickStartSecondsByPoint = data.timestamps;
+  if(data.fullVideoByPoint && typeof data.fullVideoByPoint === "object") fullVideoByPoint = data.fullVideoByPoint;
+  if(data.videoIdByPoint && typeof data.videoIdByPoint === "object") videoIdByPoint = data.videoIdByPoint;
+
+  officialDataInfo = {
+    loaded:true,
+    source:OFFICIAL_TRICK_DATA_PATH,
+    version:data.version || data.name || "official_tricks_2026.json",
+    updated:data.updated || ""
+  };
+  return true;
+}
+
+async function loadOfficialTrickData(){
+  try{
+    const response = await fetch(`${OFFICIAL_TRICK_DATA_PATH}?v=${Date.now()}`, {cache:"no-store"});
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    applyOfficialTrickData(data);
+    console.log("official trick data loaded", officialDataInfo, data);
+  }catch(err){
+    officialDataInfo = {loaded:false, source:"内蔵データ", version:"built-in", updated:""};
+    console.warn("official trick data fallback", err);
+  }
+  updateOfficialDataStatus();
+}
+
 /* =========================================================
    0) 点数別 全動画URL
 ========================================================= */
-const fullVideoByPoint = {
+let fullVideoByPoint = {
   1:"https://youtu.be/-21xaBq6eO0?si=TaHeRTlGXAqChguf",
   2:"https://youtu.be/KqYhciXs9QQ?si=aYwcpmxiG5PRPeF9",
   3:"https://youtu.be/7KqlE9a6fe0?si=bxqDRPa6RIdYN9IH",
@@ -2791,7 +2945,7 @@ const fullVideoByPoint = {
   9:"https://youtu.be/mkXk2JpGYCo?si=A7wFANhO-UkeGF8j",
  10:"https://youtu.be/twdbwAdapjE?si=kRdp82sjUuOBB3bd"
 };
-const videoIdByPoint = {
+let videoIdByPoint = {
   1:"-21xaBq6eO0",
   2:"KqYhciXs9QQ",
   3:"7KqlE9a6fe0",
@@ -2807,7 +2961,7 @@ const videoIdByPoint = {
 /* =========================================================
    1) 技データ（表記統一）
 ========================================================= */
- const tricks = {
+ let tricks = {
   1:["紐かけ手乗せ","お手玉","どじょうすくい","メリーゴーランド","初詣","手乗せジャンプ","脚下から回す","線香花火","ブーメランキャッチ","ベルト"],
   2:["つばめ返し","ひばり返し","リフティング","つなわたり","紐のせ","日本一周","ツイスト片道","お手玉足抜き","カメレオン","フック"],
   3:["トンネルつなわたり","腰かけ","手からメリーゴーランド（3周）","ツイスト往復","トランポリン（3回）","おちょこ","タケコプター","二段ゴマ","サンズ（1回）","燈籠","クロスキャッチ"],
@@ -2824,7 +2978,7 @@ const videoIdByPoint = {
    2) 判定基準データ（あなたの貼付内容を保持）
    ※必要に応じて今後追加OK
 ========================================================= */
-const judgeCriteria = {
+let judgeCriteria = {
   "紐かけ手乗せ": `【点数】1
 【審査基準】
 ・紐のかけ方は問わない
@@ -3788,7 +3942,7 @@ const judgeCriteria = {
 /* =========================================================
    3) 個別タイムスタンプ（開始秒）
 ========================================================= */
-const trickStartSecondsByPoint = {
+let trickStartSecondsByPoint = {
   1: {
     "紐かけ手乗せ": 4,
     "お手玉": 18,
@@ -4033,7 +4187,7 @@ function lookupStart(startsMap, name){
   return null;
 }
 
-/* 判定基準 lookup */
+/* 審査基準・成功判定 lookup */
 function lookupCriteria(name){
   for(const cand of softNameVariants(name)){
     if(judgeCriteria[cand]) return judgeCriteria[cand];
@@ -4047,18 +4201,24 @@ function lookupCriteria(name){
 const scoreListWrap = document.getElementById("tech-list");
 const preTechWrap = document.getElementById("pre-tech-list");
 
+function escapeAttr(s){
+  return String(s||"").replace(/[&<>'"]/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"
+  }[c]));
+}
+
 function makeScoreItem(pt, name){
   const item = document.createElement('div');
   item.className = 'tech-item score-tech-item';
   item.innerHTML = `
     <div class="tech-name-cell">
-      <span class="tech-title">${name}</span>
+      <span class="tech-title">${escapeAttr(name)}</span>
       <span class="tech-pt-label">${pt}点技</span>
     </div>
-    <button type="button" class="judge-btn" data-name="${name}" data-pt="${pt}">動画・判定</button>
+    <button type="button" class="judge-btn" data-name="${escapeAttr(name)}" data-pt="${pt}">動画・判定</button>
     <label class="toggle-btn multi-toggle"><input type="checkbox" class="multi"><span>1.5倍</span></label>
-    <label class="toggle-btn use-toggle"><input type="checkbox" class="chk" data-pt="${pt}" data-name="${name}"><span>使用</span></label>
-    <button type="button" class="candidate-add-btn" data-kind="finals" data-pt="${pt}" data-name="${name}">候補</button>`;
+    <label class="toggle-btn use-toggle"><input type="checkbox" class="chk" data-pt="${pt}" data-name="${escapeAttr(name)}"><span>使用</span></label>
+    <button type="button" class="candidate-add-btn" data-kind="finals" data-pt="${pt}" data-name="${escapeAttr(name)}">候補</button>`;
   return item;
 }
 function makePreItemCheck(pt, name){
@@ -4066,12 +4226,12 @@ function makePreItemCheck(pt, name){
   item.className = 'tech-item pre-tech-item';
   item.innerHTML = `
     <div class="tech-name-cell">
-      <span class="tech-title">${name}</span>
+      <span class="tech-title">${escapeAttr(name)}</span>
       <span class="tech-pt-label">${pt}点技</span>
     </div>
-    <button type="button" class="judge-btn" data-name="${name}" data-pt="${pt}">動画・判定</button>
-    <label class="toggle-btn pre-toggle"><input type="checkbox" class="pre-chk" data-pt="${pt}" data-name="${name}"><span>使用</span></label>
-    <button type="button" class="candidate-add-btn" data-kind="prelims" data-pt="${pt}" data-name="${name}">候補</button>`;
+    <button type="button" class="judge-btn" data-name="${escapeAttr(name)}" data-pt="${pt}">動画・判定</button>
+    <label class="toggle-btn pre-toggle"><input type="checkbox" class="pre-chk" data-pt="${pt}" data-name="${escapeAttr(name)}"><span>使用</span></label>
+    <button type="button" class="candidate-add-btn" data-kind="prelims" data-pt="${pt}" data-name="${escapeAttr(name)}">候補</button>`;
   return item;
 }
 
@@ -4119,7 +4279,7 @@ function buildLists(){
     preTechWrap.appendChild(sec2);
   });
 }
-buildLists();
+/* buildListsはDOMContentLoaded時に外部データ読込後に実行 */
 
 /* 全動画ボタン押下（detailsの開閉を邪魔しない） */
 document.addEventListener("click",(e)=>{
@@ -4133,7 +4293,7 @@ document.addEventListener("click",(e)=>{
 });
 
 /* =========================================================
-   7) 判定基準の整形表示
+   7) 審査基準・成功判定の整形表示
 ========================================================= */
 function escapeHtml(s){
   return (s||"").replace(/[&<>"']/g, c => ({
@@ -4143,7 +4303,7 @@ function escapeHtml(s){
 
 /* 文字列を見やすいブロック構造へ */
 function renderCriteria(text){
-  if(!text) return `<div class="criteria-block"><div class="criteria-empty">この技の判定基準はまだ登録されていません。</div></div>`;
+  if(!text) return `<div class="criteria-block"><div class="criteria-empty">この技の審査基準・成功判定はまだ登録されていません。</div></div>`;
 
   const lines = text.split(/\r?\n/).map(l=>l.trimEnd());
   let html = "";
@@ -4224,7 +4384,7 @@ function renderCriteria(text){
     `;
   }
 
-  return `<div class="criteria-block">${head}${html || `<div class="criteria-empty">判定基準テキストが空です。</div>`}</div>`;
+  return `<div class="criteria-block">${head}${html || `<div class="criteria-empty">審査基準・成功判定テキストが空です。</div>`}</div>`;
 }
 
 /* =========================================================
@@ -4528,7 +4688,7 @@ function bindRecalc(){
   });
   syncToggleButtonStates();
 }
-bindRecalc();
+/* bindRecalcはDOMContentLoaded時にリスト構築後に実行 */
 preInput.addEventListener("input", calcTotal);
 
 /* 決勝チェック制限 */
@@ -4600,6 +4760,9 @@ if(searchInput){
 /* =========================================================
    13) 決勝編成
 ========================================================= */
+const FINAL_CANDIDATE_LIMIT = 40;
+const PRE_CANDIDATE_LIMIT = 10;
+
 const finalsList=document.getElementById("finals-list");
 const finalsCountSpan=document.getElementById("finals-count");
 const finalsLimitAlert=document.getElementById("finals-limit-alert");
@@ -4898,7 +5061,7 @@ function rebuildFinalsList(){
   if(finalsLimitNum) finalsLimitNum.classList.toggle("limit-over", overFinals);
   finalsLimitAlert.style.display = overFinals ? 'block' : 'none';
 
-  finalsCandidateWarn.style.display = candCount>10 ? 'block' : 'none';
+  finalsCandidateWarn.style.display = candCount>FINAL_CANDIDATE_LIMIT ? 'block' : 'none';
 
   syncFinalsMultiVisuals();
   syncToggleButtonStates();
@@ -5059,9 +5222,9 @@ function addFinalCandidate(pt,name){
     showToast("同じ技はすでに登録されています");
     return false;
   }
-  if(finalsCandidateList.querySelectorAll('.order-item').length >= 10){
+  if(finalsCandidateList.querySelectorAll('.order-item').length >= FINAL_CANDIDATE_LIMIT){
     finalsCandidateWarn.style.display='block';
-    showToast("決勝の技選択候補は10技までです");
+    showToast("決勝の技選択候補は40技までです");
     return false;
   }
   finalsCandidateList.appendChild(finalCandidateLiTemplate(pt,name));
@@ -5098,9 +5261,9 @@ finalsList.addEventListener("click",e=>{
   if(act==="cand"){
     const info=parseOrderText(getItemText(li));
     if(!info) return;
-    if(finalsCandidateList.querySelectorAll('.order-item').length >= 10){
+    if(finalsCandidateList.querySelectorAll('.order-item').length >= FINAL_CANDIDATE_LIMIT){
       finalsCandidateWarn.style.display='block';
-      showToast("決勝の技選択候補は10技までです");
+      showToast("決勝の技選択候補は40技までです");
       return;
     }
     const wasPredicted = li.dataset.predicted === "1" || li.classList.contains("is-predicted");
@@ -5346,9 +5509,9 @@ function addPreCandidate(pt,name){
     showToast("同じ技はすでに登録されています");
     return false;
   }
-  if(preCandidateList.querySelectorAll('.order-item').length >= 6){
+  if(preCandidateList.querySelectorAll('.order-item').length >= PRE_CANDIDATE_LIMIT){
     preCandidateWarn.style.display='block';
-    showToast("予選の技選択候補は6技までです");
+    showToast("予選の技選択候補は10技までです");
     return false;
   }
   preCandidateList.appendChild(preCandidateLiTemplate(pt,name));
@@ -5389,9 +5552,9 @@ function preListHandler(e){
   else if(act==="cand"){
     const info=parseOrderText(getItemText(li));
     if(!info) return;
-    if(preCandidateList.querySelectorAll('.order-item').length >= 6){
+    if(preCandidateList.querySelectorAll('.order-item').length >= PRE_CANDIDATE_LIMIT){
       preCandidateWarn.style.display='block';
-      showToast("予選の技選択候補は6技までです");
+      showToast("予選の技選択候補は10技までです");
       return;
     }
     setPreTechChecked(info.pt, info.name, false);
@@ -5540,7 +5703,7 @@ function updatePreSummary(){
 
   preCandidateCountSpan.textContent = preCandidateList.querySelectorAll('.order-item').length;
   preMainLimitAlert.style.display = (overR1 || overR2 || overTotal) ? 'block' : 'none';
-  preCandidateWarn.style.display = preCandidateList.querySelectorAll('.order-item').length>6 ? 'block' : 'none';
+  preCandidateWarn.style.display = preCandidateList.querySelectorAll('.order-item').length>PRE_CANDIDATE_LIMIT ? 'block' : 'none';
   saveState();
 }
 
@@ -6994,8 +7157,13 @@ if('serviceWorker' in navigator){
 /* =========================================================
    22) 起動処理
 ========================================================= */
-window.addEventListener("DOMContentLoaded",()=>{
+window.addEventListener("DOMContentLoaded", async()=>{
   window.scrollTo({top:0, behavior:"auto"});
+
+  await loadOfficialTrickData();
+  buildLists();
+  bindRecalc();
+
   if(!restoreSharedStateIfNeeded()){
     loadState();
   }
