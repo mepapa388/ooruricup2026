@@ -2936,8 +2936,8 @@ h1{
   <div class="combo-box" id="combo-box">
     <div class="combo-title">コンボ技を登録</div>
     <p class="combo-note">
-      決勝編成リスト内の「選択」にチェックを入れ、複数の技を1つのコンボ技として登録できます。<br>
-      コンボは1〜10まで最大10種類登録でき、点数は構成技から自動計算します。
+      決勝編成・候補技リスト内の「コンボ選択」にチェックを入れ、複数の技を1つのコンボ技として登録できます。<br>
+      コンボは1〜10まで最大10種類登録でき、空いている番号へ自動登録します。点数は構成技から自動計算します。
     </p>
     <div class="combo-form">
       <select id="combo-slot">
@@ -2955,7 +2955,6 @@ h1{
       <input id="combo-name" type="text" placeholder="例：序盤安定コンボ／高得点コンボ">
       <div class="combo-actions">
         <button type="button" id="combo-make-main">選択技をコンボ化</button>
-        <button type="button" id="combo-make-candidate">選択技をコンボ候補へ登録</button>
         <button type="button" id="combo-clear-picks">選択解除</button>
       </div>
     </div>
@@ -5644,6 +5643,19 @@ function getSelectedComboParts(){
 function currentComboSlot(){
   return Number(document.getElementById("combo-slot")?.value || 1);
 }
+function nextAvailableComboSlot(preferred=1){
+  const pref = Math.max(1, Math.min(COMBO_LIMIT, Number(preferred) || 1));
+  if(!comboDefinitions[pref-1]) return pref;
+
+  // 選ばれている番号が埋まっている場合は、次の空き番号を探す。
+  for(let i=pref+1; i<=COMBO_LIMIT; i++){
+    if(!comboDefinitions[i-1]) return i;
+  }
+  for(let i=1; i<pref; i++){
+    if(!comboDefinitions[i-1]) return i;
+  }
+  return null;
+}
 function currentComboName(slot){
   const input = document.getElementById("combo-name");
   const raw = input?.value?.trim();
@@ -5655,7 +5667,15 @@ function makeComboFromSelection(){
     showToast("コンボにする技を2つ以上選択してください");
     return null;
   }
-  const slot = currentComboSlot();
+  const preferredSlot = currentComboSlot();
+  const slot = nextAvailableComboSlot(preferredSlot);
+  if(!slot){
+    showToast(`コンボ登録は${COMBO_LIMIT}種類までです。不要なコンボを削除してください`);
+    return null;
+  }
+  const slotEl = document.getElementById("combo-slot");
+  if(slotEl) slotEl.value = String(slot);
+
   const combo = normalizeComboData({
     combo:true,
     comboSlot:slot,
@@ -5688,7 +5708,7 @@ function renderComboDefinitions(){
         <div class="combo-def-sub">${escapeHtml(comboItemSummary(c))}</div>
         <div class="combo-def-actions">
           <button type="button" class="combo-add-main" data-slot="${slot}">決勝へ追加</button>
-          <button type="button" class="combo-add-cand" data-slot="${slot}">候補へ追加</button>
+          <button type="button" class="combo-add-cand" data-slot="${slot}">候補へ</button>
           <button type="button" class="combo-del" data-slot="${slot}">削除</button>
         </div>`;
     }else{
@@ -5888,7 +5908,6 @@ function addComboToFinals(combo){
 }
 function initComboUi(){
   const mainBtn = document.getElementById("combo-make-main");
-  const candBtn = document.getElementById("combo-make-candidate");
   const clearBtn = document.getElementById("combo-clear-picks");
   if(mainBtn){
     mainBtn.addEventListener("click",()=>{
@@ -5898,7 +5917,8 @@ function initComboUi(){
 
       // 決勝編成側でコンボ選択した元技は候補技へ移動。
       // 候補技側でコンボ選択した元技はそのまま候補技に残す。
-      // その上で、決勝編成にはコンボ技として残す。
+      // その上で、決勝編成にはコンボ技として作成する。
+      // 作成後にコンボの「候補へ」ボタンを押すと、コンボごと候補技へ移動できる。
       if(!ensureCandidateCapacityForPicked(picked, null)) return;
 
       moveFinalPickedItemsToCandidate(picked);
@@ -5907,24 +5927,6 @@ function initComboUi(){
       clearComboPicks();
       rebuildFinalsList();
       showToast("元技を候補に残し、コンボ技を決勝編成に作成しました");
-    });
-  }
-  if(candBtn){
-    candBtn.addEventListener("click",()=>{
-      const result = makeComboFromSelection();
-      if(!result) return;
-      const {combo, picked} = result;
-
-      // コンボ候補を作る場合も、決勝編成側で選択した元技は候補へ移動。
-      // 候補技側で選択した元技はそのまま残す。
-      // コンボ案を比較できるよう、元技とコンボ候補の両方を候補欄に残す。
-      if(!ensureCandidateCapacityForPicked(picked, combo)) return;
-
-      moveFinalPickedItemsToCandidate(picked);
-      addComboToCandidate(combo);
-      clearComboPicks();
-      rebuildFinalsList();
-      showToast("元技を候補に残し、コンボ候補を登録しました");
     });
   }
   if(clearBtn) clearBtn.addEventListener("click",()=>{ clearComboPicks(); showToast("コンボ選択を解除しました"); });
