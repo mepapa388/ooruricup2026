@@ -2620,8 +2620,8 @@ h1{
   min-height:auto !important;
 }
 .order-item.is-combo.is-combo-candidate{
-  grid-template-columns:30px minmax(0,1fr) auto;
-  grid-template-areas:"drag main controls";
+  grid-template-columns:30px auto minmax(0,1fr) auto;
+  grid-template-areas:"drag pick main controls";
 }
 .order-item.is-combo .drag-handle{
   grid-area:drag;
@@ -2713,6 +2713,7 @@ h1{
   .order-item.is-combo.is-combo-candidate{
     grid-template-areas:
       "drag main"
+      "pick main"
       "controls controls";
   }
   .order-item.is-combo .order-controls{
@@ -2738,6 +2739,71 @@ h1{
   .combo-sequence{
     font-size:12px;
   }
+}
+
+
+/* ===== v1.77 候補欄でもコンボ選択 ===== */
+#finals-candidate-list .order-item{
+  flex-wrap:wrap;
+}
+#finals-candidate-list .combo-pick-wrap{
+  flex:0 0 auto;
+}
+#finals-candidate-list .order-name{
+  min-width:160px;
+}
+@media (max-width:620px){
+  #finals-candidate-list .order-item:not(.is-combo){
+    display:grid;
+    grid-template-columns:28px minmax(0,1fr);
+    grid-template-areas:
+      "drag name"
+      "pick name"
+      "controls controls";
+    align-items:start;
+    gap:8px;
+  }
+  #finals-candidate-list .order-item:not(.is-combo) .drag-handle{
+    grid-area:drag;
+  }
+  #finals-candidate-list .order-item:not(.is-combo) .combo-pick-wrap{
+    grid-area:pick;
+  }
+  #finals-candidate-list .order-item:not(.is-combo) .order-name{
+    grid-area:name;
+    min-width:0;
+  }
+  #finals-candidate-list .order-item:not(.is-combo) .order-controls{
+    grid-area:controls;
+    justify-content:flex-start;
+    padding-left:36px;
+  }
+}
+
+
+/* ===== v1.78 決勝構成内の同一技重複警告 ===== */
+.order-item.has-duplicate-tech{
+  border-color:#ff4d4d !important;
+  box-shadow:0 0 0 2px rgba(255,77,77,.14) !important;
+}
+.order-item .is-duplicate-tech-name,
+.order-item.is-duplicate-tech-name .order-name{
+  color:#d60000 !important;
+  font-weight:1000 !important;
+}
+.combo-seq-part.is-duplicate-tech-name{
+  display:inline-block;
+  padding:1px 4px;
+  border-radius:6px;
+  background:#ffe5e5;
+  color:#d60000 !important;
+  font-weight:1000 !important;
+}
+.combo-seq-arrow{
+  display:inline-block;
+  margin:0 5px;
+  color:#667;
+  font-weight:900;
 }
 
 /* ===== 印刷 ===== */
@@ -2903,6 +2969,7 @@ h1{
     <ul id="finals-list" class="order-list"></ul>
     <p style="font-size:11px;opacity:.7;margin-top:4px;">選んだ技を一覧表示します ／ ☰または技名を指で押して並べ替え ／ 候補へで別枠保管 ／ ✕は長押し削除</p>
     <p class="warning inline-warning" id="finals-limit-alert">⚠ 決勝編成が30技を超えています。技選択候補へ移動して30技以内にしてください。</p>
+    <p class="warning inline-warning" id="finals-duplicate-alert">⚠ 決勝構成内で同じ技が複数回使われています。赤字の技を確認してください。</p>
   </div>
 
   <div class="order-box candidate-box">
@@ -5378,6 +5445,7 @@ function rebuildFinalsList(){
   finalsLimitAlert.style.display = overFinals ? 'block' : 'none';
 
   finalsCandidateWarn.style.display = candCount>FINAL_CANDIDATE_LIMIT ? 'block' : 'none';
+  updateFinalDuplicateWarnings();
 
   syncFinalsMultiVisuals();
   syncToggleButtonStates();
@@ -5396,7 +5464,7 @@ function orderLiTemplate(pt,name,multi=false,predicted=false){
   li.dataset.predicted = predicted ? "1" : "0";
   li.innerHTML=`
     <span class="drag-handle" aria-label="並び替え">☰</span>
-    <label class="combo-pick-wrap"><input type="checkbox" class="combo-pick">選択</label>
+    <label class="combo-pick-wrap"><input type="checkbox" class="combo-pick">コンボ選択</label>
     <span class="order-name">${orderText(pt,name)}</span>
     <div class="order-controls">
       <button class="order-btn final-multi-btn ${multi ? 'selected' : ''}" data-act="multi">1.5倍</button>
@@ -5429,6 +5497,7 @@ function finalCandidateLiTemplate(pt,name,predicted=false){
   if(predicted) li.classList.add("is-predicted");
   li.innerHTML=`
     <span class="drag-handle" aria-hidden="true">◎</span>
+    <label class="combo-pick-wrap"><input type="checkbox" class="combo-pick">コンボ選択</label>
     <span class="order-name">${orderText(pt,name)}</span>
     <div class="order-controls">
       <button class="order-btn order-btn-main" data-act="main">採用</button>
@@ -5520,17 +5589,17 @@ function comboOrderLiTemplate(combo, candidate=false){
   li.dataset.name=c.comboName;
   const comboNo = `コンボ${comboMark(c.comboSlot)}`;
   const scoreText = `${c.count}技 / ${formatScore(c.score)}点`;
-  const seqText = comboItemSummary(c);
+  const seqHtml = c.items.map(d=>`<span class="combo-seq-part" data-tech-name="${escapeHtml(d.name)}">${escapeHtml(d.name + (d.multi ? "×1.5" : ""))}</span>`).join('<span class="combo-seq-arrow">→</span>');
   li.innerHTML=`
     <span class="drag-handle" aria-label="並び替え">${candidate ? "◎" : "☰"}</span>
-    ${candidate ? "" : `<label class="combo-pick-wrap"><input type="checkbox" class="combo-pick">選択</label>`}
+    <label class="combo-pick-wrap"><input type="checkbox" class="combo-pick">コンボ選択</label>
     <div class="combo-main">
       <div class="combo-summary">
         <span class="combo-badge">${escapeHtml(comboNo)}</span>
         <span class="combo-title-inline order-name">${escapeHtml(c.comboName)}</span>
         <span class="combo-score-chip">${escapeHtml(scoreText)}</span>
       </div>
-      <div class="combo-sequence"><span class="combo-sequence-label">構成</span>${escapeHtml(seqText)}</div>
+      <div class="combo-sequence"><span class="combo-sequence-label">構成</span>${seqHtml}</div>
     </div>
     <div class="order-controls">
       ${candidate
@@ -5556,8 +5625,10 @@ function appendOrderDataToList(list, data, mode="final"){
   }
 }
 function getComboPickItems(){
-  return [...finalsList.querySelectorAll(".order-item")]
-    .filter(li=>li.querySelector(".combo-pick")?.checked);
+  return [
+    ...finalsList.querySelectorAll(".order-item"),
+    ...finalsCandidateList.querySelectorAll(".order-item")
+  ].filter(li=>li.querySelector(".combo-pick")?.checked);
 }
 function getSelectedComboParts(){
   const picked = getComboPickItems();
@@ -5597,7 +5668,7 @@ function makeComboFromSelection(){
   return {combo, picked};
 }
 function clearComboPicks(){
-  finalsList.querySelectorAll(".combo-pick").forEach(chk=>chk.checked=false);
+  document.querySelectorAll("#finals-list .combo-pick, #finals-candidate-list .combo-pick").forEach(chk=>chk.checked=false);
 }
 function renderComboDefinitions(){
   const list = document.getElementById("combo-def-list");
@@ -5629,13 +5700,176 @@ function renderComboDefinitions(){
 function serializeComboDefinitions(){
   return comboDefinitions.map(c=>c ? normalizeComboData(c) : null);
 }
+
+/* ===== v1.78 決勝構成内の同一技重複検出 ===== */
+function finalTechniqueNamesFromData(data){
+  if(!data) return [];
+  if(data.combo){
+    return (data.items || []).map(d=>String(d.name || "").trim()).filter(Boolean);
+  }
+  return [String(data.name || "").trim()].filter(Boolean);
+}
+
+function getFinalDuplicateNameSet(){
+  const counts = new Map();
+  finalsList.querySelectorAll(".order-item").forEach(li=>{
+    const data = orderItemToData(li);
+    finalTechniqueNamesFromData(data).forEach(name=>{
+      counts.set(name, (counts.get(name) || 0) + 1);
+    });
+  });
+  const duplicates = new Set();
+  counts.forEach((count, name)=>{
+    if(count >= 2) duplicates.add(name);
+  });
+  return duplicates;
+}
+
+function updateFinalDuplicateWarnings(){
+  if(!finalsList) return;
+  const duplicates = getFinalDuplicateNameSet();
+
+  finalsList.querySelectorAll(".order-item").forEach(li=>{
+    const data = orderItemToData(li);
+    const names = finalTechniqueNamesFromData(data);
+    const hasDup = names.some(name=>duplicates.has(name));
+    li.classList.toggle("has-duplicate-tech", hasDup);
+
+    if(data?.combo){
+      li.querySelectorAll(".combo-seq-part").forEach(part=>{
+        const name = String(part.dataset.techName || "").trim();
+        part.classList.toggle("is-duplicate-tech-name", duplicates.has(name));
+      });
+      li.querySelectorAll(".order-name").forEach(nameEl=>{
+        nameEl.classList.remove("is-duplicate-tech-name");
+      });
+    }else{
+      li.querySelectorAll(".order-name").forEach(nameEl=>{
+        nameEl.classList.toggle("is-duplicate-tech-name", hasDup);
+      });
+    }
+  });
+
+  const alert = document.getElementById("finals-duplicate-alert");
+  if(alert){
+    if(duplicates.size){
+      alert.style.display = "block";
+      alert.textContent = `⚠ 決勝構成内で同じ技が複数回使われています：${[...duplicates].join("、")}`;
+    }else{
+      alert.style.display = "none";
+      alert.textContent = "⚠ 決勝構成内で同じ技が複数回使われています。赤字の技を確認してください。";
+    }
+  }
+}
+
+
+function candidateKeyFromData(data){
+  if(!data) return "";
+  if(data.combo){
+    const c = normalizeComboData(data);
+    if(!c) return "";
+    const itemsKey = c.items.map(d=>`${d.pt}:${d.name}:${d.multi ? 1 : 0}`).join("|");
+    return `combo:${c.comboSlot}:${c.comboName}:${itemsKey}`;
+  }
+  return `tech:${Number(data.pt)}:${String(data.name || "")}`;
+}
+
+function finalCandidateKeySet(){
+  const keys = new Set();
+  finalsCandidateList.querySelectorAll(".order-item").forEach(li=>{
+    const data = orderItemToData(li);
+    const key = candidateKeyFromData(data);
+    if(key) keys.add(key);
+  });
+  return keys;
+}
+
+function finalCandidateContainsData(data){
+  const key = candidateKeyFromData(data);
+  if(!key) return false;
+  return finalCandidateKeySet().has(key);
+}
+
+function appendDataToFinalCandidateIfMissing(data){
+  const normalized = data?.combo ? normalizeComboData(data) : data;
+  const key = candidateKeyFromData(normalized);
+  if(!key) return false;
+
+  const keys = finalCandidateKeySet();
+  if(keys.has(key)) return true;
+
+  if(finalsCandidateList.querySelectorAll(".order-item").length >= FINAL_CANDIDATE_LIMIT){
+    finalsCandidateWarn.style.display='block';
+    showToast(`決勝の技選択候補は${FINAL_CANDIDATE_LIMIT}技までです`);
+    return false;
+  }
+
+  appendOrderDataToList(finalsCandidateList, normalized, "candidate");
+  return true;
+}
+
+function countCandidateSlotsNeededForPicked(picked, extraData=null){
+  const keys = finalCandidateKeySet();
+  let needed = 0;
+
+  picked.forEach(li=>{
+    // 候補欄で選んだ技はすでに候補に残っているので追加枠不要。
+    // 決勝編成側で選んだ元技だけ、候補へ移すための枠を確認する。
+    if(li.parentElement !== finalsList) return;
+    const data = orderItemToData(li);
+    const key = candidateKeyFromData(data);
+    if(key && !keys.has(key)){
+      keys.add(key);
+      needed++;
+    }
+  });
+
+  if(extraData){
+    const key = candidateKeyFromData(extraData);
+    if(key && !keys.has(key)){
+      keys.add(key);
+      needed++;
+    }
+  }
+
+  return needed;
+}
+
+function ensureCandidateCapacityForPicked(picked, extraData=null){
+  const current = finalsCandidateList.querySelectorAll(".order-item").length;
+  const needed = countCandidateSlotsNeededForPicked(picked, extraData);
+  if(current + needed > FINAL_CANDIDATE_LIMIT){
+    finalsCandidateWarn.style.display='block';
+    showToast(`候補技が${FINAL_CANDIDATE_LIMIT}技を超えるため、コンボを作成できません`);
+    return false;
+  }
+  return true;
+}
+
+function moveFinalPickedItemsToCandidate(picked){
+  picked.forEach(li=>{
+    if(li.parentElement !== finalsList) return;
+    const data = orderItemToData(li);
+    appendDataToFinalCandidateIfMissing(data);
+    li.remove();
+  });
+}
+
+
 function addComboToCandidate(combo){
+  const c = normalizeComboData(combo);
+  if(!c) return false;
+  if(finalCandidateContainsData(c)){
+    rebuildFinalsList();
+    showToast("同じコンボ候補はすでに登録されています");
+    return true;
+  }
   if(finalsCandidateList.querySelectorAll('.order-item').length >= FINAL_CANDIDATE_LIMIT){
     finalsCandidateWarn.style.display='block';
     showToast(`決勝の技選択候補は${FINAL_CANDIDATE_LIMIT}技までです`);
     return false;
   }
-  finalsCandidateList.appendChild(comboOrderLiTemplate(combo, true));
+  finalsCandidateList.appendChild(comboOrderLiTemplate(c, true));
   rebuildFinalsList();
   showToast("コンボを候補へ追加しました");
   return true;
@@ -5661,21 +5895,36 @@ function initComboUi(){
       const result = makeComboFromSelection();
       if(!result) return;
       const {combo, picked} = result;
-      const first = picked[0];
-      picked.forEach(li=>li.remove());
+
+      // 決勝編成側でコンボ選択した元技は候補技へ移動。
+      // 候補技側でコンボ選択した元技はそのまま候補技に残す。
+      // その上で、決勝編成にはコンボ技として残す。
+      if(!ensureCandidateCapacityForPicked(picked, null)) return;
+
+      moveFinalPickedItemsToCandidate(picked);
       finalsList.dataset.authoritative = "1";
-      finalsList.insertBefore(comboOrderLiTemplate(combo, false), first?.nextSibling || null);
+      finalsList.appendChild(comboOrderLiTemplate(combo, false));
       clearComboPicks();
       rebuildFinalsList();
-      showToast("選択技をコンボ化しました");
+      showToast("元技を候補に残し、コンボ技を決勝編成に作成しました");
     });
   }
   if(candBtn){
     candBtn.addEventListener("click",()=>{
       const result = makeComboFromSelection();
       if(!result) return;
-      addComboToCandidate(result.combo);
+      const {combo, picked} = result;
+
+      // コンボ候補を作る場合も、決勝編成側で選択した元技は候補へ移動。
+      // 候補技側で選択した元技はそのまま残す。
+      // コンボ案を比較できるよう、元技とコンボ候補の両方を候補欄に残す。
+      if(!ensureCandidateCapacityForPicked(picked, combo)) return;
+
+      moveFinalPickedItemsToCandidate(picked);
+      addComboToCandidate(combo);
       clearComboPicks();
+      rebuildFinalsList();
+      showToast("元技を候補に残し、コンボ候補を登録しました");
     });
   }
   if(clearBtn) clearBtn.addEventListener("click",()=>{ clearComboPicks(); showToast("コンボ選択を解除しました"); });
