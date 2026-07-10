@@ -2806,6 +2806,79 @@ h1{
   font-weight:900;
 }
 
+
+/* ===== v1.81 スマホ表示：コンボ選択と技名の重なり防止 ===== */
+@media (max-width:620px){
+  #finals-list .order-item:not(.is-combo),
+  #finals-candidate-list .order-item:not(.is-combo){
+    display:grid !important;
+    grid-template-columns:34px minmax(0,1fr);
+    grid-template-areas:
+      "drag name"
+      "pick pick"
+      "controls controls";
+    align-items:start;
+    gap:8px 10px;
+  }
+  #finals-list .order-item:not(.is-combo) .drag-handle,
+  #finals-candidate-list .order-item:not(.is-combo) .drag-handle{
+    grid-area:drag;
+  }
+  #finals-list .order-item:not(.is-combo) .order-name,
+  #finals-candidate-list .order-item:not(.is-combo) .order-name{
+    grid-area:name;
+    min-width:0 !important;
+    width:100%;
+    overflow-wrap:anywhere;
+    word-break:normal;
+    line-height:1.45;
+  }
+  #finals-list .order-item:not(.is-combo) .combo-pick-wrap,
+  #finals-candidate-list .order-item:not(.is-combo) .combo-pick-wrap{
+    grid-area:pick;
+    justify-self:start;
+    max-width:100%;
+    white-space:nowrap;
+  }
+  #finals-list .order-item:not(.is-combo) .order-controls,
+  #finals-candidate-list .order-item:not(.is-combo) .order-controls{
+    grid-area:controls;
+    justify-content:flex-start;
+    width:100%;
+    padding-left:44px;
+  }
+
+  .order-item.is-combo,
+  .order-item.is-combo.is-combo-candidate{
+    grid-template-columns:34px minmax(0,1fr) !important;
+    grid-template-areas:
+      "drag main"
+      "pick pick"
+      "controls controls" !important;
+    gap:8px 10px;
+  }
+  .order-item.is-combo .combo-pick-wrap{
+    grid-area:pick;
+    justify-self:start;
+    max-width:100%;
+    white-space:nowrap;
+  }
+  .order-item.is-combo .combo-main{
+    grid-area:main;
+    min-width:0;
+  }
+  .order-item.is-combo .order-controls{
+    grid-area:controls;
+    justify-content:flex-start;
+    width:100%;
+    padding-left:44px;
+  }
+  .combo-sequence{
+    overflow-wrap:anywhere;
+    word-break:normal;
+  }
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
