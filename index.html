@@ -2461,6 +2461,285 @@ h1{
   }
 }
 
+
+/* ===== v1.74 コンボ技・候補40件表示改善 ===== */
+.combo-box{
+  margin:12px 0;
+  padding:12px;
+  border-radius:14px;
+  background:#f6fbff;
+  border:2px solid #b9d8ff;
+  box-shadow:0 3px 10px rgba(0,70,140,.06);
+}
+.combo-title{
+  font-size:17px;
+  font-weight:1000;
+  color:#0b4aa6;
+  margin-bottom:4px;
+}
+.combo-note{
+  margin:0 0 9px;
+  font-size:12px;
+  line-height:1.55;
+  color:#17406f;
+  font-weight:700;
+}
+.combo-form{
+  display:grid;
+  grid-template-columns:110px 1fr;
+  gap:8px;
+  align-items:center;
+}
+.combo-form select,
+.combo-form input{
+  min-height:38px;
+  padding:8px 10px;
+  border:1px solid #bcd6ff;
+  border-radius:10px;
+  background:#fff;
+  font-size:15px;
+  font-weight:700;
+}
+.combo-actions{
+  grid-column:1 / -1;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.combo-actions button,
+.combo-def-actions button{
+  border:none;
+  border-radius:10px;
+  padding:8px 11px;
+  font-size:13px;
+  font-weight:900;
+  cursor:pointer;
+}
+#combo-make-main{background:#0a84ff;color:#fff;}
+#combo-make-candidate{background:#6b4eff;color:#fff;}
+#combo-clear-picks{background:#eef3ff;color:#0b4aa6;border:1px solid #bcd6ff;}
+.combo-status{
+  margin-top:7px;
+  font-size:12px;
+  font-weight:800;
+  color:#345;
+}
+.combo-def-list{
+  list-style:none;
+  padding:0;
+  margin:10px 0 0;
+  display:grid;
+  gap:7px;
+}
+.combo-def-item{
+  border:1px solid #d7e6ff;
+  background:#fff;
+  border-radius:12px;
+  padding:8px 10px;
+}
+.combo-def-head{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  font-size:13px;
+  font-weight:1000;
+  color:#0b4aa6;
+}
+.combo-def-sub{
+  margin-top:4px;
+  font-size:12px;
+  color:#555;
+  line-height:1.45;
+}
+.combo-def-actions{
+  margin-top:7px;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.combo-def-actions .combo-add-main{background:#e3f2fd;color:#0d47a1;border:1px solid #90caf9;}
+.combo-def-actions .combo-add-cand{background:#f0ecff;color:#3b2aa0;border:1px solid #c9bfff;}
+.combo-def-actions .combo-del{background:#fff;color:#a40000;border:1px solid #ffc2c2;}
+.combo-pick-wrap{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:5px 6px;
+  border-radius:999px;
+  border:1px solid #bcd6ff;
+  background:#f5faff;
+  color:#0b4aa6;
+  font-size:11px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.combo-pick-wrap input{
+  width:16px;
+  height:16px;
+}
+.order-item.is-combo{
+  background:#f6fbff !important;
+  border:2px solid #8ec5ff !important;
+}
+.order-item.is-combo .order-name{
+  color:#0b4aa6;
+  font-weight:1000;
+}
+.combo-detail{
+  flex-basis:100%;
+  font-size:11px;
+  line-height:1.45;
+  color:#345;
+  padding-left:28px;
+  opacity:.9;
+}
+#finals-candidate-list{
+  max-height:72vh !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch;
+  padding-right:4px;
+}
+#finals-candidate-list .order-item{
+  min-height:44px;
+}
+@media (max-width:520px){
+  .combo-form{grid-template-columns:1fr;}
+  .combo-actions button{flex:1;min-width:120px;}
+  .combo-detail{padding-left:0;}
+}
+
+
+/* ===== v1.75 コンボ技表示改善 ===== */
+.order-item.is-combo{
+  display:grid !important;
+  grid-template-columns:30px auto minmax(0,1fr) auto;
+  grid-template-areas:"drag pick main controls";
+  align-items:center;
+  gap:8px;
+  padding:10px 12px !important;
+  min-height:auto !important;
+}
+.order-item.is-combo.is-combo-candidate{
+  grid-template-columns:30px minmax(0,1fr) auto;
+  grid-template-areas:"drag main controls";
+}
+.order-item.is-combo .drag-handle{
+  grid-area:drag;
+  align-self:center;
+}
+.order-item.is-combo .combo-pick-wrap{
+  grid-area:pick;
+  align-self:center;
+}
+.order-item.is-combo .combo-main{
+  grid-area:main;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.order-item.is-combo .order-controls{
+  grid-area:controls;
+  align-self:center;
+}
+.combo-summary{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:7px;
+  line-height:1.35;
+}
+.combo-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:72px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#0b4aa6;
+  color:#fff;
+  font-size:12px;
+  font-weight:1000;
+  white-space:nowrap;
+}
+.combo-title-inline{
+  color:#0b4aa6;
+  font-size:15px;
+  font-weight:1000;
+}
+.combo-score-chip{
+  display:inline-flex;
+  align-items:center;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#fff7e6;
+  border:1px solid #f2c66d;
+  color:#7a4b00;
+  font-size:12px;
+  font-weight:1000;
+  white-space:nowrap;
+}
+.combo-sequence{
+  font-size:13px;
+  line-height:1.55;
+  color:#26384d;
+  font-weight:700;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.combo-sequence-label{
+  display:inline-block;
+  margin-right:6px;
+  color:#667;
+  font-size:11px;
+  font-weight:900;
+}
+.combo-detail{
+  display:none !important;
+}
+#finals-candidate-list .order-item.is-combo{
+  min-height:auto !important;
+}
+@media (max-width:620px){
+  .order-item.is-combo,
+  .order-item.is-combo.is-combo-candidate{
+    grid-template-columns:28px minmax(0,1fr);
+    grid-template-areas:
+      "drag main"
+      "pick main"
+      "controls controls";
+    align-items:start;
+  }
+  .order-item.is-combo.is-combo-candidate{
+    grid-template-areas:
+      "drag main"
+      "controls controls";
+  }
+  .order-item.is-combo .order-controls{
+    justify-content:flex-start;
+    width:100%;
+    padding-left:36px;
+  }
+  .combo-summary{
+    gap:5px;
+  }
+  .combo-badge{
+    min-width:auto;
+    font-size:11px;
+    padding:3px 7px;
+  }
+  .combo-title-inline{
+    font-size:14px;
+  }
+  .combo-score-chip{
+    font-size:11px;
+    padding:3px 7px;
+  }
+  .combo-sequence{
+    font-size:12px;
+  }
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -2587,6 +2866,38 @@ h1{
     <ul id="predict-list" class="predict-list"></ul>
   </div>
 
+
+  <div class="combo-box" id="combo-box">
+    <div class="combo-title">コンボ技を登録</div>
+    <p class="combo-note">
+      決勝編成リスト内の「選択」にチェックを入れ、複数の技を1つのコンボ技として登録できます。<br>
+      コンボは1〜10まで最大10種類登録でき、点数は構成技から自動計算します。
+    </p>
+    <div class="combo-form">
+      <select id="combo-slot">
+        <option value="1">コンボ①</option>
+        <option value="2">コンボ②</option>
+        <option value="3">コンボ③</option>
+        <option value="4">コンボ④</option>
+        <option value="5">コンボ⑤</option>
+        <option value="6">コンボ⑥</option>
+        <option value="7">コンボ⑦</option>
+        <option value="8">コンボ⑧</option>
+        <option value="9">コンボ⑨</option>
+        <option value="10">コンボ⑩</option>
+      </select>
+      <input id="combo-name" type="text" placeholder="例：序盤安定コンボ／高得点コンボ">
+      <div class="combo-actions">
+        <button type="button" id="combo-make-main">選択技をコンボ化</button>
+        <button type="button" id="combo-make-candidate">選択技をコンボ候補へ登録</button>
+        <button type="button" id="combo-clear-picks">選択解除</button>
+      </div>
+    </div>
+    <div class="combo-status" id="combo-status">コンボ登録：0/10</div>
+    <ul id="combo-def-list" class="combo-def-list"></ul>
+  </div>
+
+
   <div class="order-box">
     <div class="order-box-title">決勝編成（<span id="finals-count">0</span>技 / <span id="finals-limit-num">30</span>技）</div>
     <ul id="finals-list" class="order-list"></ul>
@@ -2602,7 +2913,7 @@ h1{
     <p class="warning inline-warning" id="finals-candidate-warn">⚠ 決勝の技選択候補は40技までです。</p>
   </div>
 
-  <!-- 決勝プリセット（2枠） -->
+  <!-- 決勝プリセット（4枠） -->
   <div class="preset-box preset-important preset-finals-important" id="finals-preset-anchor">
     <div class="preset-heading">決勝プリセット</div>
     <div class="preset-summary" id="finals-preset-summary">保存状況を確認中</div>
@@ -2610,6 +2921,8 @@ h1{
       <select id="finals-preset-slot">
         <option value="slot1">決勝プリセット①</option>
         <option value="slot2">決勝プリセット②</option>
+        <option value="slot3">決勝プリセット③</option>
+        <option value="slot4">決勝プリセット④</option>
       </select>
       <input id="finals-preset-name" type="text" placeholder="プリセット名">
       <button id="save-finals-preset">保存</button>
@@ -2646,12 +2959,12 @@ h1{
     <ul id="pre-candidate-list" class="order-list"></ul>
     <p class="candidate-note">12技に入れるか迷う技を一時保管できます。候補から1R/2Rへ戻せます。候補欄内もドラッグ＆ドロップで並べ替えできます。</p>
     <button type="button" class="candidate-sort-btn" id="pre-candidate-sort">候補を点数順に整理</button>
-    <p class="warning inline-warning" id="pre-candidate-warn">⚠ 予選の技選択候補は10技までです。</p>
+    <p class="warning inline-warning" id="pre-candidate-warn">⚠ 予選の技選択候補は40技までです。</p>
   </div>
 
   <p class="pre-sum">予選技合計：<span id="pre-tech-total">0</span> 点</p>
 
-  <!-- 予選プリセット（2枠） -->
+  <!-- 予選プリセット（4枠） -->
   <div class="preset-box preset-important preset-prelims-important" id="prelims-preset-anchor">
     <div class="preset-heading">予選プリセット</div>
     <div class="preset-summary" id="prelims-preset-summary">保存状況を確認中</div>
@@ -2659,6 +2972,8 @@ h1{
       <select id="prelims-preset-slot">
         <option value="slot1">予選プリセット①</option>
         <option value="slot2">予選プリセット②</option>
+        <option value="slot3">予選プリセット③</option>
+        <option value="slot4">予選プリセット④</option>
       </select>
       <input id="prelims-preset-name" type="text" placeholder="プリセット名">
       <button id="save-prelims-preset">保存</button>
@@ -4762,6 +5077,7 @@ if(searchInput){
 ========================================================= */
 const FINAL_CANDIDATE_LIMIT = 40;
 const PRE_CANDIDATE_LIMIT = 10;
+const COMBO_LIMIT = 10;
 
 const finalsList=document.getElementById("finals-list");
 const finalsCountSpan=document.getElementById("finals-count");
@@ -5080,6 +5396,7 @@ function orderLiTemplate(pt,name,multi=false,predicted=false){
   li.dataset.predicted = predicted ? "1" : "0";
   li.innerHTML=`
     <span class="drag-handle" aria-label="並び替え">☰</span>
+    <label class="combo-pick-wrap"><input type="checkbox" class="combo-pick">選択</label>
     <span class="order-name">${orderText(pt,name)}</span>
     <div class="order-controls">
       <button class="order-btn final-multi-btn ${multi ? 'selected' : ''}" data-act="multi">1.5倍</button>
@@ -5122,6 +5439,291 @@ function finalCandidateLiTemplate(pt,name,predicted=false){
   bindLongPressDelete(delBtn, doDel);
   return li;
 }
+
+
+/* =========================================================
+   v1.74 コンボ技登録（1〜10）
+========================================================= */
+let comboDefinitions = Array.from({length: COMBO_LIMIT}, ()=>null);
+
+function comboMark(slot){
+  return ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"][Number(slot)-1] || String(slot);
+}
+function safeJsonParse(s, fallback=null){
+  try{return JSON.parse(s);}catch{return fallback;}
+}
+function singleSquareScore(d){
+  const p = Number(d?.pt || 0);
+  return p * p * (d?.multi ? 1.5 : 1);
+}
+function singleBaseScore(d){
+  return Number(d?.pt || 0);
+}
+function normalizeComboData(data){
+  if(!data || typeof data !== "object") return null;
+  const items = Array.isArray(data.items) ? data.items.map(d=>({
+    pt:Number(d.pt || 0),
+    name:String(d.name || ""),
+    multi:!!d.multi,
+    predicted:!!d.predicted
+  })).filter(d=>d.name) : [];
+  if(!items.length) return null;
+  const slot = Number(data.comboSlot || data.slot || 1);
+  const name = String(data.comboName || data.name || `コンボ${comboMark(slot)}`);
+  const score = items.reduce((sum,d)=>sum + singleSquareScore(d), 0);
+  const baseScore = items.reduce((sum,d)=>sum + singleBaseScore(d), 0);
+  return {
+    combo:true,
+    comboSlot:slot,
+    comboName:name,
+    name,
+    items,
+    score,
+    baseScore,
+    pt:baseScore,
+    count:items.length
+  };
+}
+function orderItemToData(li){
+  if(!li) return null;
+  if(li.dataset.combo === "1"){
+    return normalizeComboData(safeJsonParse(li.dataset.comboData, null));
+  }
+  const info = parseOrderText(getItemText(li));
+  if(!info) return null;
+  return {
+    pt:Number(info.pt),
+    name:info.name,
+    multi:li.dataset.multi === "1",
+    predicted:li.dataset.predicted === "1" || li.classList.contains("is-predicted")
+  };
+}
+function comboItemSummary(combo){
+  const c = normalizeComboData(combo);
+  if(!c) return "";
+  return c.items.map(d=>`${d.name}${d.multi ? "×1.5" : ""}`).join(" → ");
+}
+function comboDisplayText(combo){
+  const c = normalizeComboData(combo);
+  if(!c) return "コンボ";
+  return `【コンボ${comboMark(c.comboSlot)}】${c.comboName}（${c.count}技 / ${formatScore(c.score)}点）`;
+}
+function comboOrderLiTemplate(combo, candidate=false){
+  const c = normalizeComboData(combo);
+  if(!c) return document.createElement("li");
+  const li=document.createElement('li');
+  li.className='order-item is-combo' + (candidate ? ' is-combo-candidate' : '');
+  li.draggable=true;
+  li.dataset.combo="1";
+  li.dataset.comboData=JSON.stringify(c);
+  li.dataset.pt=String(c.baseScore);
+  li.dataset.name=c.comboName;
+  const comboNo = `コンボ${comboMark(c.comboSlot)}`;
+  const scoreText = `${c.count}技 / ${formatScore(c.score)}点`;
+  const seqText = comboItemSummary(c);
+  li.innerHTML=`
+    <span class="drag-handle" aria-label="並び替え">${candidate ? "◎" : "☰"}</span>
+    ${candidate ? "" : `<label class="combo-pick-wrap"><input type="checkbox" class="combo-pick">選択</label>`}
+    <div class="combo-main">
+      <div class="combo-summary">
+        <span class="combo-badge">${escapeHtml(comboNo)}</span>
+        <span class="combo-title-inline order-name">${escapeHtml(c.comboName)}</span>
+        <span class="combo-score-chip">${escapeHtml(scoreText)}</span>
+      </div>
+      <div class="combo-sequence"><span class="combo-sequence-label">構成</span>${escapeHtml(seqText)}</div>
+    </div>
+    <div class="order-controls">
+      ${candidate
+        ? `<button class="order-btn combo-main-btn" data-act="combo-main">採用</button>`
+        : `<button class="order-btn combo-cand-btn" data-act="combo-cand">候補へ</button>`}
+      <button class="order-btn order-btn-del" data-act="del">✕</button>
+    </div>`;
+  const delBtn = li.querySelector('[data-act="del"]');
+  const doDel=()=>{ if(!li.isConnected) return; li.remove(); rebuildFinalsList(); showToast(candidate ? "コンボ候補から削除しました" : "コンボを削除しました"); };
+  bindLongPressDelete(delBtn, doDel);
+  return li;
+}
+function appendOrderDataToList(list, data, mode="final"){
+  if(!data) return;
+  if(data.combo){
+    list.appendChild(comboOrderLiTemplate(data, mode === "candidate"));
+    return;
+  }
+  if(mode === "candidate"){
+    list.appendChild(finalCandidateLiTemplate(data.pt, data.name, !!data.predicted));
+  }else{
+    list.appendChild(orderLiTemplate(data.pt, data.name, !!data.multi, !!data.predicted));
+  }
+}
+function getComboPickItems(){
+  return [...finalsList.querySelectorAll(".order-item")]
+    .filter(li=>li.querySelector(".combo-pick")?.checked);
+}
+function getSelectedComboParts(){
+  const picked = getComboPickItems();
+  const parts = [];
+  picked.forEach(li=>{
+    const d = orderItemToData(li);
+    if(!d) return;
+    if(d.combo) parts.push(...d.items);
+    else parts.push(d);
+  });
+  return { picked, parts };
+}
+function currentComboSlot(){
+  return Number(document.getElementById("combo-slot")?.value || 1);
+}
+function currentComboName(slot){
+  const input = document.getElementById("combo-name");
+  const raw = input?.value?.trim();
+  return raw || `コンボ${comboMark(slot)}`;
+}
+function makeComboFromSelection(){
+  const {picked, parts} = getSelectedComboParts();
+  if(parts.length < 2){
+    showToast("コンボにする技を2つ以上選択してください");
+    return null;
+  }
+  const slot = currentComboSlot();
+  const combo = normalizeComboData({
+    combo:true,
+    comboSlot:slot,
+    comboName:currentComboName(slot),
+    items:parts
+  });
+  comboDefinitions[slot-1] = combo;
+  renderComboDefinitions();
+  saveState();
+  return {combo, picked};
+}
+function clearComboPicks(){
+  finalsList.querySelectorAll(".combo-pick").forEach(chk=>chk.checked=false);
+}
+function renderComboDefinitions(){
+  const list = document.getElementById("combo-def-list");
+  const status = document.getElementById("combo-status");
+  if(!list) return;
+  list.innerHTML = "";
+  const count = comboDefinitions.filter(Boolean).length;
+  if(status) status.textContent = `コンボ登録：${count}/${COMBO_LIMIT}`;
+  comboDefinitions.forEach((combo,idx)=>{
+    const slot = idx + 1;
+    const li = document.createElement("li");
+    li.className = "combo-def-item";
+    if(combo){
+      const c = normalizeComboData(combo);
+      li.innerHTML = `
+        <div class="combo-def-head"><span>コンボ${comboMark(slot)}：${escapeHtml(c.comboName)}</span><span>${c.count}技 / ${formatScore(c.score)}点</span></div>
+        <div class="combo-def-sub">${escapeHtml(comboItemSummary(c))}</div>
+        <div class="combo-def-actions">
+          <button type="button" class="combo-add-main" data-slot="${slot}">決勝へ追加</button>
+          <button type="button" class="combo-add-cand" data-slot="${slot}">候補へ追加</button>
+          <button type="button" class="combo-del" data-slot="${slot}">削除</button>
+        </div>`;
+    }else{
+      li.innerHTML = `<div class="combo-def-head"><span>コンボ${comboMark(slot)}</span><span>未登録</span></div>`;
+    }
+    list.appendChild(li);
+  });
+}
+function serializeComboDefinitions(){
+  return comboDefinitions.map(c=>c ? normalizeComboData(c) : null);
+}
+function addComboToCandidate(combo){
+  if(finalsCandidateList.querySelectorAll('.order-item').length >= FINAL_CANDIDATE_LIMIT){
+    finalsCandidateWarn.style.display='block';
+    showToast(`決勝の技選択候補は${FINAL_CANDIDATE_LIMIT}技までです`);
+    return false;
+  }
+  finalsCandidateList.appendChild(comboOrderLiTemplate(combo, true));
+  rebuildFinalsList();
+  showToast("コンボを候補へ追加しました");
+  return true;
+}
+function addComboToFinals(combo){
+  if(finalsList.querySelectorAll('.order-item').length >= 30){
+    finalsLimitAlert.style.display='block';
+    showToast("決勝は30技までです");
+    return false;
+  }
+  finalsList.dataset.authoritative = "1";
+  finalsList.appendChild(comboOrderLiTemplate(combo, false));
+  rebuildFinalsList();
+  showToast("コンボを決勝編成へ追加しました");
+  return true;
+}
+function initComboUi(){
+  const mainBtn = document.getElementById("combo-make-main");
+  const candBtn = document.getElementById("combo-make-candidate");
+  const clearBtn = document.getElementById("combo-clear-picks");
+  if(mainBtn){
+    mainBtn.addEventListener("click",()=>{
+      const result = makeComboFromSelection();
+      if(!result) return;
+      const {combo, picked} = result;
+      const first = picked[0];
+      picked.forEach(li=>li.remove());
+      finalsList.dataset.authoritative = "1";
+      finalsList.insertBefore(comboOrderLiTemplate(combo, false), first?.nextSibling || null);
+      clearComboPicks();
+      rebuildFinalsList();
+      showToast("選択技をコンボ化しました");
+    });
+  }
+  if(candBtn){
+    candBtn.addEventListener("click",()=>{
+      const result = makeComboFromSelection();
+      if(!result) return;
+      addComboToCandidate(result.combo);
+      clearComboPicks();
+    });
+  }
+  if(clearBtn) clearBtn.addEventListener("click",()=>{ clearComboPicks(); showToast("コンボ選択を解除しました"); });
+  const defList = document.getElementById("combo-def-list");
+  if(defList){
+    defList.addEventListener("click",e=>{
+      const btn = e.target.closest("button[data-slot]");
+      if(!btn) return;
+      const slot = Number(btn.dataset.slot);
+      const combo = comboDefinitions[slot-1];
+      if(!combo) return;
+      if(btn.classList.contains("combo-add-main")) addComboToFinals(combo);
+      if(btn.classList.contains("combo-add-cand")) addComboToCandidate(combo);
+      if(btn.classList.contains("combo-del")){
+        comboDefinitions[slot-1] = null;
+        renderComboDefinitions();
+        saveState();
+        showToast(`コンボ${comboMark(slot)}を削除しました`);
+      }
+    });
+  }
+  renderComboDefinitions();
+}
+initComboUi();
+
+finalsList.addEventListener("click",e=>{
+  const btn = e.target.closest(".combo-cand-btn");
+  if(!btn) return;
+  const li = btn.closest(".order-item");
+  const combo = orderItemToData(li);
+  if(!combo?.combo) return;
+  if(addComboToCandidate(combo)){
+    li.remove();
+    rebuildFinalsList();
+  }
+});
+
+finalsCandidateList.addEventListener("click",e=>{
+  const btn = e.target.closest(".combo-main-btn");
+  if(!btn) return;
+  const li = btn.closest(".order-item");
+  const combo = orderItemToData(li);
+  if(!combo?.combo) return;
+  if(addComboToFinals(combo)){
+    li.remove();
+    rebuildFinalsList();
+  }
+});
 
 function serializePredictedList(){
   return [...predictList.querySelectorAll(".predict-item")].map(li=>({
@@ -5511,7 +6113,7 @@ function addPreCandidate(pt,name){
   }
   if(preCandidateList.querySelectorAll('.order-item').length >= PRE_CANDIDATE_LIMIT){
     preCandidateWarn.style.display='block';
-    showToast("予選の技選択候補は10技までです");
+    showToast("予選の技選択候補は40技までです");
     return false;
   }
   preCandidateList.appendChild(preCandidateLiTemplate(pt,name));
@@ -5554,7 +6156,7 @@ function preListHandler(e){
     if(!info) return;
     if(preCandidateList.querySelectorAll('.order-item').length >= PRE_CANDIDATE_LIMIT){
       preCandidateWarn.style.display='block';
-      showToast("予選の技選択候補は10技までです");
+      showToast("予選の技選択候補は40技までです");
       return;
     }
     setPreTechChecked(info.pt, info.name, false);
@@ -5767,16 +6369,25 @@ function parseOrderText(txt){
 
 function normalizeScoreItem(item){
   if(typeof item === "string") return parseOrderText(item);
-  if(item && typeof item === "object") return {pt:Number(item.pt), name:item.name, multi:!!item.multi};
+  if(item && typeof item === "object"){
+    if(item.combo) return normalizeComboData(item);
+    return {pt:Number(item.pt), name:item.name, multi:!!item.multi, predicted:!!item.predicted};
+  }
   return null;
 }
 
 function calcOrderSquareScore(items){
-  return items.map(normalizeScoreItem).filter(Boolean).reduce((sum,item)=>sum + item.pt * item.pt * (item.multi ? 1.5 : 1), 0);
+  return items.map(normalizeScoreItem).filter(Boolean).reduce((sum,item)=>{
+    if(item.combo) return sum + Number(item.score || 0);
+    return sum + singleSquareScore(item);
+  }, 0);
 }
 
 function calcOrderBaseScore(items){
-  return items.map(normalizeScoreItem).filter(Boolean).reduce((sum,item)=>sum + item.pt, 0);
+  return items.map(normalizeScoreItem).filter(Boolean).reduce((sum,item)=>{
+    if(item.combo) return sum + Number(item.baseScore || 0);
+    return sum + singleBaseScore(item);
+  }, 0);
 }
 
 function pointKey(pt){
@@ -5801,6 +6412,7 @@ function trickFromCode(code){
   if(!Array.isArray(code) || code.length < 2) return null;
   const pt = code[0];
   const ref = code[1];
+  if(pt === "combo") return normalizeComboData(ref);
   if(typeof ref === "number"){
     const arr = tricks[pointKey(pt)] || tricks[Number(pt)] || [];
     const name = arr[ref];
@@ -5816,6 +6428,8 @@ function orderTextsToCodes(list){
 
 function orderItemsToCodes(list){
   return [...list.querySelectorAll(".order-item")].map(li=>{
+    const data = orderItemToData(li);
+    if(data?.combo) return ["combo", data];
     const code = trickCodeFromOrderText(getItemText(li));
     if(!code) return null;
     if(li.dataset.multi === "1") code[2] = 1;
@@ -5881,11 +6495,13 @@ function applyShortShareState(data){
   if((data.f||[]).length) finalsList.dataset.authoritative = "1";
   (data.f||[]).forEach(code=>{
     const item = trickFromCode(code);
-    if(item) finalsList.appendChild(orderLiTemplate(item.pt, item.name, !!code[2], !!code[3]));
+    if(item?.combo) appendOrderDataToList(finalsList, item, "final");
+    else if(item) finalsList.appendChild(orderLiTemplate(item.pt, item.name, !!code[2], !!code[3]));
   });
   (data.fc||[]).forEach(code=>{
     const item = trickFromCode(code);
-    if(item) finalsCandidateList.appendChild(finalCandidateLiTemplate(item.pt, item.name));
+    if(item?.combo) appendOrderDataToList(finalsCandidateList, item, "candidate");
+    else if(item) finalsCandidateList.appendChild(finalCandidateLiTemplate(item.pt, item.name));
   });
   predictList.innerHTML="";
   (data.y||[]).forEach(code=>{
@@ -6062,8 +6678,12 @@ function playerInfoOutputHtml(){
 
 function getExportData(){
   const finalEntries = serializeOrderList(finalsList);
-  const finals = finalEntries.map(d=>`${orderText(d.pt, d.name)}${d.predicted ? "（予想技）" : ""}${d.multi ? "（1.5倍）" : ""}`);
-  const finalsCand = getOrderTexts(finalsCandidateList);
+  const formatFinalEntry = (d)=>{
+    if(d.combo) return comboDisplayText(d);
+    return `${orderText(d.pt, d.name)}${d.predicted ? "（予想技）" : ""}${d.multi ? "（1.5倍）" : ""}`;
+  };
+  const finals = finalEntries.map(formatFinalEntry);
+  const finalsCand = serializeOrderList(finalsCandidateList).map(formatFinalEntry);
   const p1 = getOrderTexts(list1);
   const p2 = getOrderTexts(list2);
   const preCand = getOrderTexts(preCandidateList);
@@ -6427,7 +7047,7 @@ function presetScoreSuffix(pack, kind){
   if(kind === "finals"){
     const data = Array.isArray(pack.data) ? pack.data : (pack.data?.main || []);
     if(data.length){
-      const score = data.reduce((sum,d)=>sum + Number(d.pt||0) * Number(d.pt||0) * (d.multi ? 1.5 : 1), 0);
+      const score = calcOrderSquareScore(data);
       return `（${formatScore(score)}点）`;
     }
   }
@@ -6461,7 +7081,7 @@ function updatePresetOptionLabels(kind){
   if(!sel) return;
   [...sel.options].forEach(opt=>{
     const slot = opt.value;
-    const mark = slot === "slot1" ? "①" : "②";
+    const mark = ({slot1:"①",slot2:"②",slot3:"③",slot4:"④"}[slot] || slot);
     const base = kind === "finals" ? "決勝プリセット" : kind === "prelims" ? "予選プリセット" : "全体プリセット";
     const pack = store[kind]?.[slot];
     const name = pack?.name?.trim() || `${base}${mark}`;
@@ -6471,16 +7091,16 @@ function updatePresetOptionLabels(kind){
 
 function getPresetSummaryText(kind){
   const store = loadPresetStore();
-  const slots = ["slot1","slot2"];
+  const slots = kind === "overall" ? ["slot1","slot2"] : ["slot1","slot2","slot3","slot4"];
   const base = kind === "finals" ? "決勝" : "予選";
   return slots.map((slot,idx)=>{
     const pack = store[kind]?.[slot];
-    const mark = idx === 0 ? "①" : "②";
+    const mark = ["①","②","③","④"][idx] || String(idx+1);
     const name = pack?.name?.trim() || `${base}プリセット${mark}`;
     if(kind === "finals"){
       const data = Array.isArray(pack?.data) ? pack.data : (pack?.data?.main || []);
       const count = data.length;
-      const score = data.reduce((sum,d)=>sum + Number(d.pt||0) * Number(d.pt||0) * (d.multi ? 1.5 : 1), 0);
+      const score = calcOrderSquareScore(data);
       return `${mark} ${name}：${count}技 / ${formatScore(score)}点`;
     }
     if(kind === "prelims"){
@@ -6517,7 +7137,7 @@ document.getElementById("btn-reset").addEventListener("click",()=>{
   if(entryInput) entryInput.value="";
   if(playerInput) playerInput.value="";
   preInput.value=0; warn.style.display="none"; preWarn.style.display="none"; preLimitWarn.style.display="none";
-  list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsList.dataset.authoritative=""; finalsCandidateList.innerHTML=""; predictList.innerHTML=""; updatePredictCount();
+  list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsList.dataset.authoritative=""; finalsCandidateList.innerHTML=""; predictList.innerHTML=""; comboDefinitions = Array.from({length: COMBO_LIMIT}, ()=>null); renderComboDefinitions(); updatePredictCount();
   if(searchInput) searchInput.value=""; applySearch();
   localStorage.removeItem("tsubame2025");
   updatePredictCount();
@@ -6540,9 +7160,9 @@ document.getElementById("btn-print").addEventListener("click",()=>{
     const txt = li.querySelector(".order-name")?.textContent || "";
     return txt + (li.dataset.predicted==="1" ? "（予想技）" : "") + (li.dataset.multi==="1" ? "（1.5倍）" : "");
   });
-  const finalCands=[...finalsCandidateList.querySelectorAll(".order-item")].map(li=>{
-    const txt = li.querySelector(".order-name")?.textContent || "";
-    return txt + (li.dataset.predicted==="1" || li.classList.contains("is-predicted") ? "（予想技）" : "");
+  const finalCands=serializeOrderList(finalsCandidateList).map(d=>{
+    if(d.combo) return comboDisplayText(d);
+    return orderText(d.pt, d.name) + (d.predicted ? "（予想技）" : "");
   });
   const p1=[...list1.querySelectorAll(".order-name")].map(n=>n.textContent);
   const p2=[...list2.querySelectorAll(".order-name")].map(n=>n.textContent);
@@ -6630,14 +7250,19 @@ document.getElementById("btn-print").addEventListener("click",()=>{
 function exportCSV(){
   const rows=[["type","name","point","mult15","round","order"]];
 
-  [...finalsList.querySelectorAll(".order-item")].forEach((li,i)=>{
-    const n=li.querySelector(".order-name");
-    const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
-    rows.push(["final", m[2], m[1], li.dataset.multi==="1" ? 1.5 : "", li.dataset.predicted==="1" ? "predicted" : "", i+1]);
+  serializeOrderList(finalsList).forEach((d,i)=>{
+    if(d.combo){
+      rows.push(["final_combo", JSON.stringify(d), d.baseScore || "", "", "combo", i+1]);
+    }else{
+      rows.push(["final", d.name, d.pt, d.multi ? 1.5 : "", d.predicted ? "predicted" : "", i+1]);
+    }
   });
-  [...finalsCandidateList.querySelectorAll(".order-item .order-name")].forEach((n,i)=>{
-    const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
-    rows.push(["final_candidate", m[2], m[1], "", "", i+1]);
+  serializeOrderList(finalsCandidateList).forEach((d,i)=>{
+    if(d.combo){
+      rows.push(["final_combo_candidate", JSON.stringify(d), d.baseScore || "", "", "combo_candidate", i+1]);
+    }else{
+      rows.push(["final_candidate", d.name, d.pt, "", d.predicted ? "predicted" : "", i+1]);
+    }
   });
   serializePredictedList().forEach((d,i)=>{
     rows.push(["predicted_final", d.name, d.pt, "", "", i+1]);
@@ -6757,14 +7382,8 @@ function saveState(){
       u:c.checked
     })),
     finals: serializeOrderList(finalsList),
-    finalCands: [...finalsCandidateList.querySelectorAll(".order-item")].map(li=>{
-      const info = parseOrderText(getItemText(li));
-      return info ? {
-        pt: Number(info.pt),
-        name: info.name,
-        predicted: li.dataset.predicted === "1" || li.classList.contains("is-predicted")
-      } : null;
-    }).filter(Boolean),
+    finalCands: serializeOrderList(finalsCandidateList),
+    combos: serializeComboDefinitions(),
     predicted: serializePredictedList(),
     p1: [...list1.querySelectorAll(".order-name")].map(n=>n.textContent),
     p2: [...list2.querySelectorAll(".order-name")].map(n=>n.textContent),
@@ -6802,10 +7421,17 @@ function loadState(){
     finalsList.innerHTML="";
     finalsCandidateList.innerHTML="";
     predictList.innerHTML="";
+    comboDefinitions = Array.from({length: COMBO_LIMIT}, ()=>null);
+    (s.combos||[]).slice(0,COMBO_LIMIT).forEach((combo,idx)=>{
+      if(combo) comboDefinitions[idx] = normalizeComboData(combo);
+    });
+    renderComboDefinitions();
     (s.finals||[]).forEach(entry=>{
       if(typeof entry === "string"){
         const m=entry.match(/^\[(.+?)点]\s*(.+)$/);
         if(m) finalsList.appendChild(orderLiTemplate(m[1], m[2]));
+      }else if(entry && entry.combo){
+        appendOrderDataToList(finalsList, entry, "final");
       }else if(entry && entry.name){
         finalsList.appendChild(orderLiTemplate(entry.pt, entry.name, !!entry.multi, !!entry.predicted));
       }
@@ -6819,6 +7445,8 @@ function loadState(){
       if(typeof entry === "string"){
         const m=entry.match(/^\[(.+?)点]\s*(.+)$/);
         if(m) finalsCandidateList.appendChild(finalCandidateLiTemplate(m[1], m[2], false));
+      }else if(entry && entry.combo){
+        appendOrderDataToList(finalsCandidateList, entry, "candidate");
       }else if(entry && entry.name){
         finalsCandidateList.appendChild(finalCandidateLiTemplate(entry.pt, entry.name, !!entry.predicted));
       }
@@ -6864,11 +7492,15 @@ function defaultPresetStore(){
   return {
     finals: {
       slot1:{ name:"", data:[] },
-      slot2:{ name:"", data:[] }
+      slot2:{ name:"", data:[] },
+      slot3:{ name:"", data:[] },
+      slot4:{ name:"", data:[] }
     },
     prelims: {
       slot1:{ name:"", data:{r1:[], r2:[]} },
-      slot2:{ name:"", data:{r1:[], r2:[]} }
+      slot2:{ name:"", data:{r1:[], r2:[]} },
+      slot3:{ name:"", data:{r1:[], r2:[]} },
+      slot4:{ name:"", data:{r1:[], r2:[]} }
     },
     overall: {
       slot1:{ name:"", data:null },
@@ -6886,7 +7518,11 @@ function loadPresetStore(){
   }
   try{
     const s = JSON.parse(raw);
-    return Object.assign(defaultPresetStore(), s);
+    const d = defaultPresetStore();
+    ["finals","prelims","overall"].forEach(kind=>{
+      d[kind] = {...d[kind], ...(s[kind] || {})};
+    });
+    return d;
   }catch{
     const s = defaultPresetStore();
     localStorage.setItem(PRESET_V2_KEY, JSON.stringify(s));
@@ -6940,11 +7576,7 @@ migrateOldPresetsIfNeeded();
 
 /* 決勝/予選の保存用シリアライズ */
 function serializeOrderList(list){
-  return [...list.querySelectorAll('.order-item')].map(li=>{
-    const n = li.querySelector('.order-name');
-    const m=n?.textContent.match(/^\[(.+?)点]\s*(.+)$/);
-    return m ? {pt:Number(m[1]), name:m[2], multi: li.dataset.multi === "1", predicted: li.dataset.predicted === "1"} : null;
-  }).filter(Boolean);
+  return [...list.querySelectorAll('.order-item')].map(li=>orderItemToData(li)).filter(Boolean);
 }
 
 /* セレクトと名前入力の同期 */
@@ -6971,8 +7603,8 @@ document.getElementById("save-finals-preset").addEventListener("click",()=>{
   const slot = document.getElementById("finals-preset-slot").value;
   const nm = document.getElementById("finals-preset-name").value.trim() || (slot==="slot1"?"決勝プリセット①":"決勝プリセット②");
 
-  const score = main.slice(0,30).reduce((sum,d)=>sum + (Number(d.pt||0) * Number(d.pt||0) * (d.multi ? 1.5 : 1)), 0);
-  store.finals[slot] = { name:nm, score, data:{ main:main.slice(0,30), cand:cand.slice(0,10), predicted: serializePredictedList().slice(0,10) } };
+  const score = calcOrderSquareScore(main.slice(0,30));
+  store.finals[slot] = { name:nm, score, data:{ main:main.slice(0,30), cand:cand.slice(0,FINAL_CANDIDATE_LIMIT), combos: serializeComboDefinitions(), predicted: serializePredictedList().slice(0,10) } };
   savePresetStore(store);
   updateAllPresetOptionLabels();
   markPresetSaved("決勝プリセット");
@@ -6993,8 +7625,13 @@ document.getElementById("load-finals-preset").addEventListener("click",()=>{
   finalsList.innerHTML="";
   finalsCandidateList.innerHTML="";
   predictList.innerHTML="";
-  main.slice(0,30).forEach(d=> finalsList.appendChild(orderLiTemplate(d.pt, d.name, !!d.multi, !!d.predicted)));
-  cand.slice(0,10).forEach(d=> finalsCandidateList.appendChild(finalCandidateLiTemplate(d.pt, d.name)));
+  comboDefinitions = Array.from({length: COMBO_LIMIT}, ()=>null);
+  (pack.data.combos || []).slice(0,COMBO_LIMIT).forEach((combo,idx)=>{
+    if(combo) comboDefinitions[idx] = normalizeComboData(combo);
+  });
+  renderComboDefinitions();
+  main.slice(0,30).forEach(d=> appendOrderDataToList(finalsList, d, "final"));
+  cand.slice(0,FINAL_CANDIDATE_LIMIT).forEach(d=> appendOrderDataToList(finalsCandidateList, d, "candidate"));
   predicted.slice(0,10).forEach(d=> predictList.appendChild(predictedLiTemplate(d.pt, d.name)));
   updatePredictCount();
   rebuildFinalsList();
@@ -7020,7 +7657,7 @@ document.getElementById("save-prelims-preset").addEventListener("click",()=>{
   store.prelims[slot] = {
     name:nm,
     score,
-    data:{ r1:r1.slice(0,6), r2:r2.slice(0,6), cand:cand.slice(0,10) }
+    data:{ r1:r1.slice(0,6), r2:r2.slice(0,6), cand:cand.slice(0,FINAL_CANDIDATE_LIMIT) }
   };
   savePresetStore(store);
   updateAllPresetOptionLabels();
@@ -7042,7 +7679,7 @@ document.getElementById("load-prelims-preset").addEventListener("click",()=>{
   list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML="";
   r1.slice(0,6).forEach(d=> list1.appendChild(mkPreOrderItem(d.pt, d.name, 1)));
   r2.slice(0,6).forEach(d=> list2.appendChild(mkPreOrderItem(d.pt, d.name, 2)));
-  cand.slice(0,10).forEach(d=> preCandidateList.appendChild(preCandidateLiTemplate(d.pt, d.name)));
+  cand.slice(0,FINAL_CANDIDATE_LIMIT).forEach(d=> preCandidateList.appendChild(preCandidateLiTemplate(d.pt, d.name)));
   syncPreChecksFromLists();
   updatePreSummary();
   document.getElementById("prelims-preset-name").value = pack.name || "";
