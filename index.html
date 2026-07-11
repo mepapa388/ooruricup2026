@@ -5080,6 +5080,48 @@ document.addEventListener("keydown",(e)=>{
 /* =========================================================
    11) 計算
 ========================================================= */
+function calcPrelimListScore(){
+  const l1 = document.getElementById("prelims1-list");
+  const l2 = document.getElementById("prelims2-list");
+  const items = [
+    ...(l1 ? l1.querySelectorAll(".order-item") : []),
+    ...(l2 ? l2.querySelectorAll(".order-item") : [])
+  ];
+  return items.reduce((sum,li)=>{
+    const data = orderItemToData(li);
+    return sum + Number(data?.pt || 0);
+  }, 0);
+}
+
+function calcPrelimCheckedScore(){
+  return [...document.querySelectorAll(".pre-chk:checked")]
+    .reduce((sum,chk)=>sum + Number(chk.dataset.pt || 0), 0);
+}
+
+function getCurrentPrelimScore(){
+  const l1 = document.getElementById("prelims1-list");
+  const l2 = document.getElementById("prelims2-list");
+  const itemCount = (l1 ? l1.querySelectorAll(".order-item").length : 0)
+                + (l2 ? l2.querySelectorAll(".order-item").length : 0);
+  if(itemCount) return calcPrelimListScore();
+
+  const checkedCount = document.querySelectorAll(".pre-chk:checked").length;
+  if(checkedCount) return calcPrelimCheckedScore();
+
+  let v=parseFloat(preInput.value);
+  if(isNaN(v)) v=0;
+  return Math.min(Math.max(0,v),112);
+}
+
+function syncPrelimScoreDisplays(score=null){
+  const value = score === null ? getCurrentPrelimScore() : Number(score || 0);
+  const formatted = formatScore(value);
+  if(preSum) preSum.textContent = formatted;
+  if(preInput) preInput.value = formatted;
+  if(preSpan) preSpan.textContent = formatted;
+  return value;
+}
+
 function getPrelimAutoScore(){
   const l1 = document.getElementById("prelims1-list");
   const l2 = document.getElementById("prelims2-list");
@@ -5188,6 +5230,7 @@ function calcTotal(){
   warn.style.display = displayCount>30 ? "block" : "none";
 
   const pre=getPreScore();
+  syncPrelimScoreDisplays(pre);
   const total=fmd+base+pre;
 
   selectedSpan.textContent=displayCount;
@@ -6801,6 +6844,14 @@ function bindDnd(list){
 }
 [list1,list2].forEach(bindDnd);
 bindCandidateDnd(preCandidateList, updatePreSummary);
+
+const preScoreObserver = new MutationObserver(()=>{
+  updatePreSummary();
+});
+[list1,list2].forEach(list=>{
+  if(list) preScoreObserver.observe(list, {childList:true, subtree:true, attributes:true, attributeFilter:["data-predicted","class"]});
+});
+
 document.getElementById("pre-candidate-sort").addEventListener("click",()=>{
   sortCandidateListByPoint(preCandidateList, updatePreSummary);
 });
@@ -6849,9 +6900,8 @@ function updatePreSummary(){
   // 予選技合計は、使用ボタンで選択した瞬間にリアルタイム増減。
   // プリセット読込などでチェックがまだ無い場合は、編成リストから補完する。
   const checkedCount = document.querySelectorAll(".pre-chk:checked").length;
-  const autoScore = totalMain ? (sumNode(n1)+sumNode(n2)) : (checkedCount ? sumChecked() : 0);
-  preSum.textContent = formatScore(autoScore);
-  preInput.value = formatScore(autoScore);
+  const autoScore = totalMain ? calcPrelimListScore() : (checkedCount ? calcPrelimCheckedScore() : 0);
+  syncPrelimScoreDisplays(autoScore);
 
   preCandidateCountSpan.textContent = preCandidateList.querySelectorAll('.order-item').length;
   preMainLimitAlert.style.display = (overR1 || overR2 || overTotal) ? 'block' : 'none';
