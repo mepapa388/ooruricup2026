@@ -2879,6 +2879,45 @@ h1{
   }
 }
 
+
+/* ===== v1.82 予選予想技・予選得点自動計算 ===== */
+.pre-predict-box{
+  background:#f7fff7;
+  border-color:#9fd7a6;
+}
+.pre-predict-box .predict-title{color:#126b2c;}
+.pre-predict-box .predict-note,
+.pre-predict-box .predict-count{color:#195f2c;}
+.pre-predict-box .predict-form button{background:#148a3b;}
+.pre-predict-list .predict-item{
+  grid-template-columns:minmax(0,1fr) auto;
+  background:#f8fff8;
+  border-color:#b9e4bf;
+}
+.predict-add-pre-r1,
+.predict-add-pre-r2{background:#148a3b;color:#fff;}
+.predict-add-pre-candidate{background:#0a84ff;color:#fff;}
+.order-item.is-pre-predicted{
+  background:#fff5f5 !important;
+  border:1px solid #ffb3b3 !important;
+}
+.order-item.is-pre-predicted .order-name{
+  color:#d60000 !important;
+  font-weight:1000;
+}
+.order-item.is-pre-predicted .order-name::after{
+  content:"  予想技";
+  display:inline-block;
+  margin-left:6px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:#d60000;
+  color:#fff;
+  font-size:11px;
+  font-weight:1000;
+  vertical-align:middle;
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -3083,6 +3122,33 @@ h1{
 
   <div class="auto-prelim-note">予選の使用ボタンを押すと、第1ラウンド・第2ラウンドへ自動で振り分けられます。</div>
 
+
+  <div class="predict-box pre-predict-box" id="pre-predict-box">
+    <div class="predict-title">予選用の予想技を作成</div>
+    <p class="predict-note">
+      9月1日以降に追加されそうな技を、予選用にも仮登録できます。最大10個まで作成し、第1R・第2R・候補へ追加できます。
+    </p>
+    <div class="predict-form">
+      <select id="pre-predict-pt">
+        <option value="0.5">0.5点</option>
+        <option value="1">1点</option>
+        <option value="2">2点</option>
+        <option value="3">3点</option>
+        <option value="4">4点</option>
+        <option value="5">5点</option>
+        <option value="6">6点</option>
+        <option value="7">7点</option>
+        <option value="8">8点</option>
+        <option value="9">9点</option>
+        <option value="10">10点</option>
+      </select>
+      <input id="pre-predict-name" type="text" placeholder="予選用の予想技名を入力">
+      <button type="button" id="add-pre-predict-tech">作成</button>
+    </div>
+    <div class="predict-count">予選予想技リスト：<span id="pre-predict-count">0</span>/10</div>
+    <ul id="pre-predict-list" class="predict-list pre-predict-list"></ul>
+  </div>
+
   <div class="order-box">
     <div class="order-box-title">第1ラウンド（<span id="prelims1-count">0</span>技 / <span id="prelims1-limit-num">6</span>技）</div>
     <ul id="prelims1-list" class="order-list"></ul>
@@ -3098,7 +3164,7 @@ h1{
     <ul id="pre-candidate-list" class="order-list"></ul>
     <p class="candidate-note">12技に入れるか迷う技を一時保管できます。候補から1R/2Rへ戻せます。候補欄内もドラッグ＆ドロップで並べ替えできます。</p>
     <button type="button" class="candidate-sort-btn" id="pre-candidate-sort">候補を点数順に整理</button>
-    <p class="warning inline-warning" id="pre-candidate-warn">⚠ 予選の技選択候補は40技までです。</p>
+    <p class="warning inline-warning" id="pre-candidate-warn">⚠ 予選の技選択候補は10技までです。</p>
   </div>
 
   <p class="pre-sum">予選技合計：<span id="pre-tech-total">0</span> 点</p>
@@ -5014,7 +5080,35 @@ document.addEventListener("keydown",(e)=>{
 /* =========================================================
    11) 計算
 ========================================================= */
+function getPrelimAutoScore(){
+  const l1 = document.getElementById("prelims1-list");
+  const l2 = document.getElementById("prelims2-list");
+  const items = [
+    ...(l1 ? l1.querySelectorAll(".order-item") : []),
+    ...(l2 ? l2.querySelectorAll(".order-item") : [])
+  ];
+  if(items.length){
+    return items.reduce((sum,li)=>{
+      const data = orderItemToData(li);
+      return sum + Number(data?.pt || 0);
+    }, 0);
+  }
+
+  const checked = [...document.querySelectorAll(".pre-chk:checked")];
+  if(checked.length){
+    return checked.reduce((sum,chk)=>sum + Number(chk.dataset.pt || 0), 0);
+  }
+  return null;
+}
+
 function getPreScore(){
+  const auto = getPrelimAutoScore();
+  if(auto !== null){
+    preInput.value = formatScore(auto);
+    preWarn.style.display = "none";
+    return auto;
+  }
+
   let v=parseFloat(preInput.value);
   if(isNaN(v)) v=0;
   let c=Math.min(Math.max(0,v),112);
@@ -5356,7 +5450,7 @@ function enforcePreLimit(){
       if(info){
         setPreTechChecked(info.pt, info.name, false);
         if(preCandidateList.querySelectorAll(".order-item").length < 6 && !listContainsText(preCandidateList, orderText(info.pt, info.name))){
-          preCandidateList.appendChild(preCandidateLiTemplate(info.pt, info.name));
+          preCandidateList.appendChild(preCandidateLiTemplate(info.pt, info.name, li.dataset.predicted === "1" || li.classList.contains("is-pre-predicted")));
         }
       }
       ok = false;
@@ -6310,6 +6404,10 @@ const c2=document.getElementById("prelims2-count");
 const pre1LimitNum=document.getElementById("prelims1-limit-num");
 const pre2LimitNum=document.getElementById("prelims2-limit-num");
 const preSum=document.getElementById("pre-tech-total");
+const prePredictPt=document.getElementById("pre-predict-pt");
+const prePredictName=document.getElementById("pre-predict-name");
+const prePredictList=document.getElementById("pre-predict-list");
+const prePredictCount=document.getElementById("pre-predict-count");
 
 document.addEventListener('change', e=>{
   if(e.target.classList.contains('pre-chk')){
@@ -6336,9 +6434,11 @@ document.addEventListener('change', e=>{
   }
 });
 
-function mkPreOrderItem(pt,name,round){
+function mkPreOrderItem(pt,name,round,predicted=false){
   const li=document.createElement('li');
-  li.className='order-item'; li.draggable=true;
+  li.className='order-item' + (predicted ? ' is-pre-predicted is-predicted' : '');
+  li.draggable=true;
+  li.dataset.predicted = predicted ? "1" : "0";
   const label=round===1?"2R▶":"◀1R"; const move=round===1?"to2":"to1";
   li.innerHTML=`
     <span class="drag-handle" aria-label="並び替え">☰</span>
@@ -6376,7 +6476,7 @@ function autoSyncPreListsFromChecks(){
   const currentEntries = [...list1.querySelectorAll(".order-item"), ...list2.querySelectorAll(".order-item")]
     .map(li=>{
       const info = parseOrderText(getItemText(li));
-      return info ? {pt:String(info.pt), name:info.name, key:orderText(info.pt, info.name)} : null;
+      return info ? {pt:String(info.pt), name:info.name, key:orderText(info.pt, info.name), predicted:li.dataset.predicted === "1" || li.classList.contains("is-pre-predicted")} : null;
     })
     .filter(Boolean)
     .filter(d=>checkedKeys.has(d.key));
@@ -6395,8 +6495,8 @@ function autoSyncPreListsFromChecks(){
   list1.innerHTML="";
   list2.innerHTML="";
   finalEntries.forEach((d,i)=>{
-    if(i < 6) list1.appendChild(mkPreOrderItem(d.pt, d.name, 1));
-    else list2.appendChild(mkPreOrderItem(d.pt, d.name, 2));
+    if(i < 6) list1.appendChild(mkPreOrderItem(d.pt, d.name, 1, !!d.predicted));
+    else list2.appendChild(mkPreOrderItem(d.pt, d.name, 2, !!d.predicted));
   });
 
   pruneCandidateDuplicates(list1, preCandidateList);
@@ -6404,9 +6504,11 @@ function autoSyncPreListsFromChecks(){
   syncToggleButtonStates();
 }
 
-function preCandidateLiTemplate(pt,name){
+function preCandidateLiTemplate(pt,name,predicted=false){
   const li=document.createElement('li');
-  li.className='order-item'; li.draggable=true;
+  li.className='order-item' + (predicted ? ' is-pre-predicted is-predicted' : '');
+  li.draggable=true;
+  li.dataset.predicted = predicted ? "1" : "0";
   li.innerHTML=`
     <span class="drag-handle" aria-hidden="true">◎</span>
     <span class="order-name">${orderText(pt,name)}</span>
@@ -6421,6 +6523,128 @@ function preCandidateLiTemplate(pt,name){
   const doDel=()=>{ if(!li.isConnected) return; li.remove(); updatePreSummary(); showToast("候補から削除しました"); };
   bindLongPressDelete(delBtn, doDel);
   return li;
+}
+
+
+/* ===== v1.82 予選用の予想技 ===== */
+function serializePrePredictedList(){
+  if(!prePredictList) return [];
+  return [...prePredictList.querySelectorAll(".predict-item")].map(li=>({
+    pt:Number(li.dataset.pt),
+    name:li.dataset.name
+  }));
+}
+
+function updatePrePredictCount(){
+  if(prePredictCount && prePredictList) prePredictCount.textContent = prePredictList.querySelectorAll(".predict-item").length;
+}
+
+function prePredictedLiTemplate(pt,name){
+  const li=document.createElement("li");
+  li.className="predict-item";
+  li.dataset.pt=String(pt);
+  li.dataset.name=String(name);
+  li.innerHTML=`
+    <div class="predict-name">${orderText(pt,name)}</div>
+    <div class="predict-actions">
+      <button type="button" class="predict-add-pre-r1">1R</button>
+      <button type="button" class="predict-add-pre-r2">2R</button>
+      <button type="button" class="predict-add-pre-candidate">候補</button>
+      <button type="button" class="predict-del">削除</button>
+    </div>`;
+  return li;
+}
+
+function addPrePredictedTech(pt,name){
+  if(!prePredictList) return false;
+  const cleanName = String(name||"").trim();
+  if(!cleanName){ showToast("予選用の予想技名を入力してください"); return false; }
+  if(prePredictList.querySelectorAll(".predict-item").length >= 10){
+    showToast("予選予想技リストは10個までです");
+    return false;
+  }
+  const txt = orderText(pt, cleanName);
+  const exists = [...prePredictList.querySelectorAll(".predict-item")].some(li=>orderText(li.dataset.pt, li.dataset.name) === txt);
+  if(exists){ showToast("同じ予選予想技はすでにあります"); return false; }
+  prePredictList.appendChild(prePredictedLiTemplate(pt, cleanName));
+  updatePrePredictCount();
+  saveState();
+  showToast("予選用の予想技を作成しました");
+  return true;
+}
+
+function addPrePredictedToRound(pt,name,round){
+  const target = round === 1 ? list1 : list2;
+  if(getPreMainCount() >= 12){
+    preMainLimitAlert.style.display='block';
+    showToast('予選は合計12技までです');
+    return false;
+  }
+  if(target.querySelectorAll(".order-item").length >= 6){
+    preMainLimitAlert.style.display='block';
+    showToast(round === 1 ? '第1ラウンドは6技までです' : '第2ラウンドは6技までです');
+    return false;
+  }
+  target.appendChild(mkPreOrderItem(pt, name, round, true));
+  updatePreSummary();
+  showToast(`予選予想技を第${round}ラウンドに追加しました`);
+  return true;
+}
+
+function addPrePredictedToCandidate(pt,name){
+  if(preCandidateList.querySelectorAll('.order-item').length >= PRE_CANDIDATE_LIMIT){
+    preCandidateWarn.style.display='block';
+    showToast(`予選の技選択候補は${PRE_CANDIDATE_LIMIT}技までです`);
+    return false;
+  }
+  const txt = orderText(pt,name);
+  if(listContainsText(preCandidateList, txt)){
+    showToast("同じ予選予想技は候補にすでにあります");
+    return false;
+  }
+  preCandidateList.appendChild(preCandidateLiTemplate(pt, name, true));
+  updatePreSummary();
+  showToast("予選予想技を候補に追加しました");
+  return true;
+}
+
+if(document.getElementById("add-pre-predict-tech")){
+  document.getElementById("add-pre-predict-tech").addEventListener("click",()=>{
+    if(addPrePredictedTech(prePredictPt.value, prePredictName.value)){
+      prePredictName.value="";
+    }
+  });
+}
+if(prePredictName){
+  prePredictName.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){
+      e.preventDefault();
+      document.getElementById("add-pre-predict-tech")?.click();
+    }
+  });
+}
+if(prePredictList){
+  prePredictList.addEventListener("click",e=>{
+    const li=e.target.closest(".predict-item");
+    if(!li) return;
+    if(e.target.classList.contains("predict-add-pre-r1")){
+      addPrePredictedToRound(li.dataset.pt, li.dataset.name, 1);
+    }
+    if(e.target.classList.contains("predict-add-pre-r2")){
+      addPrePredictedToRound(li.dataset.pt, li.dataset.name, 2);
+    }
+    if(e.target.classList.contains("predict-add-pre-candidate")){
+      addPrePredictedToCandidate(li.dataset.pt, li.dataset.name);
+    }
+    if(e.target.classList.contains("predict-del")){
+      if(confirm("この予選予想技を削除しますか？")){
+        li.remove();
+        updatePrePredictCount();
+        saveState();
+        showToast("予選予想技を削除しました");
+      }
+    }
+  });
 }
 
 function addPreCandidate(pt,name){
@@ -6459,7 +6683,7 @@ function swapMove(li, to2){
   const info=parseOrderText(getItemText(li)); if(!info) return;
   const target = to2 ? list2 : list1;
   li.remove();
-  target.appendChild(mkPreOrderItem(info.pt,info.name,to2?2:1));
+  target.appendChild(mkPreOrderItem(info.pt,info.name,to2?2:1, li.dataset.predicted === "1" || li.classList.contains("is-pre-predicted")));
 
   const over = target.querySelectorAll('.order-item').length > 6;
   if(over){
@@ -6510,7 +6734,7 @@ preCandidateList.addEventListener('click',e=>{
     }
     li.remove();
     setPreTechChecked(info.pt, info.name, true);
-    target.appendChild(mkPreOrderItem(info.pt, info.name, act==='r1' ? 1 : 2));
+    target.appendChild(mkPreOrderItem(info.pt, info.name, act==='r1' ? 1 : 2, li.dataset.predicted === "1" || li.classList.contains("is-pre-predicted")));
   }else if(act==='del'){
     showToast('削除は長押しで実行');
     return;
@@ -6625,11 +6849,14 @@ function updatePreSummary(){
   // 予選技合計は、使用ボタンで選択した瞬間にリアルタイム増減。
   // プリセット読込などでチェックがまだ無い場合は、編成リストから補完する。
   const checkedCount = document.querySelectorAll(".pre-chk:checked").length;
-  preSum.textContent = checkedCount ? formatScore(sumChecked()) : formatScore(sumNode(n1)+sumNode(n2));
+  const autoScore = totalMain ? (sumNode(n1)+sumNode(n2)) : (checkedCount ? sumChecked() : 0);
+  preSum.textContent = formatScore(autoScore);
+  preInput.value = formatScore(autoScore);
 
   preCandidateCountSpan.textContent = preCandidateList.querySelectorAll('.order-item').length;
   preMainLimitAlert.style.display = (overR1 || overR2 || overTotal) ? 'block' : 'none';
   preCandidateWarn.style.display = preCandidateList.querySelectorAll('.order-item').length>PRE_CANDIDATE_LIMIT ? 'block' : 'none';
+  calcTotal();
   saveState();
 }
 
@@ -6679,7 +6906,7 @@ function getCurrentPresetLabel(kind){
   const name = nameEl?.value?.trim();
   if(name) return name;
   const base = kind === "finals" ? "決勝プリセット" : kind === "prelims" ? "予選プリセット" : "全体プリセット";
-  return `${base}${slot === "slot1" ? "①" : "②"}`;
+  return `${base}${({slot1:"①",slot2:"②",slot3:"③",slot4:"④"}[slot] || "")}`;
 }
 
 function getOrderTexts(list){
@@ -6750,6 +6977,15 @@ function orderTextsToCodes(list){
   return getOrderTexts(list).map(trickCodeFromOrderText).filter(Boolean);
 }
 
+function preItemsToCodes(list){
+  return [...list.querySelectorAll(".order-item")].map(li=>{
+    const code = trickCodeFromOrderText(getItemText(li));
+    if(!code) return null;
+    if(li.dataset.predicted === "1" || li.classList.contains("is-pre-predicted")) code[3] = 1;
+    return code;
+  }).filter(Boolean);
+}
+
 function orderItemsToCodes(list){
   return [...list.querySelectorAll(".order-item")].map(li=>{
     const data = orderItemToData(li);
@@ -6775,9 +7011,10 @@ function collectShortShareState(){
     f:orderItemsToCodes(finalsList),
     fc:orderTextsToCodes(finalsCandidateList),
     y:serializePredictedList().map(d=>trickCodeFromPtName(d.pt, d.name)),
-    r1:orderTextsToCodes(list1),
-    r2:orderTextsToCodes(list2),
-    pc:orderTextsToCodes(preCandidateList)
+    py:serializePrePredictedList().map(d=>trickCodeFromPtName(d.pt, d.name)),
+    r1:preItemsToCodes(list1),
+    r2:preItemsToCodes(list2),
+    pc:preItemsToCodes(preCandidateList)
   };
 }
 
@@ -6833,17 +7070,23 @@ function applyShortShareState(data){
     if(item) predictList.appendChild(predictedLiTemplate(item.pt, item.name));
   });
   updatePredictCount();
+  if(prePredictList) prePredictList.innerHTML="";
+  (data.py||[]).forEach(code=>{
+    const item = trickFromCode(code);
+    if(item && prePredictList) prePredictList.appendChild(prePredictedLiTemplate(item.pt, item.name));
+  });
+  updatePrePredictCount();
   (data.r1||[]).forEach(code=>{
     const item = trickFromCode(code);
-    if(item) list1.appendChild(mkPreOrderItem(item.pt, item.name, 1));
+    if(item) list1.appendChild(mkPreOrderItem(item.pt, item.name, 1, !!code[3]));
   });
   (data.r2||[]).forEach(code=>{
     const item = trickFromCode(code);
-    if(item) list2.appendChild(mkPreOrderItem(item.pt, item.name, 2));
+    if(item) list2.appendChild(mkPreOrderItem(item.pt, item.name, 2, !!code[3]));
   });
   (data.pc||[]).forEach(code=>{
     const item = trickFromCode(code);
-    if(item) preCandidateList.appendChild(preCandidateLiTemplate(item.pt, item.name));
+    if(item) preCandidateList.appendChild(preCandidateLiTemplate(item.pt, item.name, !!code[3]));
   });
 
   calcTotal();
@@ -7000,6 +7243,26 @@ function playerInfoOutputHtml(){
   });
 });
 
+
+function serializePreOrderList(list){
+  return [...list.querySelectorAll(".order-item")].map(li=>orderItemToData(li)).filter(Boolean);
+}
+
+function appendPreOrderEntry(entry, list, roundOrCandidate){
+  if(typeof entry === "string"){
+    const m=entry.match(/^\[(.+?)点]\s*(.+)$/);
+    if(!m) return;
+    if(roundOrCandidate === "candidate") list.appendChild(preCandidateLiTemplate(m[1], m[2], false));
+    else list.appendChild(mkPreOrderItem(m[1], m[2], roundOrCandidate, false));
+    return;
+  }
+  if(entry && entry.name){
+    if(roundOrCandidate === "candidate") list.appendChild(preCandidateLiTemplate(entry.pt, entry.name, !!entry.predicted));
+    else list.appendChild(mkPreOrderItem(entry.pt, entry.name, roundOrCandidate, !!entry.predicted));
+  }
+}
+
+
 function getExportData(){
   const finalEntries = serializeOrderList(finalsList);
   const formatFinalEntry = (d)=>{
@@ -7008,9 +7271,10 @@ function getExportData(){
   };
   const finals = finalEntries.map(formatFinalEntry);
   const finalsCand = serializeOrderList(finalsCandidateList).map(formatFinalEntry);
-  const p1 = getOrderTexts(list1);
-  const p2 = getOrderTexts(list2);
-  const preCand = getOrderTexts(preCandidateList);
+  const formatPreEntry = (d)=>`${orderText(d.pt, d.name)}${d.predicted ? "（予想技）" : ""}`;
+  const p1 = serializePreOrderList(list1).map(formatPreEntry);
+  const p2 = serializePreOrderList(list2).map(formatPreEntry);
+  const preCand = serializePreOrderList(preCandidateList).map(formatPreEntry);
   const now = new Date().toLocaleString();
   const shareUrl = createShareUrl();
   const finalScore = calcOrderSquareScore(finalEntries);
@@ -7461,7 +7725,7 @@ document.getElementById("btn-reset").addEventListener("click",()=>{
   if(entryInput) entryInput.value="";
   if(playerInput) playerInput.value="";
   preInput.value=0; warn.style.display="none"; preWarn.style.display="none"; preLimitWarn.style.display="none";
-  list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsList.dataset.authoritative=""; finalsCandidateList.innerHTML=""; predictList.innerHTML=""; comboDefinitions = Array.from({length: COMBO_LIMIT}, ()=>null); renderComboDefinitions(); updatePredictCount();
+  list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML=""; finalsList.innerHTML=""; finalsList.dataset.authoritative=""; finalsCandidateList.innerHTML=""; predictList.innerHTML=""; if(prePredictList) prePredictList.innerHTML=""; comboDefinitions = Array.from({length: COMBO_LIMIT}, ()=>null); renderComboDefinitions(); updatePredictCount(); updatePrePredictCount();
   if(searchInput) searchInput.value=""; applySearch();
   localStorage.removeItem("tsubame2025");
   updatePredictCount();
@@ -7488,9 +7752,10 @@ document.getElementById("btn-print").addEventListener("click",()=>{
     if(d.combo) return comboDisplayText(d);
     return orderText(d.pt, d.name) + (d.predicted ? "（予想技）" : "");
   });
-  const p1=[...list1.querySelectorAll(".order-name")].map(n=>n.textContent);
-  const p2=[...list2.querySelectorAll(".order-name")].map(n=>n.textContent);
-  const preCands=[...preCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent);
+  const formatPrePrint = (d)=>`${orderText(d.pt, d.name)}${d.predicted ? "（予想技）" : ""}`;
+  const p1=serializePreOrderList(list1).map(formatPrePrint);
+  const p2=serializePreOrderList(list2).map(formatPrePrint);
+  const preCands=serializePreOrderList(preCandidateList).map(formatPrePrint);
   const now = new Date().toLocaleString();
   const playerInfo = getPlayerInfo();
   const playerLine = `エントリーNo.：${playerInfo.entryNo || "—"} ／ 選手名：${playerInfo.playerName || "—"}`;
@@ -7591,17 +7856,14 @@ function exportCSV(){
   serializePredictedList().forEach((d,i)=>{
     rows.push(["predicted_final", d.name, d.pt, "", "", i+1]);
   });
-  [...list1.querySelectorAll(".order-name")].forEach((n,i)=>{
-    const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
-    rows.push(["prelim", m[2], m[1], "", 1, i+1]);
+  serializePreOrderList(list1).forEach((d,i)=>{
+    rows.push(["prelim", d.name, d.pt, "", d.predicted ? "1_predicted" : 1, i+1]);
   });
-  [...list2.querySelectorAll(".order-name")].forEach((n,i)=>{
-    const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
-    rows.push(["prelim", m[2], m[1], "", 2, i+1]);
+  serializePreOrderList(list2).forEach((d,i)=>{
+    rows.push(["prelim", d.name, d.pt, "", d.predicted ? "2_predicted" : 2, i+1]);
   });
-  [...preCandidateList.querySelectorAll(".order-name")].forEach((n,i)=>{
-    const m=n.textContent.match(/^\[(.+?)点]\s*(.+)$/); if(!m) return;
-    rows.push(["prelim_candidate", m[2], m[1], "", "candidate", i+1]);
+  serializePreOrderList(preCandidateList).forEach((d,i)=>{
+    rows.push(["prelim_candidate", d.name, d.pt, "", d.predicted ? "candidate_predicted" : "candidate", i+1]);
   });
 
   document.querySelectorAll(".chk").forEach(chk=>{
@@ -7709,9 +7971,10 @@ function saveState(){
     finalCands: serializeOrderList(finalsCandidateList),
     combos: serializeComboDefinitions(),
     predicted: serializePredictedList(),
-    p1: [...list1.querySelectorAll(".order-name")].map(n=>n.textContent),
-    p2: [...list2.querySelectorAll(".order-name")].map(n=>n.textContent),
-    preCands: [...preCandidateList.querySelectorAll(".order-name")].map(n=>n.textContent),
+    prePredicted: serializePrePredictedList(),
+    p1: serializePreOrderList(list1),
+    p2: serializePreOrderList(list2),
+    preCands: serializePreOrderList(preCandidateList),
   };
   localStorage.setItem("tsubame2025", JSON.stringify(state));
   markDirty();
@@ -7776,22 +8039,19 @@ function loadState(){
       }
     });
 
+    if(prePredictList) prePredictList.innerHTML="";
+    (s.prePredicted||[]).forEach(d=>{
+      if(d && d.name && prePredictList) prePredictList.appendChild(prePredictedLiTemplate(d.pt, d.name));
+    });
+    updatePrePredictCount();
+
     list1.innerHTML="";
     preCandidateList.innerHTML="";
-    (s.p1||[]).forEach(txt=>{
-      const m=txt.match(/^\[(.+?)点]\s*(.+)$/);
-      if(m) list1.appendChild(mkPreOrderItem(m[1],m[2],1));
-    });
+    (s.p1||[]).forEach(entry=>appendPreOrderEntry(entry, list1, 1));
 
     list2.innerHTML="";
-    (s.p2||[]).forEach(txt=>{
-      const m=txt.match(/^\[(.+?)点]\s*(.+)$/);
-      if(m) list2.appendChild(mkPreOrderItem(m[1],m[2],2));
-    });
-    (s.preCands||[]).forEach(txt=>{
-      const m=txt.match(/^\[(.+?)点]\s*(.+)$/);
-      if(m) preCandidateList.appendChild(preCandidateLiTemplate(m[1], m[2]));
-    });
+    (s.p2||[]).forEach(entry=>appendPreOrderEntry(entry, list2, 2));
+    (s.preCands||[]).forEach(entry=>appendPreOrderEntry(entry, preCandidateList, "candidate"));
 
     rebuildFinalsList(); syncPreChecksFromLists();
   updatePreSummary();
@@ -7968,9 +8228,9 @@ document.getElementById("load-finals-preset").addEventListener("click",()=>{
 
 /* ===== 予選プリセット ===== */
 document.getElementById("save-prelims-preset").addEventListener("click",()=>{
-  const r1 = serializeOrderList(list1);
-  const r2 = serializeOrderList(list2);
-  const cand = serializeOrderList(preCandidateList);
+  const r1 = serializePreOrderList(list1);
+  const r2 = serializePreOrderList(list2);
+  const cand = serializePreOrderList(preCandidateList);
   if(!r1.length && !r2.length && !cand.length){ showToast("保存する予選構成がありません"); return; }
 
   const store = loadPresetStore();
@@ -7981,7 +8241,7 @@ document.getElementById("save-prelims-preset").addEventListener("click",()=>{
   store.prelims[slot] = {
     name:nm,
     score,
-    data:{ r1:r1.slice(0,6), r2:r2.slice(0,6), cand:cand.slice(0,FINAL_CANDIDATE_LIMIT) }
+    data:{ r1:r1.slice(0,6), r2:r2.slice(0,6), cand:cand.slice(0,PRE_CANDIDATE_LIMIT), prePredicted: serializePrePredictedList().slice(0,10) }
   };
   savePresetStore(store);
   updateAllPresetOptionLabels();
@@ -7998,12 +8258,16 @@ document.getElementById("load-prelims-preset").addEventListener("click",()=>{
   const r1 = pack.data.r1 || [];
   const r2 = pack.data.r2 || [];
   const cand = pack.data.cand || [];
+  const prePredicted = pack.data.prePredicted || [];
   if(!r1.length && !r2.length && !cand.length){ showToast("保存済みの予選構成がありません"); return; }
 
   list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML="";
-  r1.slice(0,6).forEach(d=> list1.appendChild(mkPreOrderItem(d.pt, d.name, 1)));
-  r2.slice(0,6).forEach(d=> list2.appendChild(mkPreOrderItem(d.pt, d.name, 2)));
-  cand.slice(0,FINAL_CANDIDATE_LIMIT).forEach(d=> preCandidateList.appendChild(preCandidateLiTemplate(d.pt, d.name)));
+  if(prePredictList) prePredictList.innerHTML="";
+  prePredicted.slice(0,10).forEach(d=>{ if(d && d.name && prePredictList) prePredictList.appendChild(prePredictedLiTemplate(d.pt,d.name)); });
+  updatePrePredictCount();
+  r1.slice(0,6).forEach(d=> appendPreOrderEntry(d, list1, 1));
+  r2.slice(0,6).forEach(d=> appendPreOrderEntry(d, list2, 2));
+  cand.slice(0,PRE_CANDIDATE_LIMIT).forEach(d=> appendPreOrderEntry(d, preCandidateList, "candidate"));
   syncPreChecksFromLists();
   updatePreSummary();
   document.getElementById("prelims-preset-name").value = pack.name || "";
