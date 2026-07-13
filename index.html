@@ -2918,6 +2918,44 @@ h1{
   vertical-align:middle;
 }
 
+
+/* ===== v1.84 決勝候補40件をすべてページ内で確認できるようにする ===== */
+#mode-finals .candidate-box{
+  overflow:visible !important;
+}
+#finals-candidate-list{
+  max-height:none !important;
+  height:auto !important;
+  overflow:visible !important;
+  -webkit-overflow-scrolling:auto !important;
+  display:block;
+}
+#finals-candidate-list .order-item{
+  width:100%;
+  box-sizing:border-box;
+  margin-bottom:7px;
+}
+#finals-candidate-list .order-item:last-child{
+  margin-bottom:0;
+}
+#finals-candidate-list::after{
+  content:"";
+  display:block;
+  height:18px;
+}
+
+/* 候補リストはページ全体をスクロールして確認する。
+   内側スクロールをやめることで、スマホでも40件すべてに触れられる。 */
+@media (max-width:620px){
+  #finals-candidate-list{
+    max-height:none !important;
+    overflow:visible !important;
+  }
+  #mode-finals .candidate-box{
+    padding-bottom:18px;
+  }
+}
+
 /* ===== 印刷 ===== */
 @media print{
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
@@ -3086,7 +3124,7 @@ h1{
   <div class="order-box candidate-box">
     <div class="order-box-title">技選択候補（<span id="finals-candidate-count">0</span>/40技）</div>
     <ul id="finals-candidate-list" class="order-list"></ul>
-    <p class="candidate-note">30技に入れるか迷う技を一時保管できます。候補から「採用」で決勝編成に戻せます。候補欄内もドラッグ＆ドロップで並べ替えできます。</p>
+    <p class="candidate-note">30技に入れるか迷う技を一時保管できます。候補から「採用」で決勝編成に戻せます。40件すべてをページスクロールで確認できます。候補欄内もドラッグ＆ドロップで並べ替えできます。</p>
     <button type="button" class="candidate-sort-btn" id="finals-candidate-sort">候補を点数順に整理</button>
     <p class="warning inline-warning" id="finals-candidate-warn">⚠ 決勝の技選択候補は40技までです。</p>
   </div>
