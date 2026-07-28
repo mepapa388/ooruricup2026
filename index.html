@@ -3170,7 +3170,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
   outline-offset:2px;
 }
 
-/* 上部は点数と「その他」だけ。多色ボタンは使わない。 */
+/* 上部は点数と設定ボタンだけ。多色ボタンは使わない。 */
 .total-bar{
   padding:7px 12px;
   background:rgba(250,250,252,.88);
@@ -3407,7 +3407,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 }
 
 /* 通常の編成カードは確認用の簡潔な番号リスト。
-   移動・削除などは「編成を編集」の操作シートへ集約する。 */
+   移動・削除などは「技順編集」の操作シートへ集約する。 */
 #finals-list,#prelims1-list,#prelims2-list{counter-reset:ux-order}
 #ux-unified-finals-body #finals-list>.order-item,
 #ux-unified-prelims-body #prelims1-list>.order-item,
@@ -3597,6 +3597,98 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .score-tech-item .judge-btn::before,.pre-tech-item .judge-btn::before{content:none!important}
 .score-tech-item .candidate-add-btn,.pre-tech-item .candidate-add-btn{grid-area:cand!important;width:40px;min-width:40px}
 .score-tech-item .multi-toggle{grid-area:multi!important;width:46px;min-width:46px;padding:4px!important}
+
+/* =========================================================
+   v1.96 下部の主要画面切替を見つけやすくする
+========================================================= */
+.mini-nav .mini-btn[data-mode]{
+  flex:1.28;
+  min-height:50px;
+  padding:9px 8px;
+  border-radius:13px;
+  color:var(--apple-label);
+  font-size:15px;
+  font-weight:750;
+}
+.mini-nav .mini-btn[data-mode].active{
+  background:rgba(0,122,255,.1);
+  color:var(--apple-blue);
+  box-shadow:inset 0 0 0 1px rgba(0,122,255,.18);
+}
+.mini-nav .mini-btn[data-link]{
+  flex:.78;
+  min-height:42px;
+  padding:7px 4px;
+  font-size:10.5px;
+  font-weight:550;
+}
+
+/* 上部設定ボタンは内容が分かる名称にし、長い文言を2行まで許可。 */
+#ux-actions-toggle{
+  max-width:136px;
+  min-height:38px;
+  padding:5px 8px;
+  white-space:normal;
+  text-align:center;
+  line-height:1.15;
+}
+#ux-actions-toggle.is-open{
+  background:rgba(0,122,255,.1);
+  color:var(--apple-blue);
+}
+
+/* =========================================================
+   v1.98 技順編集シートの直接ドラッグ並べ替え
+========================================================= */
+.ux-sheet-group-section{margin:0 0 10px}
+.ux-sheet-group-list{
+  min-height:54px;
+  padding:1px;
+  border-radius:13px;
+}
+.ux-sheet-group-list:empty::after{
+  content:"ここへドラッグ";
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:54px;
+  margin:4px 0;
+  border:1px dashed rgba(60,60,67,.22);
+  border-radius:12px;
+  color:var(--apple-tertiary);
+  font-size:12px;
+  font-weight:600;
+}
+.ux-sheet-row{
+  grid-template-columns:36px minmax(0,1fr) auto 34px!important;
+}
+.ux-sheet-status{font-size:11px;color:var(--apple-secondary);white-space:nowrap}
+.ux-sheet-meta.is-multi{
+  color:var(--apple-red)!important;
+  font-weight:800!important;
+}
+.ux-sheet-drag{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:38px;
+  border-radius:9px;
+  background:var(--apple-fill);
+  color:var(--apple-secondary);
+  font-size:18px;
+  font-weight:800;
+  cursor:grab;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.ux-sheet-drag:active{cursor:grabbing;background:rgba(0,122,255,.12);color:var(--apple-blue)}
+.ux-sheet-row.sortable-ghost{opacity:.34;background:rgba(0,122,255,.1)}
+.ux-sheet-row.sortable-chosen,.ux-sheet-row.sortable-drag{
+  background:#fff;
+  box-shadow:0 8px 24px rgba(0,0,0,.16);
+}
 </style>
 </head>
 <body>
@@ -3614,8 +3706,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
       <span>総合計：<span id="final-total">0</span></span>
       <div class="save-status is-clean" id="save-status">自動保存済み</div>
       <span class="ux-header-controls">
-        <button type="button" id="ux-undo-button" class="ux-header-btn" disabled aria-label="直前の操作を取り消す">↶ 戻す</button>
-        <button type="button" id="ux-actions-toggle" class="ux-header-btn" aria-expanded="true">操作</button>
+        <button type="button" id="ux-actions-toggle" class="ux-header-btn" aria-expanded="true">画面保存・リセットなど設定</button>
       </span>
     </div>
     <div class="total-buttons">
@@ -3957,7 +4048,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 <!-- 選択中トレイ -->
 <div class="ux-selection-tray" id="ux-selection-tray">
   <div class="ux-selection-summary" id="ux-selection-summary">決勝 0/30技・0点</div>
-  <button type="button" id="ux-selection-open">編成を編集</button>
+  <button type="button" id="ux-selection-open">技順編集</button>
 </div>
 
 <!-- 編成ボトムシート -->
@@ -3971,7 +4062,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
       </div>
       <button type="button" id="ux-selection-close" aria-label="編成を閉じる">閉じる</button>
     </header>
-    <div class="ux-selection-help">技を1つ選び、下の固定ボタンで移動・候補・削除を操作できます。ドラッグは不要です。</div>
+    <div class="ux-selection-help">右端の「≡」をドラッグして並べ替えできます。従来どおり、技を選んで下の固定ボタンからも移動・候補・削除を操作できます。</div>
     <div class="ux-selection-list" id="ux-selection-list"></div>
     <div class="ux-selection-actions" id="ux-selection-actions">
       <button type="button" data-ux-action="up5">5つ上</button>
@@ -9199,7 +9290,7 @@ document.getElementById('tour-never').addEventListener('click',tourNever);
 
 if('serviceWorker' in navigator){
   const swCode = `
-  const CACHE='ooruricup2026-v1-95';
+  const CACHE='ooruricup2026-v1-99';
   self.addEventListener('install',e=>{
     e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])));
     self.skipWaiting();
@@ -9383,6 +9474,9 @@ let uxUndoLabel = "";
 let uxUndoBusy = false;
 let uxSheetItems = [];
 let uxSheetActiveSource = null;
+let uxSheetSortables = [];
+let uxSheetDraggingUntil = 0;
+let uxSheetDropBlocked = false;
 let uxScrollTicking = false;
 
 function uxGetMode(){
@@ -9417,8 +9511,10 @@ function uxUpdateHeaderButtons(){
   const toggle = document.getElementById("ux-actions-toggle");
   if(!toggle) return;
   const collapsed = document.body.classList.contains("ux-actions-collapsed");
-  toggle.textContent = collapsed ? "その他" : "閉じる";
+  toggle.textContent = "画面保存・リセットなど設定";
   toggle.setAttribute("aria-expanded", String(!collapsed));
+  toggle.setAttribute("aria-label", collapsed ? "画面保存・リセットなどの設定を開く" : "画面保存・リセットなどの設定を閉じる");
+  toggle.classList.toggle("is-open", !collapsed);
   requestAnimationFrame(uxUpdateFixedHeights);
 }
 
@@ -9678,11 +9774,118 @@ function uxUpdateSheetActions(){
   });
 }
 
+function uxDestroySheetDnd(){
+  uxSheetSortables.forEach(sortable=>{
+    try{ sortable?.destroy?.(); }catch{}
+  });
+  uxSheetSortables = [];
+}
+
+function uxSheetSourcesFor(group){
+  const list = document.querySelector(`.ux-sheet-group-list[data-ux-sheet-group="${group}"]`);
+  if(!list) return [];
+  return [...list.querySelectorAll(":scope > .ux-sheet-row[data-ux-sheet-index]")]
+    .map(row=>uxSheetItems[Number(row.dataset.uxSheetIndex)]?.source)
+    .filter(Boolean);
+}
+
+function uxCommitSheetDrag(mode){
+  let roundChanged = false;
+  if(mode === "score"){
+    uxSheetSourcesFor("決勝編成").forEach(source=>{
+      if(source?.isConnected) finalsList.appendChild(source);
+    });
+    finalsList.dataset.authoritative = "1";
+    rebuildFinalsList();
+  }else if(mode === "prelims"){
+    const plans = [
+      {group:"第1ラウンド", target:list1, round:1},
+      {group:"第2ラウンド", target:list2, round:2}
+    ];
+    roundChanged = plans.some(plan=>uxSheetSourcesFor(plan.group).some(source=>source?.parentElement !== plan.target));
+    plans.forEach(plan=>{
+      uxSheetSourcesFor(plan.group).forEach(source=>{
+        if(!source?.isConnected) return;
+        if(source.parentElement === plan.target){
+          plan.target.appendChild(source);
+          return;
+        }
+        const info = parseOrderText(getItemText(source));
+        if(!info) return;
+        const predicted = source.dataset.predicted === "1" || source.classList.contains("is-pre-predicted");
+        const replacement = mkPreOrderItem(info.pt, info.name, plan.round, predicted);
+        source.remove();
+        plan.target.appendChild(replacement);
+      });
+    });
+    updatePreSummary();
+  }
+
+  uxSheetActiveSource = null;
+  uxUpdateTray();
+  uxRenderSelectionSheet();
+  showToast(roundChanged ? "ラウンド間で技を移動しました" : "ドラッグで技順を変更しました", 1100);
+}
+
+function uxInitSheetDnd(mode){
+  uxDestroySheetDnd();
+  if(!window.Sortable) return;
+  const lists = [...document.querySelectorAll("#ux-selection-list .ux-sheet-group-list")];
+  lists.forEach(list=>{
+    const sortable = new Sortable(list, {
+      group:mode === "prelims"
+        ? {name:"ooruri-sheet-prelims", pull:true, put:true}
+        : {name:"ooruri-sheet-finals", pull:false, put:false},
+      draggable:".ux-sheet-row",
+      handle:".ux-sheet-drag",
+      animation:160,
+      ghostClass:"sortable-ghost",
+      chosenClass:"sortable-chosen",
+      dragClass:"sortable-drag",
+      forceFallback:true,
+      fallbackOnBody:true,
+      scroll:true,
+      bubbleScroll:true,
+      scrollSensitivity:90,
+      scrollSpeed:16,
+      delayOnTouchOnly:true,
+      delay:100,
+      touchStartThreshold:4,
+      onStart:()=>{
+        uxSheetDropBlocked = false;
+        uxCaptureUndo("並べ替え");
+        document.body.classList.add("ux-sheet-sorting");
+      },
+      onMove:event=>{
+        if(mode === "prelims" && event.to !== event.from && event.to.querySelectorAll(":scope > .ux-sheet-row").length >= 6){
+          uxSheetDropBlocked = true;
+          return false;
+        }
+        uxSheetDropBlocked = false;
+        return true;
+      },
+      onEnd:event=>{
+        document.body.classList.remove("ux-sheet-sorting");
+        uxSheetDraggingUntil = Date.now() + 350;
+        if(uxSheetDropBlocked){
+          uxSheetDropBlocked = false;
+          showToast("各ラウンドは6技までです", 1200);
+          return;
+        }
+        const changed = event.from !== event.to || event.oldIndex !== event.newIndex;
+        if(changed) requestAnimationFrame(()=>uxCommitSheetDrag(mode));
+      }
+    });
+    uxSheetSortables.push(sortable);
+  });
+}
+
 function uxRenderSelectionSheet(){
   const container = document.getElementById("ux-selection-list");
   const count = document.getElementById("ux-selection-sheet-count");
   const title = document.getElementById("ux-selection-title");
   if(!container || !count || !title) return;
+  uxDestroySheetDnd();
   const mode = uxGetMode();
   uxSheetItems = uxCollectSheetItems();
   if(uxSheetActiveSource && !uxSheetActiveSource.isConnected) uxSheetActiveSource = null;
@@ -9699,15 +9902,23 @@ function uxRenderSelectionSheet(){
     return;
   }
 
-  let lastGroup = "";
+  const groupNames = mode === "prelims" ? ["第1ラウンド", "第2ラウンド"] : ["決勝編成"];
+  const groupLists = new Map();
+  groupNames.forEach(group=>{
+    const section = document.createElement("section");
+    section.className = "ux-sheet-group-section";
+    const heading = document.createElement("div");
+    heading.className = "ux-sheet-group";
+    heading.textContent = group;
+    const list = document.createElement("div");
+    list.className = "ux-sheet-group-list";
+    list.dataset.uxSheetGroup = group;
+    section.append(heading, list);
+    container.appendChild(section);
+    groupLists.set(group, list);
+  });
+
   uxSheetItems.forEach((item,globalIndex)=>{
-    if(item.group !== lastGroup){
-      lastGroup = item.group;
-      const heading = document.createElement("div");
-      heading.className = "ux-sheet-group";
-      heading.textContent = item.group;
-      container.appendChild(heading);
-    }
     const button = document.createElement("button");
     button.type = "button";
     button.className = "ux-sheet-row";
@@ -9722,14 +9933,23 @@ function uxRenderSelectionSheet(){
     text.textContent = uxSheetText(item.source);
     const meta = document.createElement("span");
     meta.className = "ux-sheet-meta";
-    meta.textContent = item.source.dataset.multi === "1" ? "1.5倍選択中" : item.group;
+    const multiSelected = item.source.dataset.multi === "1";
+    meta.textContent = multiSelected ? "1.5倍選択中" : item.group;
+    meta.classList.toggle("is-multi", multiSelected);
     textWrap.append(text, meta);
     const mark = document.createElement("span");
+    mark.className = "ux-sheet-status";
     mark.textContent = item.source === uxSheetActiveSource ? "選択中" : "選ぶ";
-    button.append(index, textWrap, mark);
-    container.appendChild(button);
+    const drag = document.createElement("span");
+    drag.className = "ux-sheet-drag";
+    drag.textContent = "≡";
+    drag.setAttribute("aria-hidden", "true");
+    drag.title = "ドラッグして並べ替え";
+    button.append(index, textWrap, mark, drag);
+    groupLists.get(item.group)?.appendChild(button);
   });
   uxUpdateSheetActions();
+  uxInitSheetDnd(mode);
 }
 
 function uxOpenSelectionSheet(){
@@ -9746,6 +9966,7 @@ function uxOpenSelectionSheet(){
 function uxCloseSelectionSheet(){
   const sheet = document.getElementById("ux-selection-sheet");
   if(!sheet) return;
+  uxDestroySheetDnd();
   sheet.classList.remove("open");
   sheet.setAttribute("aria-hidden", "true");
   document.body.classList.remove("ux-sheet-open");
@@ -9818,7 +10039,7 @@ function uxRunSheetAction(action){
     uxApplyFilter("score", true);
     uxApplyFilter("prelims", true);
     uxRenderSelectionSheet();
-    showToast(action === "delete" ? "削除しました。上部の「戻す」で取り消せます" : "編成を更新しました", 1300);
+    showToast(action === "delete" ? "削除しました" : "編成を更新しました", 1300);
   }
 }
 
@@ -10024,7 +10245,6 @@ function initOoruriUx(){
     localStorage.setItem("ooruri2026_compact_actions", collapsed ? "1" : "0");
     uxUpdateHeaderButtons();
   });
-  document.getElementById("ux-undo-button")?.addEventListener("click", uxApplyUndo);
   document.getElementById("ux-point-prev")?.addEventListener("click", ()=>uxMovePoint(-1));
   document.getElementById("ux-point-next")?.addEventListener("click", ()=>uxMovePoint(1));
   document.getElementById("ux-point-current")?.addEventListener("click", ()=>{
@@ -10062,6 +10282,7 @@ function initOoruriUx(){
   document.getElementById("ux-selection-close")?.addEventListener("click", uxCloseSelectionSheet);
   document.querySelector("[data-ux-sheet-close]")?.addEventListener("click", uxCloseSelectionSheet);
   document.getElementById("ux-selection-list")?.addEventListener("click", event=>{
+    if(Date.now() < uxSheetDraggingUntil || event.target.closest(".ux-sheet-drag")) return;
     const row = event.target.closest(".ux-sheet-row[data-ux-sheet-index]");
     if(!row) return;
     const item = uxSheetItems[Number(row.dataset.uxSheetIndex)];
