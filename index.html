@@ -3689,6 +3689,83 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
   background:#fff;
   box-shadow:0 8px 24px rgba(0,0,0,.16);
 }
+
+/* =========================================================
+   v1.100 技順編集内で候補と構成を往復する
+========================================================= */
+.ux-selection-list{padding-bottom:190px}
+.ux-sheet-limit-alert{
+  margin:0;
+  padding:10px 14px;
+  border-top:1px solid rgba(255,59,48,.18);
+  border-bottom:1px solid rgba(255,59,48,.18);
+  background:rgba(255,59,48,.1);
+  color:#c62828;
+  font-size:13px;
+  font-weight:800;
+  line-height:1.45;
+}
+.ux-selection-summary.is-limit-over{color:var(--apple-red);font-weight:800}
+#ux-candidate-list-toggle{
+  grid-column:1/-1;
+  order:-1;
+  min-height:42px;
+  background:rgba(175,82,222,.12)!important;
+  color:#8e44ad!important;
+  font-size:14px;
+  font-weight:750!important;
+}
+#ux-candidate-list-toggle.is-open{
+  background:#af52de!important;
+  color:#fff!important;
+}
+.ux-sheet-candidate-panel{
+  margin:12px 0 6px;
+  padding:10px;
+  border:1px solid rgba(175,82,222,.2);
+  border-radius:14px;
+  background:rgba(175,82,222,.06);
+}
+.ux-sheet-candidate-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin:0 2px 8px;
+  color:#7d3797;
+  font-size:14px;
+  font-weight:800;
+}
+.ux-sheet-candidate-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  min-height:52px;
+  margin:5px 0;
+  padding:7px 8px 7px 11px;
+  border-radius:11px;
+  background:#fff;
+}
+.ux-sheet-candidate-name{min-width:0;font-size:14px;font-weight:650;line-height:1.3}
+.ux-sheet-candidate-actions{display:flex;gap:5px}
+.ux-sheet-candidate-actions button{
+  min-width:54px;
+  min-height:38px;
+  padding:5px 8px;
+  border:0;
+  border-radius:9px;
+  background:rgba(0,122,255,.11);
+  color:var(--apple-blue);
+  font-size:12px;
+  font-weight:750;
+}
+.ux-sheet-candidate-empty{
+  padding:14px 8px;
+  color:var(--apple-secondary);
+  text-align:center;
+  font-size:13px;
+}
 </style>
 </head>
 <body>
@@ -4062,9 +4139,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
       </div>
       <button type="button" id="ux-selection-close" aria-label="編成を閉じる">閉じる</button>
     </header>
-    <div class="ux-selection-help">右端の「≡」をドラッグして並べ替えできます。従来どおり、技を選んで下の固定ボタンからも移動・候補・削除を操作できます。</div>
+    <div class="ux-selection-help">右端の「≡」をドラッグして並べ替えできます。技を選んで下の固定ボタンから候補へ移し、「候補から採用」から同じ画面内で戻せます。</div>
+    <div class="ux-sheet-limit-alert" id="ux-sheet-limit-alert" role="alert" hidden></div>
     <div class="ux-selection-list" id="ux-selection-list"></div>
     <div class="ux-selection-actions" id="ux-selection-actions">
+      <button type="button" id="ux-candidate-list-toggle" data-ux-action="candidate-list" aria-expanded="false">候補から採用</button>
       <button type="button" data-ux-action="up5">5つ上</button>
       <button type="button" data-ux-action="up">↑</button>
       <button type="button" data-ux-action="down">↓</button>
@@ -9290,7 +9369,7 @@ document.getElementById('tour-never').addEventListener('click',tourNever);
 
 if('serviceWorker' in navigator){
   const swCode = `
-  const CACHE='ooruricup2026-v1-99';
+  const CACHE='ooruricup2026-v1-101';
   self.addEventListener('install',e=>{
     e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])));
     self.skipWaiting();
@@ -9474,9 +9553,10 @@ let uxUndoLabel = "";
 let uxUndoBusy = false;
 let uxSheetItems = [];
 let uxSheetActiveSource = null;
+let uxCandidateItems = [];
+let uxCandidatePanelOpen = false;
 let uxSheetSortables = [];
 let uxSheetDraggingUntil = 0;
-let uxSheetDropBlocked = false;
 let uxScrollTicking = false;
 
 function uxGetMode(){
@@ -9742,6 +9822,7 @@ function uxUpdateTray(){
     const count = (list1?.querySelectorAll(".order-item").length || 0) + (list2?.querySelectorAll(".order-item").length || 0);
     summary.textContent = `予選 ${count}/12技・${preSum?.textContent || 0}点`;
   }
+  summary.classList.toggle("is-limit-over", uxGetSheetLimitState(mode).over);
   uxUpdateUnifiedFinalsSummary();
   uxUpdateUnifiedPrelimsSummary();
 }
@@ -9762,16 +9843,178 @@ function uxCollectSheetItems(){
   return result;
 }
 
+function uxCollectCandidateItems(){
+  const list = uxGetMode() === "prelims" ? preCandidateList : finalsCandidateList;
+  return [...list.querySelectorAll(":scope > .order-item")].map((source,index)=>({source,index:index+1}));
+}
+
+function uxCandidateCount(mode=uxGetMode()){
+  const list = mode === "prelims" ? preCandidateList : finalsCandidateList;
+  return list?.querySelectorAll(":scope > .order-item").length || 0;
+}
+
+function uxGetSheetLimitState(mode=uxGetMode()){
+  if(mode === "prelims"){
+    const round1 = list1?.querySelectorAll(":scope > .order-item").length || 0;
+    const round2 = list2?.querySelectorAll(":scope > .order-item").length || 0;
+    const total = round1 + round2;
+    return {mode,total,round1,round2,over:total > 12 || round1 > 6 || round2 > 6};
+  }
+  const total = finalsList?.querySelectorAll(":scope > .order-item").length || 0;
+  return {mode:"score",total,over:total > 30};
+}
+
+function uxUpdateSheetLimitAlert(mode=uxGetMode()){
+  const alert = document.getElementById("ux-sheet-limit-alert");
+  const count = document.getElementById("ux-selection-sheet-count");
+  if(!alert) return;
+  const state = uxGetSheetLimitState(mode);
+  alert.hidden = !state.over;
+  count?.classList.toggle("limit-over", state.over);
+  if(!state.over){
+    alert.textContent = "";
+    return;
+  }
+  if(mode === "prelims"){
+    const details = [];
+    if(state.total > 12) details.push(`合計${state.total}/12技`);
+    if(state.round1 > 6) details.push(`第1R ${state.round1}/6技`);
+    if(state.round2 > 6) details.push(`第2R ${state.round2}/6技`);
+    alert.textContent = `⚠ ${details.join("・")}。規定数を超えているため、このままでは予選で使用できません。合計12技・各ラウンド6技以内に調整してください。`;
+  }else{
+    alert.textContent = `⚠ ${state.total}/30技。規定数を超えているため、このままでは本戦で使用できません。30技以内に調整してください。`;
+  }
+}
+
 function uxUpdateSheetActions(){
   const mode = uxGetMode();
   const connected = !!uxSheetActiveSource?.isConnected;
   document.querySelectorAll("#ux-selection-actions button").forEach(btn=>{
     const action = btn.dataset.uxAction;
+    if(action === "candidate-list"){
+      const candidateCount = uxCandidateCount(mode);
+      btn.disabled = candidateCount === 0 && !uxCandidatePanelOpen;
+      btn.textContent = uxCandidatePanelOpen ? `候補を閉じる（${candidateCount}）` : `候補から採用（${candidateCount}）`;
+      btn.classList.toggle("is-open", uxCandidatePanelOpen);
+      btn.setAttribute("aria-expanded", String(uxCandidatePanelOpen));
+      return;
+    }
     let enabled = connected;
     if(action === "multi" && mode !== "score") enabled = false;
     if(action === "round" && mode !== "prelims") enabled = false;
     btn.disabled = !enabled;
   });
+}
+
+function uxRenderCandidatePanel(container, mode){
+  if(!uxCandidatePanelOpen || !container) return;
+  const panel = document.createElement("section");
+  panel.className = "ux-sheet-candidate-panel";
+  panel.id = "ux-sheet-candidate-panel";
+
+  const heading = document.createElement("div");
+  heading.className = "ux-sheet-candidate-heading";
+  const headingText = document.createElement("span");
+  headingText.textContent = "候補技リスト";
+  const headingCount = document.createElement("span");
+  headingCount.textContent = `${uxCandidateItems.length}技`;
+  heading.append(headingText, headingCount);
+  panel.appendChild(heading);
+
+  if(!uxCandidateItems.length){
+    const empty = document.createElement("div");
+    empty.className = "ux-sheet-candidate-empty";
+    empty.textContent = "候補技はありません";
+    panel.appendChild(empty);
+    container.appendChild(panel);
+    return;
+  }
+
+  uxCandidateItems.forEach((item,index)=>{
+    const row = document.createElement("div");
+    row.className = "ux-sheet-candidate-row";
+    const name = document.createElement("div");
+    name.className = "ux-sheet-candidate-name";
+    name.textContent = uxSheetText(item.source);
+    const actions = document.createElement("div");
+    actions.className = "ux-sheet-candidate-actions";
+
+    const addButton = (label,destination)=>{
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.dataset.uxCandidateIndex = String(index);
+      button.dataset.uxAdopt = destination;
+      actions.appendChild(button);
+    };
+    if(mode === "prelims"){
+      addButton("1Rへ", "r1");
+      addButton("2Rへ", "r2");
+    }else addButton("採用", "final");
+
+    row.append(name, actions);
+    panel.appendChild(row);
+  });
+  container.appendChild(panel);
+}
+
+function uxAdoptCandidate(index,destination){
+  const mode = uxGetMode();
+  const item = uxCandidateItems[Number(index)];
+  const source = item?.source;
+  if(!source?.isConnected) return;
+  const expectedList = mode === "prelims" ? preCandidateList : finalsCandidateList;
+  if(source.parentElement !== expectedList) return;
+
+  uxCaptureUndo("候補から採用");
+  if(mode === "score"){
+    if(source.dataset.combo === "1" || source.classList.contains("is-combo")){
+      const combo = orderItemToData(source);
+      if(!combo?.combo) return;
+      source.remove();
+      finalsList.dataset.authoritative = "1";
+      finalsList.appendChild(comboOrderLiTemplate(combo, false));
+    }else{
+      const info = parseOrderText(getItemText(source));
+      if(!info) return;
+      if(listContainsText(finalsList, orderText(info.pt, info.name))){
+        showToast("この技はすでに決勝構成にあります");
+        return;
+      }
+      const predicted = source.dataset.predicted === "1" || source.classList.contains("is-predicted");
+      source.remove();
+      finalsList.dataset.authoritative = "1";
+      if(!predicted) setFinalTechChecked(info.pt, info.name, true, false);
+      finalsList.appendChild(orderLiTemplate(info.pt, info.name, false, predicted));
+    }
+    rebuildFinalsList();
+  }else{
+    const info = parseOrderText(getItemText(source));
+    if(!info) return;
+    if(listContainsText(list1, orderText(info.pt, info.name)) || listContainsText(list2, orderText(info.pt, info.name))){
+      showToast("この技はすでに予選構成にあります");
+      return;
+    }
+    const round = destination === "r2" ? 2 : 1;
+    const target = round === 2 ? list2 : list1;
+    const predicted = source.dataset.predicted === "1" || source.classList.contains("is-pre-predicted");
+    source.remove();
+    setPreTechChecked(info.pt, info.name, true);
+    target.appendChild(mkPreOrderItem(info.pt, info.name, round, predicted));
+    updatePreSummary();
+  }
+
+  uxCandidateItems = uxCollectCandidateItems();
+  if(!uxCandidateItems.length) uxCandidatePanelOpen = false;
+  uxSheetActiveSource = null;
+  uxUpdateTray();
+  uxApplyFilter("score", true);
+  uxApplyFilter("prelims", true);
+  uxRenderSelectionSheet();
+  const state = uxGetSheetLimitState(mode);
+  showToast(state.over
+    ? (mode === "prelims" ? `${state.total}/12技です。このままでは予選で使用できません` : `${state.total}/30技です。このままでは本戦で使用できません`)
+    : "候補から構成へ採用しました", 1600);
 }
 
 function uxDestroySheetDnd(){
@@ -9824,7 +10067,10 @@ function uxCommitSheetDrag(mode){
   uxSheetActiveSource = null;
   uxUpdateTray();
   uxRenderSelectionSheet();
-  showToast(roundChanged ? "ラウンド間で技を移動しました" : "ドラッグで技順を変更しました", 1100);
+  const state = uxGetSheetLimitState(mode);
+  showToast(state.over
+    ? (mode === "prelims" ? "規定数を超えています。このままでは予選で使用できません" : "規定数を超えています。このままでは本戦で使用できません")
+    : (roundChanged ? "ラウンド間で技を移動しました" : "ドラッグで技順を変更しました"), 1400);
 }
 
 function uxInitSheetDnd(mode){
@@ -9852,26 +10098,12 @@ function uxInitSheetDnd(mode){
       delay:100,
       touchStartThreshold:4,
       onStart:()=>{
-        uxSheetDropBlocked = false;
         uxCaptureUndo("並べ替え");
         document.body.classList.add("ux-sheet-sorting");
-      },
-      onMove:event=>{
-        if(mode === "prelims" && event.to !== event.from && event.to.querySelectorAll(":scope > .ux-sheet-row").length >= 6){
-          uxSheetDropBlocked = true;
-          return false;
-        }
-        uxSheetDropBlocked = false;
-        return true;
       },
       onEnd:event=>{
         document.body.classList.remove("ux-sheet-sorting");
         uxSheetDraggingUntil = Date.now() + 350;
-        if(uxSheetDropBlocked){
-          uxSheetDropBlocked = false;
-          showToast("各ラウンドは6技までです", 1200);
-          return;
-        }
         const changed = event.from !== event.to || event.oldIndex !== event.newIndex;
         if(changed) requestAnimationFrame(()=>uxCommitSheetDrag(mode));
       }
@@ -9888,6 +10120,7 @@ function uxRenderSelectionSheet(){
   uxDestroySheetDnd();
   const mode = uxGetMode();
   uxSheetItems = uxCollectSheetItems();
+  uxCandidateItems = uxCollectCandidateItems();
   if(uxSheetActiveSource && !uxSheetActiveSource.isConnected) uxSheetActiveSource = null;
   title.textContent = mode === "prelims" ? "予選の編成" : "決勝の編成";
   count.textContent = mode === "prelims" ? `${uxSheetItems.length}/12技` : `${uxSheetItems.length}/30技`;
@@ -9896,66 +10129,69 @@ function uxRenderSelectionSheet(){
   if(!uxSheetItems.length){
     const empty = document.createElement("div");
     empty.className = "ux-selection-help";
-    empty.textContent = "まだ技が選択されていません。技一覧で技名をタップしてください。";
+    empty.textContent = uxCandidateItems.length
+      ? "構成技はまだありません。「候補から採用」から追加できます。"
+      : "まだ技が選択されていません。技一覧で技名をタップしてください。";
     container.appendChild(empty);
-    uxUpdateSheetActions();
-    return;
+  }else{
+    const groupNames = mode === "prelims" ? ["第1ラウンド", "第2ラウンド"] : ["決勝編成"];
+    const groupLists = new Map();
+    groupNames.forEach(group=>{
+      const section = document.createElement("section");
+      section.className = "ux-sheet-group-section";
+      const heading = document.createElement("div");
+      heading.className = "ux-sheet-group";
+      heading.textContent = group;
+      const list = document.createElement("div");
+      list.className = "ux-sheet-group-list";
+      list.dataset.uxSheetGroup = group;
+      section.append(heading, list);
+      container.appendChild(section);
+      groupLists.set(group, list);
+    });
+
+    uxSheetItems.forEach((item,globalIndex)=>{
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "ux-sheet-row";
+      if(item.source === uxSheetActiveSource) button.classList.add("selected");
+      button.dataset.uxSheetIndex = String(globalIndex);
+
+      const index = document.createElement("span");
+      index.className = "ux-sheet-index";
+      index.textContent = String(item.index);
+      const textWrap = document.createElement("span");
+      const text = document.createElement("span");
+      text.textContent = uxSheetText(item.source);
+      const meta = document.createElement("span");
+      meta.className = "ux-sheet-meta";
+      const multiSelected = item.source.dataset.multi === "1";
+      meta.textContent = multiSelected ? "1.5倍選択中" : item.group;
+      meta.classList.toggle("is-multi", multiSelected);
+      textWrap.append(text, meta);
+      const mark = document.createElement("span");
+      mark.className = "ux-sheet-status";
+      mark.textContent = item.source === uxSheetActiveSource ? "選択中" : "選ぶ";
+      const drag = document.createElement("span");
+      drag.className = "ux-sheet-drag";
+      drag.textContent = "≡";
+      drag.setAttribute("aria-hidden", "true");
+      drag.title = "ドラッグして並べ替え";
+      button.append(index, textWrap, mark, drag);
+      groupLists.get(item.group)?.appendChild(button);
+    });
   }
-
-  const groupNames = mode === "prelims" ? ["第1ラウンド", "第2ラウンド"] : ["決勝編成"];
-  const groupLists = new Map();
-  groupNames.forEach(group=>{
-    const section = document.createElement("section");
-    section.className = "ux-sheet-group-section";
-    const heading = document.createElement("div");
-    heading.className = "ux-sheet-group";
-    heading.textContent = group;
-    const list = document.createElement("div");
-    list.className = "ux-sheet-group-list";
-    list.dataset.uxSheetGroup = group;
-    section.append(heading, list);
-    container.appendChild(section);
-    groupLists.set(group, list);
-  });
-
-  uxSheetItems.forEach((item,globalIndex)=>{
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "ux-sheet-row";
-    if(item.source === uxSheetActiveSource) button.classList.add("selected");
-    button.dataset.uxSheetIndex = String(globalIndex);
-
-    const index = document.createElement("span");
-    index.className = "ux-sheet-index";
-    index.textContent = String(item.index);
-    const textWrap = document.createElement("span");
-    const text = document.createElement("span");
-    text.textContent = uxSheetText(item.source);
-    const meta = document.createElement("span");
-    meta.className = "ux-sheet-meta";
-    const multiSelected = item.source.dataset.multi === "1";
-    meta.textContent = multiSelected ? "1.5倍選択中" : item.group;
-    meta.classList.toggle("is-multi", multiSelected);
-    textWrap.append(text, meta);
-    const mark = document.createElement("span");
-    mark.className = "ux-sheet-status";
-    mark.textContent = item.source === uxSheetActiveSource ? "選択中" : "選ぶ";
-    const drag = document.createElement("span");
-    drag.className = "ux-sheet-drag";
-    drag.textContent = "≡";
-    drag.setAttribute("aria-hidden", "true");
-    drag.title = "ドラッグして並べ替え";
-    button.append(index, textWrap, mark, drag);
-    groupLists.get(item.group)?.appendChild(button);
-  });
+  uxRenderCandidatePanel(container, mode);
+  uxUpdateSheetLimitAlert(mode);
   uxUpdateSheetActions();
-  uxInitSheetDnd(mode);
+  if(uxSheetItems.length) uxInitSheetDnd(mode);
 }
 
 function uxOpenSelectionSheet(){
   const sheet = document.getElementById("ux-selection-sheet");
   if(!sheet) return;
   uxSheetActiveSource = null;
+  uxCandidatePanelOpen = false;
   uxRenderSelectionSheet();
   sheet.classList.add("open");
   sheet.setAttribute("aria-hidden", "false");
@@ -9971,6 +10207,7 @@ function uxCloseSelectionSheet(){
   sheet.setAttribute("aria-hidden", "true");
   document.body.classList.remove("ux-sheet-open");
   uxSheetActiveSource = null;
+  uxCandidatePanelOpen = false;
   document.getElementById("ux-selection-open")?.focus();
 }
 
@@ -10008,6 +10245,23 @@ function uxDeleteSource(source){
 }
 
 function uxRunSheetAction(action){
+  if(action === "candidate-list"){
+    uxCandidatePanelOpen = !uxCandidatePanelOpen;
+    uxRenderSelectionSheet();
+    if(uxCandidatePanelOpen){
+      requestAnimationFrame(()=>{
+        const panel = document.getElementById("ux-sheet-candidate-panel");
+        const list = document.getElementById("ux-selection-list");
+        if(!panel || !list) return;
+        const top = list.scrollTop + panel.getBoundingClientRect().top - list.getBoundingClientRect().top - 8;
+        list.scrollTo({
+          top:Math.max(0, top),
+          behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+        });
+      });
+    }
+    return;
+  }
   const source = uxSheetActiveSource;
   if(!source?.isConnected) return;
   const label = action === "delete" ? "削除" : action === "candidate" ? "候補移動" : "並べ替え";
@@ -10027,7 +10281,7 @@ function uxRunSheetAction(action){
     else changed = false;
     updatePreSummary();
   }else if(action === "candidate"){
-    const button = source.querySelector('[data-act="cand"]');
+    const button = source.querySelector('[data-act="cand"],[data-act="combo-cand"]');
     if(button) button.click(); else changed = false;
   }else if(action === "delete"){
     uxDeleteSource(source);
@@ -10282,6 +10536,11 @@ function initOoruriUx(){
   document.getElementById("ux-selection-close")?.addEventListener("click", uxCloseSelectionSheet);
   document.querySelector("[data-ux-sheet-close]")?.addEventListener("click", uxCloseSelectionSheet);
   document.getElementById("ux-selection-list")?.addEventListener("click", event=>{
+    const adopt = event.target.closest("button[data-ux-candidate-index][data-ux-adopt]");
+    if(adopt){
+      uxAdoptCandidate(Number(adopt.dataset.uxCandidateIndex), adopt.dataset.uxAdopt);
+      return;
+    }
     if(Date.now() < uxSheetDraggingUntil || event.target.closest(".ux-sheet-drag")) return;
     const row = event.target.closest(".ux-sheet-row[data-ux-sheet-index]");
     if(!row) return;
