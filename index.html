@@ -2461,6 +2461,300 @@ h1{
   }
 }
 
+/* ===== v1.102 3分タイマー ===== */
+.practice-timer{
+  margin:8px 0 12px;
+  padding:13px;
+  border:1px solid rgba(60,60,67,.16);
+  border-radius:18px;
+  background:rgba(255,255,255,.94);
+  box-shadow:0 5px 18px rgba(0,0,0,.055);
+}
+.practice-timer-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:9px;
+}
+.practice-timer-title{
+  margin:0;
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:-.01em;
+}
+.practice-timer-status{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:26px;
+  padding:4px 9px;
+  border-radius:999px;
+  background:#f2f2f7;
+  color:#636366;
+  font-size:11px;
+  font-weight:750;
+}
+.practice-timer-status::before{
+  content:"";
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#8e8e93;
+}
+.practice-timer.is-running .practice-timer-status{
+  background:rgba(52,199,89,.12);
+  color:#197437;
+}
+.practice-timer.is-running .practice-timer-status::before{
+  background:#34c759;
+  box-shadow:0 0 0 4px rgba(52,199,89,.12);
+}
+.practice-timer.is-countdown .practice-timer-status{
+  background:rgba(255,149,0,.13);
+  color:#9a5b00;
+}
+.practice-timer.is-countdown .practice-timer-status::before{
+  background:#ff9500;
+  box-shadow:0 0 0 4px rgba(255,149,0,.12);
+}
+.practice-timer-main{
+  display:grid;
+  grid-template-columns:minmax(200px,1.1fr) minmax(210px,1fr);
+  gap:10px;
+  align-items:stretch;
+}
+.practice-timer-display{
+  width:100%;
+  min-height:72px;
+  border:0;
+  border-radius:14px;
+  background:#111114;
+  color:#fff;
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:7px;
+  padding:10px 13px;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.practice-timer-display:focus-visible{
+  outline:3px solid rgba(10,132,255,.34);
+  outline-offset:2px;
+}
+.practice-timer-display-time{
+  font-size:clamp(32px,7vw,45px);
+  line-height:1;
+  font-weight:750;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.035em;
+}
+.practice-timer-display-limit{
+  font-size:12px;
+  color:#aeaeb2;
+  font-weight:700;
+  white-space:nowrap;
+}
+.practice-timer-records{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.practice-timer-record{
+  min-width:0;
+  padding:9px 10px;
+  border-radius:13px;
+  background:#f2f2f7;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:3px;
+}
+.practice-timer-record span{
+  color:#636366;
+  font-size:11px;
+  font-weight:700;
+}
+.practice-timer-record strong{
+  color:#1c1c1e;
+  font-size:20px;
+  line-height:1.15;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.practice-timer-record.is-best{
+  background:rgba(255,204,0,.14);
+}
+.practice-timer-record.is-best strong{color:#9a6700}
+.practice-timer-controls{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+  margin-top:9px;
+}
+.practice-timer-controls button{
+  min-height:42px;
+  border:0;
+  border-radius:12px;
+  padding:8px 10px;
+  font-size:13px;
+  font-weight:780;
+  touch-action:manipulation;
+}
+.practice-timer-start{background:#007aff;color:#fff}
+.practice-timer-stop{background:#ff3b30;color:#fff}
+.practice-timer-reset{background:#f2f2f7;color:#3a3a3c}
+.practice-timer-controls button:disabled{opacity:.38;cursor:not-allowed}
+.practice-timer-audio{
+  display:grid;
+  grid-template-columns:auto minmax(130px,210px) 1fr auto;
+  gap:8px;
+  align-items:center;
+  margin-top:8px;
+  padding:8px 9px;
+  border-radius:12px;
+  background:#f2f2f7;
+}
+.practice-timer-audio-label{
+  color:#3a3a3c;
+  font-size:12px;
+  font-weight:780;
+  white-space:nowrap;
+}
+.practice-timer-audio select{
+  width:100%;
+  min-height:36px;
+  border:1px solid rgba(60,60,67,.18);
+  border-radius:10px;
+  padding:6px 28px 6px 9px;
+  background:#fff;
+  color:#1c1c1e;
+  font-size:13px;
+  font-weight:700;
+}
+.practice-timer-audio select:disabled{opacity:.58}
+.practice-timer-audio-status{
+  min-width:0;
+  color:#636366;
+  font-size:11px;
+  line-height:1.35;
+}
+.practice-timer-audio-link{
+  color:#ff3b30;
+  font-size:11px;
+  font-weight:750;
+  text-decoration:none;
+  white-space:nowrap;
+}
+.practice-timer-youtube{
+  margin-top:8px;
+  border-top:1px solid rgba(60,60,67,.12);
+  padding-top:7px;
+}
+.practice-timer-youtube[hidden]{display:none}
+.practice-timer-youtube summary{
+  color:#007aff;
+  font-size:12px;
+  font-weight:750;
+  cursor:pointer;
+}
+.practice-timer-youtube-frame,
+#practice-timer-youtube-player{
+  width:min(100%,360px);
+  min-width:200px;
+  min-height:200px;
+  aspect-ratio:16/9;
+  margin:8px auto 0;
+  overflow:hidden;
+  border-radius:12px;
+  background:#000;
+}
+#practice-timer-youtube-player{display:block;border:0}
+.practice-timer-youtube-note{
+  margin:7px 0 0;
+  color:#636366;
+  font-size:10px;
+  line-height:1.45;
+  text-align:center;
+}
+.practice-timer-tools{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-top:8px;
+  padding-top:8px;
+  border-top:1px solid rgba(60,60,67,.12);
+}
+.practice-timer-history{
+  min-width:0;
+  flex:1;
+}
+.practice-timer-history summary{
+  width:max-content;
+  max-width:100%;
+  color:#007aff;
+  font-size:12px;
+  font-weight:750;
+  cursor:pointer;
+}
+.practice-timer-history-list{
+  margin:8px 0 0;
+  padding:8px 8px 3px 30px;
+  max-height:150px;
+  overflow:auto;
+  border-radius:11px;
+  background:#f7f7fa;
+  color:#3a3a3c;
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+}
+.practice-timer-history-list li{padding:3px 0}
+.practice-timer-history-list li::marker{color:#8e8e93}
+.practice-timer-delete-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.practice-timer-delete-actions button{
+  min-height:32px;
+  border:0;
+  border-radius:9px;
+  padding:6px 9px;
+  background:rgba(255,59,48,.1);
+  color:#d70015;
+  font-size:11px;
+  font-weight:750;
+}
+.practice-timer-delete-actions button:disabled{opacity:.38}
+@media (max-width:640px){
+  .practice-timer{padding:11px}
+  .practice-timer-main{grid-template-columns:minmax(0,1.18fr) minmax(145px,.82fr);gap:8px}
+  .practice-timer-display{min-height:65px;padding:8px}
+  .practice-timer-display-time{font-size:clamp(29px,10vw,40px)}
+  .practice-timer-display-limit{font-size:10px}
+  .practice-timer-records{gap:6px}
+  .practice-timer-record{padding:7px 8px}
+  .practice-timer-record strong{font-size:16px}
+  .practice-timer-controls{gap:6px}
+  .practice-timer-controls button{padding:7px 5px;font-size:12px}
+  .practice-timer-audio{grid-template-columns:auto minmax(112px,1fr) auto}
+  .practice-timer-audio-status{grid-column:1/-1}
+  .practice-timer-tools{align-items:flex-start}
+}
+@media (max-width:390px){
+  .practice-timer-main{grid-template-columns:1fr}
+  .practice-timer-display{min-height:62px}
+  .practice-timer-records{grid-template-columns:1fr 1fr}
+  .practice-timer-tools{flex-direction:column}
+  .practice-timer-delete-actions{width:100%;justify-content:stretch}
+  .practice-timer-delete-actions button{flex:1}
+  .practice-timer-audio{grid-template-columns:1fr 1fr}
+  .practice-timer-audio-label{grid-column:1}
+  .practice-timer-audio select{grid-column:2}
+  .practice-timer-audio-status{grid-column:1/-1}
+  .practice-timer-audio-link{grid-column:1/-1}
+}
+
 
 /* ===== v1.74 コンボ技・候補40件表示改善 ===== */
 .combo-box{
@@ -3813,6 +4107,75 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
   </label>
 </div>
 <div class="data-status" id="official-data-status">技データ：読込準備中</div>
+
+<section class="practice-timer" id="practice-timer" aria-labelledby="practice-timer-title">
+  <div class="practice-timer-head">
+    <h2 class="practice-timer-title" id="practice-timer-title">3分タイマー</h2>
+    <div class="practice-timer-status" id="practice-timer-status" role="status" aria-live="polite">待機中</div>
+  </div>
+  <div class="practice-timer-main">
+    <button type="button" class="practice-timer-display" id="practice-timer-display" aria-label="現在タイム 00分00秒。計測中はタップで停止記録">
+      <span class="practice-timer-display-time" id="practice-timer-current">00:00.0</span>
+      <span class="practice-timer-display-limit">3:00で通知</span>
+    </button>
+    <div class="practice-timer-records" aria-label="タイマー記録">
+      <div class="practice-timer-record">
+        <span>前回タイム</span>
+        <strong id="practice-timer-last">--:--.-</strong>
+      </div>
+      <div class="practice-timer-record is-best">
+        <span>ベストタイム</span>
+        <strong id="practice-timer-best">--:--.-</strong>
+      </div>
+    </div>
+  </div>
+  <div class="practice-timer-controls">
+    <button type="button" class="practice-timer-start" id="practice-timer-start">スタート</button>
+    <button type="button" class="practice-timer-stop" id="practice-timer-stop" disabled>ストップ記録</button>
+    <button type="button" class="practice-timer-reset" id="practice-timer-reset">現在をリセット</button>
+  </div>
+  <div class="practice-timer-audio">
+    <label class="practice-timer-audio-label" for="practice-timer-track">BGM</label>
+    <select id="practice-timer-track" aria-label="タイマー同期BGM">
+      <option value="0">なし</option>
+      <option value="1">音源 1</option>
+      <option value="2">音源 2</option>
+      <option value="3">音源 3</option>
+      <option value="4">音源 4</option>
+      <option value="5">音源 5</option>
+      <option value="6">音源 6</option>
+      <option value="7">音源 7</option>
+      <option value="8">音源 8</option>
+      <option value="9">音源 9</option>
+      <option value="10">音源 10</option>
+      <option value="11">音源 11</option>
+      <option value="12">音源 12</option>
+      <option value="13">音源 13</option>
+      <option value="14">音源 14</option>
+      <option value="15">音源 15</option>
+      <option value="16">音源 16</option>
+    </select>
+    <div class="practice-timer-audio-status" id="practice-timer-audio-status" role="status" aria-live="polite">BGMなし</div>
+    <a class="practice-timer-audio-link" href="https://www.youtube.com/watch?v=bG7sI35ObX8&amp;list=PLjwiDg1PPG5wmrlC1UnwfOTrmhVIMT2kl" target="_blank" rel="noopener noreferrer">音源リスト ↗</a>
+  </div>
+  <details class="practice-timer-youtube" id="practice-timer-youtube" hidden>
+    <summary>YouTubeプレーヤー・音量調整</summary>
+    <div class="practice-timer-youtube-frame" id="practice-timer-youtube-player"></div>
+    <p class="practice-timer-youtube-note">YouTube音源では、冒頭の3カウント後にタイマーが00:00.0から始まります。音が出ない場合は、プレーヤー中央の再生ボタンを1回タップしてください。</p>
+  </details>
+  <div class="practice-timer-tools">
+    <details class="practice-timer-history" id="practice-timer-history">
+      <summary>計測履歴 <span id="practice-timer-history-count">0件</span></summary>
+      <ol class="practice-timer-history-list" id="practice-timer-history-list">
+        <li>記録はまだありません</li>
+      </ol>
+    </details>
+    <div class="practice-timer-delete-actions">
+      <button type="button" id="practice-timer-delete-best" disabled>ベストタイム削除</button>
+      <button type="button" id="practice-timer-delete-history" disabled>履歴削除</button>
+    </div>
+  </div>
+</section>
 
 
 <!-- モード切替 -->
@@ -8255,6 +8618,636 @@ function playerInfoOutputHtml(){
   });
 });
 
+/* =========================================================
+   v1.102 3分タイマー
+========================================================= */
+const PRACTICE_TIMER_KEY = "ooruricup2026_practice_timer_v1";
+const PRACTICE_TIMER_LIMIT_MS = 3 * 60 * 1000;
+const PRACTICE_TIMER_HISTORY_LIMIT = 50;
+const PRACTICE_TIMER_YOUTUBE_PLAYLIST = "PLjwiDg1PPG5wmrlC1UnwfOTrmhVIMT2kl";
+const PRACTICE_TIMER_YOUTUBE_INTRO_SECONDS = 3;
+let practiceTimerInterval = null;
+let practiceTimerAudioContext = null;
+let practiceTimerYouTubeApiPromise = null;
+let practiceTimerYouTubePlayerPromise = null;
+let practiceTimerYouTubePlayer = null;
+let practiceTimerYouTubeReady = false;
+let practiceTimerYouTubeShouldPlay = false;
+let practiceTimerYouTubeCountdownArmed = false;
+let practiceTimerState = {
+  running:false,
+  countdown:false,
+  startedAt:null,
+  elapsedMs:0,
+  recorded:false,
+  alarmNotified:false,
+  trackIndex:0,
+  lastMs:null,
+  bestMs:null,
+  history:[]
+};
+
+function normalizePracticeTimerMs(value){
+  const n = Number(value);
+  if(!Number.isFinite(n)) return 0;
+  return Math.max(0, n);
+}
+
+function normalizePracticeTimerRecord(value){
+  if(!value || typeof value !== "object") return null;
+  const ms = normalizePracticeTimerMs(value.ms);
+  const at = typeof value.at === "string" && value.at ? value.at : new Date().toISOString();
+  return {ms, at};
+}
+
+function loadPracticeTimerState(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(PRACTICE_TIMER_KEY) || "null");
+    if(!saved || typeof saved !== "object") return;
+    practiceTimerState = {
+      running:!!saved.running,
+      countdown:!!saved.countdown,
+      startedAt:Number.isFinite(Number(saved.startedAt)) ? Number(saved.startedAt) : null,
+      elapsedMs:normalizePracticeTimerMs(saved.elapsedMs),
+      recorded:!!saved.recorded,
+      alarmNotified:!!saved.alarmNotified || !!saved.completed,
+      trackIndex:Math.max(0, Math.min(16, Math.trunc(Number(saved.trackIndex) || 0))),
+      lastMs:saved.lastMs == null ? null : normalizePracticeTimerMs(saved.lastMs),
+      bestMs:saved.bestMs == null ? null : normalizePracticeTimerMs(saved.bestMs),
+      history:Array.isArray(saved.history)
+        ? saved.history.map(normalizePracticeTimerRecord).filter(Boolean).slice(0,PRACTICE_TIMER_HISTORY_LIMIT)
+        : []
+    };
+    if(practiceTimerState.running && !practiceTimerState.startedAt){
+      practiceTimerState.running = false;
+    }
+    if(practiceTimerState.countdown && !practiceTimerState.trackIndex){
+      practiceTimerState.countdown = false;
+    }
+    if(practiceTimerState.countdown){
+      practiceTimerState.running = false;
+      practiceTimerState.startedAt = null;
+      practiceTimerState.elapsedMs = 0;
+    }
+  }catch{
+    localStorage.removeItem(PRACTICE_TIMER_KEY);
+  }
+}
+
+function savePracticeTimerState(){
+  localStorage.setItem(PRACTICE_TIMER_KEY, JSON.stringify(practiceTimerState));
+}
+
+function getPracticeTimerCurrentMs(now=Date.now()){
+  const base = normalizePracticeTimerMs(practiceTimerState.elapsedMs);
+  if(!practiceTimerState.running || !practiceTimerState.startedAt) return base;
+  return normalizePracticeTimerMs(base + Math.max(0, now - practiceTimerState.startedAt));
+}
+
+function getPracticeTimerYouTubeCurrentSeconds(){
+  if(!practiceTimerYouTubeReady || !practiceTimerYouTubePlayer) return 0;
+  try{
+    const seconds = Number(practiceTimerYouTubePlayer.getCurrentTime?.());
+    return Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+  }catch{
+    return 0;
+  }
+}
+
+function getPracticeTimerCountdownRemaining(){
+  if(!practiceTimerState.countdown) return 0;
+  const current = practiceTimerYouTubeCountdownArmed ? getPracticeTimerYouTubeCurrentSeconds() : 0;
+  return Math.max(1, Math.ceil(PRACTICE_TIMER_YOUTUBE_INTRO_SECONDS - current));
+}
+
+function formatPracticeTimer(ms, empty="--:--.-"){
+  if(ms == null) return empty;
+  const safe = normalizePracticeTimerMs(ms);
+  const totalTenths = Math.floor(safe / 100);
+  const minutes = Math.floor(totalTenths / 600);
+  const seconds = Math.floor((totalTenths % 600) / 10);
+  const tenths = totalTenths % 10;
+  return `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}.${tenths}`;
+}
+
+function formatPracticeTimerDate(iso){
+  const date = new Date(iso);
+  if(Number.isNaN(date.getTime())) return "日時不明";
+  return new Intl.DateTimeFormat("ja-JP", {
+    month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit"
+  }).format(date);
+}
+
+function getPracticeTimerOutputData(){
+  return {
+    currentMs:getPracticeTimerCurrentMs(),
+    lastMs:practiceTimerState.lastMs,
+    bestMs:practiceTimerState.bestMs,
+    running:practiceTimerState.running,
+    countdown:practiceTimerState.countdown,
+    trackIndex:practiceTimerState.trackIndex
+  };
+}
+
+function practiceTimerOutputChipsHtml(){
+  const timer = getPracticeTimerOutputData();
+  const currentLabel = timer.countdown ? "タイマー開始前" : timer.running ? "タイマー計測中" : "タイマー現在";
+  const currentValue = timer.countdown ? "3カウント中" : formatPracticeTimer(timer.currentMs, "00:00.0");
+  return `
+    <div class="export-score-chip">${currentLabel}：${escapeHtml(currentValue)}</div>
+    <div class="export-score-chip">前回タイム：${escapeHtml(formatPracticeTimer(timer.lastMs))}</div>
+    <div class="export-score-chip">ベストタイム：${escapeHtml(formatPracticeTimer(timer.bestMs))}</div>
+    ${timer.trackIndex ? `<div class="export-score-chip">BGM：音源 ${timer.trackIndex}</div>` : ""}
+  `;
+}
+
+function renderPracticeTimerHistory(){
+  const list = document.getElementById("practice-timer-history-list");
+  const count = document.getElementById("practice-timer-history-count");
+  if(count) count.textContent = `${practiceTimerState.history.length}件`;
+  if(!list) return;
+  const signature = practiceTimerState.history.map(record=>`${record.ms}:${record.at}`).join("|") || "empty";
+  if(list.dataset.timerSignature === signature) return;
+  list.dataset.timerSignature = signature;
+  if(!practiceTimerState.history.length){
+    list.innerHTML = "<li>記録はまだありません</li>";
+    return;
+  }
+  list.innerHTML = practiceTimerState.history.map(record=>
+    `<li><strong>${escapeHtml(formatPracticeTimer(record.ms))}</strong>　${escapeHtml(formatPracticeTimerDate(record.at))}</li>`
+  ).join("");
+}
+
+function renderPracticeTimer(){
+  const section = document.getElementById("practice-timer");
+  if(!section) return;
+  const current = getPracticeTimerCurrentMs();
+  const countdownRemaining = getPracticeTimerCountdownRemaining();
+  const currentText = practiceTimerState.countdown ? `−${countdownRemaining}` : formatPracticeTimer(current, "00:00.0");
+  const active = practiceTimerState.running || practiceTimerState.countdown;
+  const display = document.getElementById("practice-timer-display");
+  const currentEl = document.getElementById("practice-timer-current");
+  const status = document.getElementById("practice-timer-status");
+  const start = document.getElementById("practice-timer-start");
+  const stop = document.getElementById("practice-timer-stop");
+  const reset = document.getElementById("practice-timer-reset");
+  const track = document.getElementById("practice-timer-track");
+  const deleteBest = document.getElementById("practice-timer-delete-best");
+  const deleteHistory = document.getElementById("practice-timer-delete-history");
+
+  section.classList.toggle("is-running", active);
+  section.classList.toggle("is-countdown", practiceTimerState.countdown);
+  if(currentEl) currentEl.textContent = currentText;
+  if(document.getElementById("practice-timer-last")){
+    document.getElementById("practice-timer-last").textContent = formatPracticeTimer(practiceTimerState.lastMs);
+  }
+  if(document.getElementById("practice-timer-best")){
+    document.getElementById("practice-timer-best").textContent = formatPracticeTimer(practiceTimerState.bestMs);
+  }
+  if(status){
+    status.textContent = practiceTimerState.countdown
+      ? practiceTimerYouTubeCountdownArmed
+        ? `音源カウント中・あと${countdownRemaining}`
+        : "音源の再生待ち"
+      : practiceTimerState.running
+      ? practiceTimerState.alarmNotified
+        ? "3分経過・計測中"
+        : "計測中"
+      : practiceTimerState.recorded
+        ? "停止・記録済み"
+        : current > 0
+          ? "一時停止中"
+          : "待機中";
+  }
+  if(display){
+    display.setAttribute("aria-label", practiceTimerState.countdown
+      ? `タイマー開始まで${countdownRemaining}カウント。タップで中止`
+      : practiceTimerState.running
+      ? `現在タイム ${currentText}。タップして停止記録`
+      : `現在タイム ${currentText}`);
+    display.title = practiceTimerState.countdown
+      ? "タップでカウントダウンを中止"
+      : practiceTimerState.running
+        ? "タップで停止・記録"
+        : "スタートボタンで計測開始";
+  }
+  if(start){
+    start.disabled = active;
+    start.textContent = practiceTimerState.recorded ? "もう一度スタート" : "スタート";
+  }
+  if(stop) stop.disabled = !active;
+  if(reset) reset.disabled = !active && current <= 0 && !practiceTimerState.recorded;
+  if(track){
+    track.value = String(practiceTimerState.trackIndex);
+    track.disabled = active;
+  }
+  if(deleteBest) deleteBest.disabled = practiceTimerState.bestMs == null;
+  if(deleteHistory) deleteHistory.disabled = !practiceTimerState.history.length;
+  renderPracticeTimerHistory();
+}
+
+function setPracticeTimerAudioStatus(message){
+  const status = document.getElementById("practice-timer-audio-status");
+  if(status) status.textContent = message;
+}
+
+function loadPracticeTimerYouTubeApi(){
+  if(window.YT?.Player) return Promise.resolve(window.YT);
+  if(practiceTimerYouTubeApiPromise) return practiceTimerYouTubeApiPromise;
+  practiceTimerYouTubeApiPromise = new Promise((resolve,reject)=>{
+    const previousReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = ()=>{
+      try{ if(typeof previousReady === "function") previousReady(); }catch{}
+      resolve(window.YT);
+    };
+    let script = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+    if(!script){
+      script = document.createElement("script");
+      script.src = "https://www.youtube.com/iframe_api";
+      script.async = true;
+      document.head.appendChild(script);
+    }
+    script.addEventListener("error", ()=>reject(new Error("YouTube API load failed")), {once:true});
+  });
+  return practiceTimerYouTubeApiPromise;
+}
+
+function getPracticeTimerYouTubePayload(startSeconds=0){
+  return {
+    listType:"playlist",
+    list:PRACTICE_TIMER_YOUTUBE_PLAYLIST,
+    index:Math.max(0, practiceTimerState.trackIndex - 1),
+    startSeconds:Math.max(0, startSeconds)
+  };
+}
+
+function controlPracticeTimerYouTube(play=false, startSeconds=0){
+  if(!practiceTimerYouTubeReady || !practiceTimerYouTubePlayer || !practiceTimerState.trackIndex) return;
+  try{
+    if(play){
+      practiceTimerYouTubePlayer.loadPlaylist(getPracticeTimerYouTubePayload(startSeconds));
+      setPracticeTimerAudioStatus(`音源 ${practiceTimerState.trackIndex} をタイマーと同期中`);
+    }else{
+      practiceTimerYouTubePlayer.cuePlaylist(getPracticeTimerYouTubePayload(0));
+      setPracticeTimerAudioStatus(`音源 ${practiceTimerState.trackIndex} を準備済み・3カウント後に計測`);
+    }
+  }catch{
+    setPracticeTimerAudioStatus("YouTube音源を準備できませんでした");
+  }
+}
+
+function ensurePracticeTimerYouTubePlayer(){
+  if(practiceTimerYouTubeReady && practiceTimerYouTubePlayer) return Promise.resolve(practiceTimerYouTubePlayer);
+  if(practiceTimerYouTubePlayerPromise) return practiceTimerYouTubePlayerPromise;
+  setPracticeTimerAudioStatus("YouTube音源を読み込み中…");
+  practiceTimerYouTubePlayerPromise = loadPracticeTimerYouTubeApi().then(()=>new Promise((resolve,reject)=>{
+    const playerVars = {
+      playsinline:1,
+      controls:1,
+      rel:0,
+      listType:"playlist",
+      list:PRACTICE_TIMER_YOUTUBE_PLAYLIST
+    };
+    if(location.origin && location.origin !== "null") playerVars.origin = location.origin;
+    try{
+      practiceTimerYouTubePlayer = new YT.Player("practice-timer-youtube-player", {
+        width:"100%",
+        height:"100%",
+        playerVars,
+        events:{
+          onReady:event=>{
+            practiceTimerYouTubeReady = true;
+            if(!practiceTimerYouTubeShouldPlay) controlPracticeTimerYouTube(false, 0);
+            resolve(event.target);
+          },
+          onStateChange:event=>{
+            if(!window.YT?.PlayerState) return;
+            if(event.data === YT.PlayerState.PLAYING){
+              const title = practiceTimerYouTubePlayer.getVideoData?.().title || `音源 ${practiceTimerState.trackIndex}`;
+              if(practiceTimerState.countdown){
+                practiceTimerYouTubeCountdownArmed = true;
+                setPracticeTimerAudioStatus(`${title}・3カウント中`);
+                updatePracticeTimerCountdown();
+              }else setPracticeTimerAudioStatus(`${title}・再生中`);
+            }else if(event.data === YT.PlayerState.ENDED){
+              practiceTimerYouTubeShouldPlay = false;
+              try{ practiceTimerYouTubePlayer.pauseVideo(); }catch{}
+              setPracticeTimerAudioStatus(`音源 ${practiceTimerState.trackIndex} 終了・タイマーは計測中`);
+            }else if(event.data === YT.PlayerState.PAUSED && (practiceTimerState.running || practiceTimerState.countdown)){
+              setPracticeTimerAudioStatus(practiceTimerState.countdown
+                ? "音源一時停止・タイマー開始待ち"
+                : practiceTimerState.alarmNotified
+                ? `音源 ${practiceTimerState.trackIndex} は3分で終了・タイマーは計測中`
+                : "音源一時停止・タイマーは計測中");
+            }
+          },
+          onError:()=>{
+            setPracticeTimerAudioStatus("この音源は再生できません。音源リストを確認してください");
+          },
+          onAutoplayBlocked:()=>{
+            setPracticeTimerAudioStatus("プレーヤーの再生ボタンをタップしてください");
+            const details = document.getElementById("practice-timer-youtube");
+            if(details){ details.hidden = false; details.open = true; }
+          }
+        }
+      });
+    }catch(error){
+      practiceTimerYouTubePlayerPromise = null;
+      reject(error);
+    }
+  })).catch(error=>{
+    console.error("YouTube timer player error", error);
+    setPracticeTimerAudioStatus("YouTube音源を読み込めませんでした");
+    practiceTimerYouTubePlayerPromise = null;
+    return null;
+  });
+  return practiceTimerYouTubePlayerPromise;
+}
+
+function startPracticeTimerYouTubePlayback(){
+  if(!practiceTimerState.trackIndex) return;
+  const details = document.getElementById("practice-timer-youtube");
+  if(details) details.hidden = false;
+  practiceTimerYouTubeShouldPlay = true;
+  if(practiceTimerState.countdown) practiceTimerYouTubeCountdownArmed = false;
+  setPracticeTimerAudioStatus(`音源 ${practiceTimerState.trackIndex} を開始中…`);
+  ensurePracticeTimerYouTubePlayer().then(()=>{
+    if(practiceTimerYouTubeShouldPlay && (practiceTimerState.running || practiceTimerState.countdown)){
+      const startSeconds = practiceTimerState.countdown
+        ? 0
+        : PRACTICE_TIMER_YOUTUBE_INTRO_SECONDS + getPracticeTimerCurrentMs() / 1000;
+      controlPracticeTimerYouTube(true, startSeconds);
+    }
+  });
+}
+
+function pausePracticeTimerYouTubePlayback(message=""){
+  practiceTimerYouTubeShouldPlay = false;
+  practiceTimerYouTubeCountdownArmed = false;
+  if(practiceTimerYouTubeReady && practiceTimerYouTubePlayer){
+    try{ practiceTimerYouTubePlayer.pauseVideo(); }catch{}
+  }
+  if(message) setPracticeTimerAudioStatus(message);
+  else if(practiceTimerState.trackIndex) setPracticeTimerAudioStatus(`音源 ${practiceTimerState.trackIndex} 一時停止`);
+}
+
+function resetPracticeTimerYouTubePlayback(){
+  practiceTimerYouTubeShouldPlay = false;
+  if(!practiceTimerState.trackIndex){
+    setPracticeTimerAudioStatus("BGMなし");
+    return;
+  }
+  if(practiceTimerYouTubeReady && practiceTimerYouTubePlayer){
+    try{
+      practiceTimerYouTubePlayer.pauseVideo();
+      practiceTimerYouTubePlayer.seekTo(0, true);
+      controlPracticeTimerYouTube(false, 0);
+    }catch{}
+  }
+  setPracticeTimerAudioStatus(`音源 ${practiceTimerState.trackIndex} を先頭に戻しました`);
+}
+
+function changePracticeTimerTrack(event){
+  if(practiceTimerState.running || practiceTimerState.countdown){
+    event.target.value = String(practiceTimerState.trackIndex);
+    return;
+  }
+  practiceTimerState.trackIndex = Math.max(0, Math.min(16, Math.trunc(Number(event.target.value) || 0)));
+  savePracticeTimerState();
+  const details = document.getElementById("practice-timer-youtube");
+  if(!practiceTimerState.trackIndex){
+    pausePracticeTimerYouTubePlayback();
+    if(details){ details.hidden = true; details.open = false; }
+    setPracticeTimerAudioStatus("BGMなし");
+  }else{
+    if(details){ details.hidden = false; details.open = true; }
+    setPracticeTimerAudioStatus(`音源 ${practiceTimerState.trackIndex} を準備中…`);
+    ensurePracticeTimerYouTubePlayer().then(()=>controlPracticeTimerYouTube(false, 0));
+  }
+  renderPracticeTimer();
+}
+
+function updatePracticeTimerCountdown(){
+  if(!practiceTimerState.countdown || !practiceTimerYouTubeCountdownArmed) return false;
+  const youtubeSeconds = getPracticeTimerYouTubeCurrentSeconds();
+  if(youtubeSeconds < PRACTICE_TIMER_YOUTUBE_INTRO_SECONDS){
+    renderPracticeTimer();
+    return false;
+  }
+  const overflowMs = Math.max(0, (youtubeSeconds - PRACTICE_TIMER_YOUTUBE_INTRO_SECONDS) * 1000);
+  practiceTimerState.countdown = false;
+  practiceTimerState.running = true;
+  practiceTimerState.elapsedMs = 0;
+  practiceTimerState.startedAt = Date.now() - overflowMs;
+  practiceTimerYouTubeCountdownArmed = false;
+  savePracticeTimerState();
+  const title = practiceTimerYouTubePlayer?.getVideoData?.().title || `音源 ${practiceTimerState.trackIndex}`;
+  setPracticeTimerAudioStatus(`${title}・3分タイマー計測中`);
+  renderPracticeTimer();
+  return true;
+}
+
+function clearPracticeTimerInterval(){
+  if(practiceTimerInterval != null){
+    clearInterval(practiceTimerInterval);
+    practiceTimerInterval = null;
+  }
+}
+
+function ensurePracticeTimerInterval(){
+  clearPracticeTimerInterval();
+  if(!practiceTimerState.running && !practiceTimerState.countdown) return;
+  practiceTimerInterval = setInterval(()=>{
+    if(practiceTimerState.countdown){
+      updatePracticeTimerCountdown();
+      return;
+    }
+    const current = getPracticeTimerCurrentMs();
+    if(current >= PRACTICE_TIMER_LIMIT_MS && !practiceTimerState.alarmNotified){
+      practiceTimerState.alarmNotified = true;
+      savePracticeTimerState();
+      notifyPracticeTimerThreeMinutes();
+    }
+    renderPracticeTimer();
+  }, 100);
+}
+
+function preparePracticeTimerAudio(){
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if(!AudioContextClass) return;
+  try{
+    if(!practiceTimerAudioContext) practiceTimerAudioContext = new AudioContextClass();
+    if(practiceTimerAudioContext.state === "suspended") practiceTimerAudioContext.resume().catch(()=>{});
+  }catch{}
+}
+
+function playPracticeTimerAlarm(){
+  const play = ()=>{
+    if(!practiceTimerAudioContext) return;
+    const base = practiceTimerAudioContext.currentTime;
+    [0,.34,.68].forEach((delay,index)=>{
+      const oscillator = practiceTimerAudioContext.createOscillator();
+      const gain = practiceTimerAudioContext.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = index === 2 ? 1046 : 880;
+      gain.gain.setValueAtTime(.001, base + delay);
+      gain.gain.exponentialRampToValueAtTime(.22, base + delay + .02);
+      gain.gain.exponentialRampToValueAtTime(.001, base + delay + .25);
+      oscillator.connect(gain);
+      gain.connect(practiceTimerAudioContext.destination);
+      oscillator.start(base + delay);
+      oscillator.stop(base + delay + .27);
+    });
+  };
+  try{
+    if(!practiceTimerAudioContext){
+      preparePracticeTimerAudio();
+    }
+    if(!practiceTimerAudioContext) return;
+    if(practiceTimerAudioContext.state === "suspended"){
+      practiceTimerAudioContext.resume().then(play).catch(()=>{});
+    }else play();
+  }catch{}
+}
+
+function notifyPracticeTimerThreeMinutes(){
+  playPracticeTimerAlarm();
+  if(practiceTimerState.trackIndex){
+    pausePracticeTimerYouTubePlayback(`音源 ${practiceTimerState.trackIndex} は3分で終了・タイマーは計測中`);
+  }
+  if(navigator.vibrate){
+    try{ navigator.vibrate([300,150,300,150,650]); }catch{}
+  }
+  showToast("3分経過しました。タイマーは停止操作まで計測を続けます", 4200);
+}
+
+function startPracticeTimer(){
+  if(practiceTimerState.running || practiceTimerState.countdown) return;
+  preparePracticeTimerAudio();
+  if(practiceTimerState.recorded){
+    practiceTimerState.elapsedMs = 0;
+    practiceTimerState.recorded = false;
+    practiceTimerState.alarmNotified = false;
+  }
+  if(practiceTimerState.trackIndex){
+    practiceTimerState.countdown = true;
+    practiceTimerState.running = false;
+    practiceTimerState.startedAt = null;
+    practiceTimerState.elapsedMs = 0;
+    practiceTimerState.alarmNotified = false;
+  }else{
+    practiceTimerState.countdown = false;
+    practiceTimerState.running = true;
+    practiceTimerState.startedAt = Date.now();
+  }
+  savePracticeTimerState();
+  renderPracticeTimer();
+  ensurePracticeTimerInterval();
+  if(practiceTimerState.trackIndex) startPracticeTimerYouTubePlayback();
+}
+
+function stopPracticeTimer(){
+  if(practiceTimerState.countdown){
+    practiceTimerState.countdown = false;
+    practiceTimerState.running = false;
+    practiceTimerState.startedAt = null;
+    practiceTimerState.elapsedMs = 0;
+    practiceTimerState.recorded = false;
+    practiceTimerState.alarmNotified = false;
+    clearPracticeTimerInterval();
+    pausePracticeTimerYouTubePlayback(`音源 ${practiceTimerState.trackIndex}・カウントダウン中止`);
+    savePracticeTimerState();
+    renderPracticeTimer();
+    showToast("3カウントを中止しました", 1400);
+    return;
+  }
+  if(!practiceTimerState.running) return;
+  const elapsed = getPracticeTimerCurrentMs();
+  practiceTimerState.running = false;
+  practiceTimerState.startedAt = null;
+  practiceTimerState.elapsedMs = elapsed;
+  practiceTimerState.recorded = true;
+  practiceTimerState.lastMs = elapsed;
+  if(practiceTimerState.bestMs == null || elapsed < practiceTimerState.bestMs){
+    practiceTimerState.bestMs = elapsed;
+  }
+  practiceTimerState.history.unshift({ms:elapsed, at:new Date().toISOString()});
+  practiceTimerState.history = practiceTimerState.history.slice(0,PRACTICE_TIMER_HISTORY_LIMIT);
+  clearPracticeTimerInterval();
+  if(practiceTimerState.trackIndex){
+    pausePracticeTimerYouTubePlayback(`音源 ${practiceTimerState.trackIndex} 停止`);
+  }
+  savePracticeTimerState();
+  renderPracticeTimer();
+  showToast(`タイム ${formatPracticeTimer(elapsed)} を記録しました`, 1800);
+}
+
+function resetPracticeTimerCurrent(){
+  if((practiceTimerState.running || practiceTimerState.countdown) && !confirm("計測中のタイマーを停止し、現在タイムだけリセットしますか？")) return;
+  clearPracticeTimerInterval();
+  practiceTimerState.running = false;
+  practiceTimerState.countdown = false;
+  practiceTimerState.startedAt = null;
+  practiceTimerState.elapsedMs = 0;
+  practiceTimerState.recorded = false;
+  practiceTimerState.alarmNotified = false;
+  resetPracticeTimerYouTubePlayback();
+  savePracticeTimerState();
+  renderPracticeTimer();
+  showToast("現在タイムをリセットしました", 1300);
+}
+
+function deletePracticeTimerBest(){
+  if(practiceTimerState.bestMs == null) return;
+  if(!confirm("ベストタイムを削除しますか？ 計測履歴は残ります。")) return;
+  practiceTimerState.bestMs = null;
+  savePracticeTimerState();
+  renderPracticeTimer();
+  showToast("ベストタイムを削除しました", 1300);
+}
+
+function deletePracticeTimerHistory(){
+  if(!practiceTimerState.history.length) return;
+  if(!confirm("計測履歴と前回タイムを削除しますか？ ベストタイムは残ります。")) return;
+  practiceTimerState.history = [];
+  practiceTimerState.lastMs = null;
+  savePracticeTimerState();
+  renderPracticeTimer();
+  showToast("計測履歴を削除しました", 1300);
+}
+
+function initPracticeTimer(){
+  loadPracticeTimerState();
+  document.getElementById("practice-timer-start")?.addEventListener("click", startPracticeTimer);
+  document.getElementById("practice-timer-stop")?.addEventListener("click", stopPracticeTimer);
+  document.getElementById("practice-timer-display")?.addEventListener("click", ()=>{
+    if(practiceTimerState.running || practiceTimerState.countdown) stopPracticeTimer();
+  });
+  document.getElementById("practice-timer-reset")?.addEventListener("click", resetPracticeTimerCurrent);
+  document.getElementById("practice-timer-track")?.addEventListener("change", changePracticeTimerTrack);
+  document.getElementById("practice-timer-delete-best")?.addEventListener("click", deletePracticeTimerBest);
+  document.getElementById("practice-timer-delete-history")?.addEventListener("click", deletePracticeTimerHistory);
+  if(practiceTimerState.running && getPracticeTimerCurrentMs() >= PRACTICE_TIMER_LIMIT_MS && !practiceTimerState.alarmNotified){
+    practiceTimerState.alarmNotified = true;
+    savePracticeTimerState();
+    notifyPracticeTimerThreeMinutes();
+  }
+  renderPracticeTimer();
+  ensurePracticeTimerInterval();
+  const details = document.getElementById("practice-timer-youtube");
+  if(practiceTimerState.trackIndex){
+    if(details) details.hidden = false;
+    if(practiceTimerState.running || practiceTimerState.countdown) startPracticeTimerYouTubePlayback();
+    else{
+      setPracticeTimerAudioStatus(`音源 ${practiceTimerState.trackIndex} を準備中…`);
+      ensurePracticeTimerYouTubePlayer().then(()=>controlPracticeTimerYouTube(false, 0));
+    }
+  }else{
+    if(details) details.hidden = true;
+    setPracticeTimerAudioStatus("BGMなし");
+  }
+}
+
 
 function serializePreOrderList(list){
   return [...list.querySelectorAll(".order-item")].map(li=>orderItemToData(li)).filter(Boolean);
@@ -8361,6 +9354,7 @@ function buildExportSheet(kind="all"){
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
         <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
         <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
+        ${practiceTimerOutputChipsHtml()}
       </div>
       <div class="export-grid">
         <div class="export-block export-block--main">
@@ -8391,6 +9385,7 @@ function buildExportSheet(kind="all"){
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
         <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
         <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
+        ${practiceTimerOutputChipsHtml()}
       </div>
       <div class="export-grid">
         <div class="export-block export-block--main">
@@ -8417,6 +9412,7 @@ function buildExportSheet(kind="all"){
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
         <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
         <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
+        ${practiceTimerOutputChipsHtml()}
       </div>
       <div class="export-grid">
         <div class="export-block export-block--main">
@@ -8771,6 +9767,10 @@ document.getElementById("btn-print").addEventListener("click",()=>{
   const now = new Date().toLocaleString();
   const playerInfo = getPlayerInfo();
   const playerLine = `エントリーNo.：${playerInfo.entryNo || "—"} ／ 選手名：${playerInfo.playerName || "—"}`;
+  const timerOutput = getPracticeTimerOutputData();
+  const timerCurrentLabel = timerOutput.countdown ? "タイマー開始前" : timerOutput.running ? "タイマー計測中" : "タイマー現在";
+  const timerCurrentValue = timerOutput.countdown ? "3カウント中" : formatPracticeTimer(timerOutput.currentMs, "00:00.0");
+  const timerLine = `${timerCurrentLabel}：${timerCurrentValue} ／ 前回タイム：${formatPracticeTimer(timerOutput.lastMs)} ／ ベストタイム：${formatPracticeTimer(timerOutput.bestMs)}${timerOutput.trackIndex ? ` ／ BGM：音源 ${timerOutput.trackIndex}` : ""}`;
   const block = (title, arr)=>`
     <div class="block">
       <h2>${escapePrint(title)}</h2>
@@ -8789,6 +9789,7 @@ document.getElementById("btn-print").addEventListener("click",()=>{
     h1{font-size:20px;margin:0}
     .meta{font-size:12px;color:#555;margin-bottom:4px}
     .player-meta{font-size:15px;font-weight:700;color:#111;margin:0 0 10px;padding:8px 10px;border:1px solid #ddd;border-radius:10px;background:#fff7e6}
+    .timer-meta{font-size:14px;font-weight:700;color:#111;margin:-4px 0 10px;padding:8px 10px;border:1px solid #d8d8dd;border-radius:10px;background:#f2f2f7;font-variant-numeric:tabular-nums}
     h2{font-size:16px;margin-top:16px}
     ol{padding-left:20px}
     li{margin-bottom:4px}
@@ -8828,6 +9829,7 @@ document.getElementById("btn-print").addEventListener("click",()=>{
   <h1>オオルリカップ2026 技構成シート</h1>
   <div class="meta">作成日時：${escapePrint(now)} ／ 合計：${escapePrint(finalSpan.textContent)}点 ／ 予選：${escapePrint(preSpan.textContent)}点</div>
   <div class="player-meta">${escapePrint(playerLine)}</div>
+  <div class="timer-meta">${escapePrint(timerLine)}</div>
   <div class="grid">
     <div>
       ${block("決勝編成", finals)}
@@ -9369,7 +10371,7 @@ document.getElementById('tour-never').addEventListener('click',tourNever);
 
 if('serviceWorker' in navigator){
   const swCode = `
-  const CACHE='ooruricup2026-v1-101';
+  const CACHE='ooruricup2026-v1-104';
   self.addEventListener('install',e=>{
     e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])));
     self.skipWaiting();
@@ -9417,6 +10419,7 @@ window.addEventListener("DOMContentLoaded", async()=>{
   updateCurrentModeBox("score");
   presetDirty = false;
   updateSaveStatus();
+  initPracticeTimer();
   initOoruriUx();
 });
 
