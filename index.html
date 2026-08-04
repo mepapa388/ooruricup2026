@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>オオルリカップ2026 技構成システム</title>
-<meta name="theme-color" content="#0a84ff" />
+<meta name="theme-color" content="#f5f5f7" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕊️</text></svg>">
 <style>
 :root{
@@ -2956,152 +2956,435 @@ h1{
   }
 }
 
-
-/* ===== v1.85 3分タイマー ===== */
-.timer-box{
-  margin:10px 0 12px;
-  padding:12px;
-  border:2px solid #b9d8ff;
-  border-radius:16px;
-  background:linear-gradient(180deg,#f7fbff,#ffffff);
-  box-shadow:0 3px 12px rgba(10,80,160,.08);
-}
-.timer-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:10px;
-}
-.timer-title{
-  font-size:18px;
-  font-weight:1000;
-  color:#0b4aa6;
-}
-.timer-note{
-  margin-top:3px;
-  font-size:12px;
-  line-height:1.5;
-  color:#365a7f;
-  font-weight:700;
-}
-.timer-limit{
-  flex:0 0 auto;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:6px 10px;
-  border-radius:999px;
-  background:#fff7e6;
-  border:1px solid #f2c66d;
-  color:#7a4b00;
-  font-size:12px;
-  font-weight:1000;
-}
-.timer-display{
-  width:100%;
-  margin:10px 0 8px;
-  padding:12px 14px;
-  border-radius:16px;
-  border:2px solid #cfe3ff;
-  background:#fff;
-  color:#111;
-  font-size:44px;
-  font-weight:1000;
-  letter-spacing:.02em;
-  line-height:1;
-  text-align:center;
-  font-variant-numeric:tabular-nums;
-  cursor:pointer;
-}
-.timer-box.is-running .timer-display{
-  border-color:#0a84ff;
-  box-shadow:0 0 0 4px rgba(10,132,255,.12);
-  color:#0b4aa6;
-}
-.timer-box.is-alarm .timer-display{
-  border-color:#d60000;
-  color:#d60000;
-  background:#fff5f5;
-  animation:timerPulse .7s ease-in-out infinite alternate;
-}
-@keyframes timerPulse{
-  from{transform:scale(1)}
-  to{transform:scale(1.015)}
-}
-.timer-progress{
-  height:10px;
-  border-radius:999px;
-  background:#eaf3ff;
-  overflow:hidden;
-}
-.timer-progress-bar{
-  width:0%;
-  height:100%;
-  border-radius:999px;
-  background:#0a84ff;
-  transition:width .12s linear;
-}
-.timer-box.is-alarm .timer-progress-bar{
-  background:#d60000;
-}
-.timer-actions{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-  margin-top:10px;
-}
-.timer-actions button{
-  min-height:40px;
-  border:none;
-  border-radius:12px;
-  padding:8px 10px;
-  font-size:13px;
-  font-weight:1000;
-  cursor:pointer;
-}
-#timer-start{background:#0a84ff;color:#fff;}
-#timer-stop{background:#148a3b;color:#fff;}
-#timer-reset-current{background:#eef6ff;color:#0b4aa6;border:1px solid #cfe3ff;}
-#timer-clear-best{background:#fff5f5;color:#a40000;border:1px solid #ffc2c2;}
-.timer-records{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:10px;
-  font-size:13px;
-  color:#345;
-  font-weight:800;
-}
-.timer-records span{
-  display:inline-flex;
-  gap:4px;
-  align-items:center;
-  padding:6px 9px;
-  border-radius:999px;
-  background:#f6fbff;
-  border:1px solid #d7e6ff;
-}
-.timer-status{
-  margin-top:7px;
-  font-size:12px;
-  font-weight:800;
-  color:#557;
-}
-@media (max-width:620px){
-  .timer-head{
-    flex-direction:column;
-  }
-  .timer-display{
-    font-size:38px;
-    padding:12px 10px;
-  }
-  .timer-actions{
-    grid-template-columns:1fr 1fr;
-  }
-}
-
 /* ===== 印刷 ===== */
+/* ===== v1.90 片手操作・検索・編成トレイ ===== */
+:root{
+  --ux-total-bar-height:112px;
+  --ux-mini-nav-height:74px;
+  --ux-tray-height:60px;
+}
+body{
+  padding-top:calc(var(--ux-total-bar-height) + 12px) !important;
+  padding-bottom:calc(var(--ux-mini-nav-height) + var(--ux-tray-height) + 24px) !important;
+}
+.sr-only{
+  position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
+  overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;
+}
+.total-main{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ux-header-controls{display:flex;align-items:center;gap:6px}
+.ux-header-btn{
+  min-height:36px;padding:6px 10px;border:1px solid #b9d8ff;background:#fff;color:#0b4aa6;
+  font-size:12px;font-weight:900;border-radius:10px;
+}
+.ux-header-btn:disabled{opacity:.45;cursor:default}
+body.ux-actions-collapsed .total-buttons{display:none}
+
+.ux-tech-toolbar{
+  position:sticky;top:calc(var(--ux-total-bar-height) + 6px);z-index:90;
+  margin:8px 0;padding:8px;border:1px solid #cfe3ff;border-radius:14px;
+  background:rgba(247,251,255,.97);box-shadow:0 3px 10px rgba(0,55,120,.08);
+}
+.ux-search-box{display:block}
+.ux-search-box input{
+  width:100%;min-height:46px;padding:9px 12px;border:1px solid #9fc8ff;border-radius:11px;
+  background:#fff;color:#111;font-size:16px;font-weight:700;
+}
+.ux-search-box input:focus{outline:none;border-color:#0a84ff;box-shadow:0 0 0 3px rgba(10,132,255,.14)}
+.ux-filter-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:6px;align-items:center;margin-top:7px}
+.ux-filter-btn{
+  min-height:42px;padding:7px 8px;border:1px solid #b9d8ff;background:#fff;color:#0b4aa6;
+  font-size:13px;font-weight:900;
+}
+.ux-filter-btn.selected{background:#0a84ff;border-color:#0a84ff;color:#fff}
+.ux-search-count{min-width:45px;text-align:right;font-size:12px;font-weight:900;color:#52677d}
+.pt-group[hidden],.tech-item[hidden]{display:none!important}
+.tech-name-cell{cursor:pointer;border-radius:8px;min-height:44px;display:flex;flex-direction:column;justify-content:center}
+.tech-name-cell:focus-visible{outline:3px solid rgba(10,132,255,.4);outline-offset:2px}
+
+.ux-point-jump{
+  position:fixed;right:8px;bottom:calc(var(--ux-mini-nav-height) + var(--ux-tray-height) + 10px);
+  z-index:215;display:flex;flex-direction:column;gap:5px;
+}
+.ux-point-jump button,.ux-point-menu button{
+  width:48px;min-width:48px;min-height:44px;padding:4px;border:1px solid #94c2ff;
+  border-radius:12px;background:#fff;color:#0755a5;font-size:13px;font-weight:1000;
+  box-shadow:0 2px 8px rgba(0,0,0,.16);touch-action:manipulation;
+}
+#ux-point-current{background:#0a84ff;border-color:#0a84ff;color:#fff;font-size:14px}
+#ux-hand-toggle{min-height:36px;background:#eef6ff}
+.ux-point-menu{
+  position:fixed;right:8px;top:calc(var(--ux-total-bar-height) + 8px);
+  bottom:calc(var(--ux-mini-nav-height) + var(--ux-tray-height) + 8px);
+  z-index:230;display:grid;grid-template-rows:repeat(10,minmax(38px,1fr));gap:4px;
+  padding:5px;border-radius:15px;background:rgba(240,247,255,.97);
+  border:1px solid #b9d8ff;box-shadow:0 5px 20px rgba(0,0,0,.2);
+}
+.ux-point-menu[hidden]{display:none}
+.ux-point-menu button{min-height:0;height:100%;box-shadow:none}
+.ux-point-menu button.is-current{background:#0a84ff;border-color:#0a84ff;color:#fff}
+body.ux-left-hand .ux-point-jump,body.ux-left-hand .ux-point-menu{right:auto;left:8px}
+
+.ux-selection-tray{
+  position:fixed;left:0;right:0;bottom:var(--ux-mini-nav-height);z-index:205;
+  min-height:var(--ux-tray-height);display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:7px 12px;background:rgba(8,61,120,.97);color:#fff;
+  box-shadow:0 -2px 10px rgba(0,0,0,.18);
+}
+.ux-selection-summary{min-width:0;font-size:14px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ux-selection-tray button{
+  flex:0 0 auto;min-height:44px;padding:8px 14px;background:#fff;color:#064b94;
+  border-radius:12px;font-size:14px;font-weight:1000;
+}
+.ux-selection-tray[hidden],.ux-point-jump[hidden]{display:none!important}
+
+.ux-selection-sheet{position:fixed;inset:0;z-index:500;display:none}
+.ux-selection-sheet.open{display:block}
+.ux-selection-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.ux-selection-dialog{
+  position:absolute;left:0;right:0;bottom:0;max-height:88vh;display:flex;flex-direction:column;
+  border-radius:20px 20px 0 0;background:#f7fbff;box-shadow:0 -8px 30px rgba(0,0,0,.25);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.ux-selection-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px 14px 9px;border-bottom:1px solid #dbe9f8}
+.ux-selection-header strong{display:block;font-size:18px;color:#0b4aa6}
+.ux-selection-header span{display:block;font-size:12px;color:#586d82;font-weight:800}
+.ux-selection-header button{min-height:44px;padding:8px 13px;background:#e8f2ff;color:#0b4aa6;font-weight:900}
+.ux-selection-help{padding:8px 14px;background:#eef6ff;color:#315b83;font-size:12px;font-weight:700}
+.ux-selection-list{flex:1;overflow:auto;padding:8px 10px 130px;-webkit-overflow-scrolling:touch}
+.ux-sheet-group{margin:4px 0 8px;padding:5px 8px;color:#6b4eff;font-size:13px;font-weight:1000}
+.ux-sheet-row{
+  width:100%;min-height:52px;display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:8px;
+  margin:5px 0;padding:7px 10px;border:2px solid transparent;border-radius:12px;background:#fff;
+  color:#23384e;text-align:left;font-size:14px;font-weight:800;
+}
+.ux-sheet-row.selected{border-color:#0a84ff;background:#eaf4ff}
+.ux-sheet-row .ux-sheet-index{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;background:#e8f2ff;color:#0b4aa6}
+.ux-sheet-row .ux-sheet-meta{font-size:11px;color:#667;font-weight:700}
+.ux-selection-actions{
+  position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.98);
+  border-top:1px solid #cfe0f3;box-shadow:0 -3px 12px rgba(0,0,0,.12);
+}
+.ux-selection-actions button{min-height:44px;padding:6px 4px;border:1px solid #afd0f7;background:#eef6ff;color:#0b4aa6;font-size:12px;font-weight:1000}
+.ux-selection-actions button.danger{border-color:#ffb1b1;background:#fff0f0;color:#a40000}
+.ux-selection-actions button:disabled{opacity:.4}
+body.ux-sheet-open{overflow:hidden}
+
+.ux-advanced-tools{margin:12px 0;border:2px solid #c9dcf4;border-radius:14px;background:#f7fbff;overflow:hidden}
+.ux-advanced-tools>summary{padding:12px 14px;background:#eaf3ff;color:#0b4aa6;font-size:15px;font-weight:1000;cursor:pointer}
+.ux-advanced-tools-inner{padding:0 8px 8px}
+.ux-advanced-tools .predict-box,.ux-advanced-tools .combo-box{margin-top:8px}
+
+.ux-unified-finals{
+  margin:10px 0 12px;border:2px solid #6b4eff;border-radius:16px;background:#f9f7ff;
+  overflow:hidden;box-shadow:0 4px 14px rgba(76,52,180,.1);
+}
+.ux-unified-finals>summary{
+  list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:52px;padding:11px 14px;background:#6b4eff;color:#fff;cursor:pointer;
+  font-size:17px;font-weight:1000;
+}
+.ux-unified-finals>summary::-webkit-details-marker{display:none}
+.ux-unified-finals>summary::before{content:"▶";font-size:11px;transition:transform .18s ease}
+.ux-unified-finals[open]>summary::before{transform:rotate(90deg)}
+.ux-unified-finals-summary{margin-left:auto;font-size:12px;font-weight:900;white-space:nowrap}
+.ux-unified-finals-guide{padding:10px 13px;background:#eeeaff;color:#402a96;font-size:13px;line-height:1.55;font-weight:800}
+.ux-unified-finals-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 10px 2px}
+.ux-unified-finals-actions button{
+  min-height:46px;padding:8px;border:1px solid #b7aaff;border-radius:11px;
+  background:#fff;color:#5134c7;font-size:14px;font-weight:1000;
+}
+#ux-unified-finals-body{padding:2px 8px 12px}
+#ux-unified-finals-body .auto-finals-note{margin:8px 0;padding:10px 12px!important;font-size:13px!important;line-height:1.55!important}
+.ux-unified-finals .order-box{border-color:#d8cffd}
+.ux-unified-finals .candidate-box{overflow:visible!important;padding-bottom:18px}
+.ux-unified-finals #finals-list,.ux-unified-finals #finals-candidate-list{max-height:none!important;overflow:visible!important}
+.ux-unified-finals .preset-important{margin-bottom:4px}
+
+/* 予選の動画導線はYouTube風の赤で統一 */
+#mode-prelims .full-video-btn,
+#mode-prelims .judge-btn{
+  border-color:#cc0000!important;background:#ff0000!important;color:#fff!important;
+  box-shadow:0 2px 5px rgba(204,0,0,.22);font-weight:1000!important;
+}
+#mode-prelims .full-video-btn:hover,
+#mode-prelims .judge-btn:hover{background:#cc0000!important}
+#mode-prelims .full-video-btn::before,
+#mode-prelims .judge-btn::before{content:"▶";display:inline-block;margin-right:4px;font-size:.82em}
+#mode-prelims .full-video-btn:focus-visible,
+#mode-prelims .judge-btn:focus-visible{outline:3px solid rgba(255,0,0,.28);outline-offset:2px}
+
+/* =========================================================
+   v1.92 Apple風シンプルUI
+   情報の順番と部品の見た目を決勝・予選で統一する。
+========================================================= */
+:root{
+  --blue:#007aff;
+  --apple-blue:#007aff;
+  --apple-green:#34c759;
+  --apple-orange:#ff9500;
+  --apple-red:#ff3b30;
+  --apple-label:#1d1d1f;
+  --apple-secondary:#6e6e73;
+  --apple-tertiary:#8e8e93;
+  --apple-bg:#f5f5f7;
+  --apple-surface:#ffffff;
+  --apple-fill:#f2f2f7;
+  --apple-line:#d2d2d7;
+  --soft:#ffffff;
+  --line:#e5e5ea;
+}
+html{background:var(--apple-bg);color-scheme:light}
+body{
+  max-width:none;
+  margin:0;
+  padding-left:14px;
+  padding-right:14px;
+  background:var(--apple-bg);
+  color:var(--apple-label);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;
+  font-size:16px;
+  line-height:1.5;
+  letter-spacing:-.01em;
+  -webkit-font-smoothing:antialiased;
+}
+body>h1,
+body>.app-subtitle,
+body>.ux-advanced-tools,
+body>.mode-bar,
+body>.current-mode-box,
+body>.warning,
+body>.mode-section{width:min(100%,820px);margin-left:auto;margin-right:auto}
+h1{
+  margin-top:22px;margin-bottom:0;padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;color:var(--apple-label)!important;
+  font-size:31px;line-height:1.14;font-weight:750;letter-spacing:-.035em;
+}
+.app-subtitle{margin-top:3px!important;margin-bottom:16px!important;color:var(--apple-secondary);font-size:15px;font-weight:550}
+button,input,select{font:inherit}
+button{-webkit-tap-highlight-color:transparent;transition:background-color .15s ease,border-color .15s ease,transform .15s ease,opacity .15s ease}
+button:active{transform:scale(.98)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{
+  outline:3px solid rgba(0,122,255,.24)!important;
+  outline-offset:2px;
+}
+
+/* 上部は点数と設定ボタンだけ。多色ボタンは使わない。 */
+.total-bar{
+  padding:7px 12px;
+  background:rgba(250,250,252,.88);
+  border-bottom:1px solid rgba(60,60,67,.14);
+  box-shadow:none;
+  -webkit-backdrop-filter:saturate(180%) blur(18px);
+  backdrop-filter:saturate(180%) blur(18px);
+}
+.total-box{width:min(100%,820px);margin:0 auto;gap:5px}
+.total-top-row{gap:5px;flex-wrap:nowrap;overflow:hidden}
+.total-chip{
+  min-width:0;padding:2px 7px;border:0;border-radius:999px;background:var(--apple-fill);
+  color:var(--apple-secondary);font-size:11px;font-weight:650;white-space:nowrap;
+}
+.total-main{font-size:20px;font-weight:750;letter-spacing:-.02em}
+.ux-header-controls{gap:7px}
+.ux-header-btn{
+  min-height:34px;padding:5px 10px;border:0;border-radius:10px;
+  background:var(--apple-fill);color:var(--apple-blue);font-size:12px;font-weight:650;
+}
+.save-status{padding:0;border:0;background:transparent!important;color:var(--apple-secondary)!important;font-size:11px;font-weight:550}
+.save-status::before{content:"";width:6px;height:6px;margin-right:5px;border-radius:50%;background:var(--apple-green)}
+.save-status.is-dirty::before{background:var(--apple-orange)}
+.total-buttons{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-top:3px}
+.total-buttons button,.total-buttons label{
+  min-height:42px!important;padding:6px!important;border:1px solid var(--apple-line)!important;
+  border-radius:11px!important;background:var(--apple-surface)!important;color:var(--apple-blue)!important;
+  box-shadow:none!important;font-size:12px!important;font-weight:650!important;
+}
+#btn-reset{color:var(--apple-red)!important}
+
+/* 切替は下部タブへ集約。上部の重複ボタンは表示しない。 */
+.mode-bar{display:none!important}
+.current-mode-box{
+  margin-top:8px;margin-bottom:12px;padding:11px 13px;border:0;border-radius:14px;
+  background:var(--apple-surface);box-shadow:none;color:var(--apple-label);font-size:14px;font-weight:650;
+}
+.mode-section{animation:none!important}
+.mode-guide{margin:4px 2px 10px;color:var(--apple-secondary);font-size:13px;line-height:1.55}
+
+/* 検索と絞り込みを、両画面で同じ固定位置・同じ見た目にする。 */
+.ux-tech-toolbar{
+  top:calc(var(--ux-total-bar-height) + 6px);margin:8px 0 10px;padding:8px;
+  border:1px solid rgba(60,60,67,.12);border-radius:15px;background:rgba(255,255,255,.92);
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+}
+.ux-search-box input{
+  min-height:44px;padding:9px 12px;border:0;border-radius:11px;background:var(--apple-fill);
+  color:var(--apple-label);font-size:16px;font-weight:500;box-shadow:none;
+}
+.ux-search-box input::placeholder{color:var(--apple-tertiary)}
+.ux-search-box input:focus{border:0;box-shadow:0 0 0 3px rgba(0,122,255,.16)}
+.ux-filter-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;border-radius:11px;background:#e9e9eb}
+.ux-filter-btn{
+  min-height:36px;padding:6px;border:0;border-radius:8px;background:transparent;color:var(--apple-secondary);
+  box-shadow:none;font-size:12px;font-weight:650;
+}
+.ux-filter-btn.selected{border:0;background:var(--apple-surface);color:var(--apple-label);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.ux-search-count{grid-column:1/-1;padding:2px 4px 0;color:var(--apple-secondary);font-size:11px;font-weight:550;text-align:left}
+
+/* 「編成」と「技を選ぶ」は同じ階層・同じカード表現。 */
+.ux-unified-finals,.section{
+  margin:10px 0 12px;border:1px solid rgba(60,60,67,.12);border-radius:16px;
+  background:var(--apple-surface);box-shadow:none;overflow:hidden;
+}
+.ux-unified-finals>summary,.section>summary{
+  min-height:52px;padding:13px 14px;border:0!important;background:var(--apple-surface)!important;
+  color:var(--apple-label);font-size:17px;font-weight:700;
+}
+.ux-unified-finals>summary::before{color:var(--apple-blue)}
+.ux-unified-finals-summary{color:var(--apple-secondary);font-size:12px;font-weight:600}
+.ux-unified-finals-guide{
+  padding:10px 14px;border-top:1px solid rgba(60,60,67,.1);background:var(--apple-fill);
+  color:var(--apple-secondary);font-size:13px;font-weight:550;
+}
+.ux-unified-finals-actions{grid-template-columns:1fr 1fr;gap:8px;padding:10px}
+.ux-unified-finals-actions button{
+  min-height:44px;padding:8px;border:0;border-radius:11px;background:rgba(0,122,255,.1);
+  color:var(--apple-blue);font-size:14px;font-weight:650;
+}
+#ux-unified-finals-body,#ux-unified-prelims-body{padding:0 10px 12px}
+.section-content{padding:2px 10px 10px}
+.pt-group{margin:0;border-top:1px solid rgba(60,60,67,.1)}
+.pt-group:first-child{border-top:0}
+.pt-group>summary,
+.section[open] .pt-group>summary{
+  min-height:48px;padding:8px 2px;gap:7px;background:var(--apple-surface)!important;
+}
+.section[open] .pt-group[open]>summary{background:var(--apple-fill)!important}
+.section-title,
+.section-title.pt-1,.section-title.pt-2,.section-title.pt-3,.section-title.pt-4,.section-title.pt-5,
+.section-title.pt-6,.section-title.pt-7,.section-title.pt-8,.section-title.pt-9,.section-title.pt-10{
+  margin:0;padding:4px 8px;border:0;border-radius:8px;background:var(--apple-fill);color:var(--apple-label);
+  font-size:13px;font-weight:650;
+}
+.pt-group-arrow{color:var(--apple-tertiary)}
+
+/* 技の行はカードを重ねず、リストとして簡潔にする。 */
+.tech-item,.pre-tech-item{
+  margin:0;padding:9px 2px;border:0!important;border-top:1px solid rgba(60,60,67,.1)!important;
+  border-radius:0;background:var(--apple-surface);box-shadow:none;
+}
+.tech-title{font-size:15px!important;font-weight:600;line-height:1.35}
+.tech-pt-label{margin-top:2px;color:var(--apple-secondary);font-size:11px}
+.toggle-btn{
+  min-height:36px;padding:6px 9px;border:0;border-radius:9px;background:var(--apple-fill);
+  color:var(--apple-label);font-size:12px!important;font-weight:650;box-shadow:none;
+}
+.toggle-btn.selected{border:0;background:var(--apple-blue);color:#fff;box-shadow:none}
+.toggle-btn.multi-toggle.selected{border:0;background:var(--apple-orange);box-shadow:none}
+.pre-toggle.selected{border:0;background:var(--apple-green);box-shadow:none}
+.candidate-add-btn,.candidate-sort-btn{
+  border:0!important;border-radius:9px!important;background:var(--apple-fill)!important;color:var(--apple-blue)!important;
+  box-shadow:none!important;font-weight:650!important;
+}
+.candidate-add-btn.selected{background:#af52de!important;color:#fff!important;box-shadow:none!important}
+.full-video-btn{border:0;background:var(--apple-fill);color:var(--apple-blue);font-weight:650}
+
+/* 編成リスト・プリセット・高度な編集も同じ白い面に統一。 */
+.order-box,.ux-unified-finals .order-box,.preset-box,.pre-box,.predict-box,.combo-box{
+  margin-top:10px;border:1px solid rgba(60,60,67,.12)!important;border-radius:14px!important;
+  background:var(--apple-surface)!important;box-shadow:none!important;
+}
+.order-box{padding:10px}
+.order-box-title{margin:2px 2px 8px;color:var(--apple-label);font-size:14px;font-weight:700}
+.order-item{padding:8px 2px;border-bottom:1px solid rgba(60,60,67,.1);background:var(--apple-surface);font-size:13px}
+.drag-handle{border:0;background:var(--apple-fill);color:var(--apple-secondary)}
+.order-btn{border:0;background:var(--apple-fill);color:var(--apple-label)}
+.order-btn-move{border:0;background:rgba(0,122,255,.1);color:var(--apple-blue)}
+.order-btn-del{border:0;background:rgba(255,59,48,.1);color:var(--apple-red)}
+.candidate-note,.preset-hint,.predict-note,.combo-note{color:var(--apple-secondary)}
+.preset-important{border:1px solid rgba(60,60,67,.12)!important;background:var(--apple-surface)!important;box-shadow:none!important}
+.preset-heading{color:var(--apple-label)!important;font-size:17px;font-weight:700}
+.preset-summary{border:0;background:var(--apple-fill);color:var(--apple-secondary)!important;font-size:12px;font-weight:550}
+.preset-row select,.preset-row input,.predict-form select,.predict-form input,.combo-form select,.combo-form input,.pre-input{
+  min-height:42px;border:1px solid var(--apple-line)!important;border-radius:10px!important;background:var(--apple-surface)!important;
+  color:var(--apple-label);box-shadow:none;
+}
+.preset-row button,.predict-form button,.combo-actions button{
+  min-height:40px;border:0!important;border-radius:10px!important;background:rgba(0,122,255,.1)!important;
+  color:var(--apple-blue)!important;font-weight:650;
+}
+.pre-sum{border:0;background:var(--apple-surface);color:var(--apple-label);font-size:17px}
+.pre-sum #pre-tech-total{color:var(--apple-blue)}
+.ux-advanced-tools{
+  margin-top:10px;margin-bottom:12px;border:1px solid rgba(60,60,67,.12);border-radius:14px;
+  background:var(--apple-surface);box-shadow:none;
+}
+.ux-advanced-tools>summary{padding:11px 13px;background:var(--apple-surface);color:var(--apple-secondary);font-size:13px;font-weight:650}
+.ux-advanced-tools-inner{padding:0 10px 10px}
+.player-info-box{border:0;background:transparent;box-shadow:none;padding:4px 0}
+.player-field input{border:1px solid var(--apple-line);border-radius:10px;background:var(--apple-surface)}
+.data-status{border:0;border-radius:10px;background:rgba(52,199,89,.1);color:#217a38}
+.warning{color:var(--apple-red)}
+
+/* 固定操作も半透明のApple系サーフェスへ。 */
+.ux-point-jump button,.ux-point-menu button{
+  border:1px solid rgba(60,60,67,.16);border-radius:13px;background:rgba(255,255,255,.94);
+  color:var(--apple-blue);box-shadow:0 2px 8px rgba(0,0,0,.1);font-weight:700;
+}
+#ux-point-current{border-color:var(--apple-blue);background:var(--apple-blue);color:#fff}
+#ux-hand-toggle{background:rgba(255,255,255,.94)}
+.ux-point-menu{border:1px solid rgba(60,60,67,.14);background:rgba(245,245,247,.94);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.ux-selection-tray{
+  padding:7px 12px;background:rgba(255,255,255,.92);color:var(--apple-label);
+  border-top:1px solid rgba(60,60,67,.14);box-shadow:none;
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+}
+.ux-selection-summary{font-size:13px;font-weight:650}
+.ux-selection-tray button{min-height:40px;padding:7px 13px;border-radius:10px;background:var(--apple-blue);color:#fff;font-size:13px;font-weight:650}
+.mini-nav{
+  padding:5px 4px max(5px,env(safe-area-inset-bottom));background:rgba(250,250,252,.92);
+  border-top:1px solid rgba(60,60,67,.14);box-shadow:none;
+  -webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);
+}
+.mini-btn{min-height:46px;color:var(--apple-secondary);font-size:11px;font-weight:550}
+.mini-btn.active{color:var(--apple-blue);font-weight:700}
+.ux-selection-overlay{background:rgba(0,0,0,.32)}
+.ux-selection-dialog{border-radius:22px 22px 0 0;background:var(--apple-bg);box-shadow:0 -8px 30px rgba(0,0,0,.15)}
+.ux-selection-header{border-bottom:1px solid rgba(60,60,67,.12);background:var(--apple-surface)}
+.ux-selection-header strong{color:var(--apple-label);font-weight:700}
+.ux-selection-header span{color:var(--apple-secondary);font-weight:550}
+.ux-selection-header button{border:0;background:var(--apple-fill);color:var(--apple-blue);font-weight:650}
+.ux-selection-help{background:var(--apple-fill);color:var(--apple-secondary);font-weight:550}
+.ux-sheet-row{border:0;border-radius:12px;color:var(--apple-label);font-weight:600;box-shadow:none}
+.ux-sheet-row.selected{border:2px solid var(--apple-blue);background:#fff}
+.ux-sheet-row .ux-sheet-index{background:var(--apple-fill);color:var(--apple-secondary)}
+.ux-selection-actions{border-top:1px solid rgba(60,60,67,.12);box-shadow:none}
+.ux-selection-actions button{border:0;background:var(--apple-fill);color:var(--apple-blue);font-weight:650}
+.ux-selection-actions button.danger{background:rgba(255,59,48,.1);color:var(--apple-red)}
+
+@media (max-width:640px){
+  body{padding-left:10px;padding-right:10px}
+  h1{font-size:28px}
+  .current-mode-box{font-size:13px}
+  .ux-unified-finals-actions{grid-template-columns:1fr 1fr}
+  .score-tech-item{grid-template-columns:minmax(80px,1fr) auto auto auto!important}
+  .pre-tech-item{grid-template-columns:minmax(84px,1fr) auto minmax(38px,46px) auto!important}
+}
+
+@media (max-width:640px){
+  h1{font-size:20px}
+  .player-info-box{padding:9px}
+  .data-status{font-size:10px;line-height:1.3}
+  .ux-filter-row{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ux-search-count{grid-column:1/-1;text-align:left;min-height:16px}
+  .score-tech-item .judge-btn,.score-tech-item .multi-toggle,.score-tech-item .candidate-add-btn,
+  .pre-tech-item .judge-btn,.pre-tech-item .candidate-add-btn{min-height:44px!important}
+  .ux-unified-finals-actions{grid-template-columns:1fr}
+}
+
 @media print{
+  .ux-tech-toolbar,.ux-point-jump,.ux-point-menu,.ux-selection-tray,.ux-selection-sheet,.ux-header-controls,.ux-unified-finals-actions{display:none!important}
   .total-bar,.mini-nav,.search-bar,.mode-bar{display:none!important}
   body{padding-top:0;padding-bottom:0}
   .order-box{page-break-inside:avoid}
@@ -3111,6 +3394,377 @@ h1{
 @media (max-width:420px){
   .tech-controls{min-width:auto}
   .media-dialog{width:min(520px,96vw)}
+}
+@media (max-width:640px){
+  h1{font-size:28px!important}
+  .ux-unified-finals-actions{grid-template-columns:1fr 1fr;padding-right:50px}
+  #ux-unified-finals-body,#ux-unified-prelims-body{padding-right:50px}
+  .section-content{padding-right:50px}
+  body.ux-left-hand .ux-unified-finals-actions{padding-right:10px;padding-left:50px}
+  body.ux-left-hand #ux-unified-finals-body,
+  body.ux-left-hand #ux-unified-prelims-body,
+  body.ux-left-hand .section-content{padding-right:10px;padding-left:50px}
+}
+
+/* 通常の編成カードは確認用の簡潔な番号リスト。
+   移動・削除などは「技順編集」の操作シートへ集約する。 */
+#finals-list,#prelims1-list,#prelims2-list{counter-reset:ux-order}
+#ux-unified-finals-body #finals-list>.order-item,
+#ux-unified-prelims-body #prelims1-list>.order-item,
+#ux-unified-prelims-body #prelims2-list>.order-item{
+  counter-increment:ux-order;
+  display:grid!important;
+  grid-template-columns:30px minmax(0,1fr)!important;
+  grid-template-areas:"number name"!important;
+  gap:8px!important;
+  align-items:center!important;
+  min-height:44px;
+  padding:7px 2px!important;
+}
+#ux-unified-finals-body #finals-list>.order-item::before,
+#ux-unified-prelims-body #prelims1-list>.order-item::before,
+#ux-unified-prelims-body #prelims2-list>.order-item::before{
+  content:counter(ux-order);
+  grid-area:number;
+  display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:50%;background:var(--apple-fill);
+  color:var(--apple-secondary);font-size:12px;font-weight:650;
+}
+#ux-unified-finals-body #finals-list>.order-item>.order-name,
+#ux-unified-prelims-body #prelims1-list>.order-item>.order-name,
+#ux-unified-prelims-body #prelims2-list>.order-item>.order-name{
+  grid-area:name!important;width:auto!important;min-width:0!important;cursor:default;
+}
+#ux-unified-finals-body #finals-list>.order-item>.drag-handle,
+#ux-unified-finals-body #finals-list>.order-item>.combo-pick-wrap,
+#ux-unified-finals-body #finals-list>.order-item>.order-controls,
+#ux-unified-prelims-body #prelims1-list>.order-item>.drag-handle,
+#ux-unified-prelims-body #prelims1-list>.order-item>.order-controls,
+#ux-unified-prelims-body #prelims2-list>.order-item>.drag-handle,
+#ux-unified-prelims-body #prelims2-list>.order-item>.order-controls{display:none!important}
+#ux-unified-finals.ux-combo-mode #finals-list>.order-item{
+  grid-template-areas:"number name" "number pick"!important;
+}
+#ux-unified-finals.ux-combo-mode #finals-list>.order-item>.combo-pick-wrap{
+  display:inline-flex!important;grid-area:pick!important;justify-self:start;padding:3px 0;
+}
+
+/* 決勝・予選とも「全動画」はYouTube風の赤で統一。 */
+.full-video-btn{
+  border:1px solid #cc0000!important;
+  background:#ff0000!important;
+  color:#fff!important;
+  box-shadow:0 2px 5px rgba(204,0,0,.22)!important;
+  font-weight:700!important;
+}
+.full-video-btn:hover{background:#cc0000!important}
+.full-video-btn::before{content:"▶";display:inline-block;margin-right:4px;font-size:.82em}
+.full-video-btn:focus-visible{outline:3px solid rgba(255,0,0,.24)!important;outline-offset:2px}
+
+/* =========================================================
+   v1.94 一覧の表示面積を増やすコンパクト表示
+========================================================= */
+.total-bar{padding-top:5px;padding-bottom:5px}
+.total-box{gap:3px}
+.total-top-row{gap:4px}
+.total-chip{padding:1px 6px;font-size:10.5px}
+.total-main{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:6px;
+  font-size:19px;
+}
+.total-main>.save-status{
+  justify-self:end;
+  width:auto;max-width:125px;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:10.5px;
+}
+.ux-header-btn{min-height:32px;padding:4px 8px}
+
+.current-mode-box{
+  margin-top:3px;margin-bottom:6px;padding:2px 3px;
+  border-radius:0;background:transparent;color:var(--apple-secondary);
+  font-size:12px;font-weight:600;
+}
+.ux-unified-finals,.section{margin-top:6px;margin-bottom:8px}
+.ux-unified-finals>summary,.section>summary{min-height:44px;padding:9px 12px;font-size:16px}
+
+/* 通常時は検索と3つの絞り込みを1段に置く。 */
+.ux-tech-toolbar{
+  display:grid!important;
+  grid-template-columns:62px minmax(0,1fr);
+  align-items:center;
+  gap:4px;
+  margin:5px 0 6px;
+  padding:5px;
+  border-radius:13px;
+}
+.ux-search-toggle{
+  grid-column:1;
+  min-height:36px;padding:5px 7px;border:0;border-radius:9px;
+  background:var(--apple-fill);color:var(--apple-blue);
+  font-size:12px;font-weight:700;
+}
+.ux-search-toggle::before{content:"⌕";margin-right:3px;font-size:15px;line-height:1}
+.ux-tech-toolbar.has-query:not(.ux-search-open) .ux-search-toggle{
+  background:rgba(0,122,255,.12);color:var(--apple-blue);
+}
+.ux-search-box{display:none!important}
+.ux-filter-row{
+  grid-column:2;
+  margin:0!important;padding:2px;
+  gap:2px;
+}
+.ux-filter-btn{min-height:32px;padding:4px 3px;font-size:11px}
+.ux-search-count{
+  position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
+  overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;
+}
+.ux-tech-toolbar.ux-search-open{grid-template-columns:minmax(0,1fr) 58px}
+.ux-tech-toolbar.ux-search-open .ux-search-box{display:block!important;grid-column:1;grid-row:1}
+.ux-tech-toolbar.ux-search-open .ux-search-toggle{grid-column:2;grid-row:1}
+.ux-tech-toolbar.ux-search-open .ux-search-toggle::before{content:"";margin:0}
+.ux-tech-toolbar.ux-search-open .ux-filter-row{grid-column:1/-1;grid-row:2}
+.ux-tech-toolbar.ux-search-open .ux-search-box input{min-height:38px;padding:7px 10px;font-size:15px}
+
+/* 点数はグループ見出しにあるため、各技での繰り返し表示を省く。 */
+.tech-pt-label{display:none!important}
+.tech-item,.pre-tech-item{min-height:46px;padding-top:5px!important;padding-bottom:5px!important}
+.tech-name-cell{min-height:38px}
+.tech-title{font-size:14px!important;line-height:1.25}
+.score-tech-item,.pre-tech-item{gap:4px!important}
+.score-tech-item .judge-btn,.pre-tech-item .judge-btn{
+  min-height:38px!important;padding:5px 7px!important;font-size:11px!important;
+}
+.score-tech-item .candidate-add-btn,.pre-tech-item .candidate-add-btn{
+  min-height:36px!important;padding:4px!important;
+}
+.toggle-btn{min-height:38px;padding:5px 8px}
+
+/* =========================================================
+   v1.95 技名タップだけで選択するシンプルUI
+========================================================= */
+.score-tech-item{
+  grid-template-columns:minmax(0,1fr) 42px 40px 46px!important;
+  grid-template-areas:"name judge cand multi"!important;
+}
+.pre-tech-item{
+  grid-template-columns:minmax(0,1fr) 42px 40px!important;
+  grid-template-areas:"name judge cand"!important;
+}
+.score-tech-item .use-toggle,.pre-tech-item .pre-toggle{display:none!important}
+.score-tech-item .tech-name-cell,.pre-tech-item .tech-name-cell{
+  grid-area:name!important;
+  position:relative;
+  min-width:0;min-height:38px;
+  padding:5px 30px 5px 6px;
+  border:1px solid transparent;
+  border-radius:10px;
+  background:transparent;
+  color:var(--apple-label);
+}
+.score-tech-item .tech-name-cell:active,.pre-tech-item .tech-name-cell:active{background:var(--apple-fill)}
+.score-tech-item.is-tech-selected .tech-name-cell{
+  border-color:rgba(0,122,255,.28);
+  background:rgba(0,122,255,.12);
+  color:#005ecb;
+}
+.pre-tech-item.is-tech-selected .tech-name-cell{
+  border-color:rgba(52,199,89,.34);
+  background:rgba(52,199,89,.14);
+  color:#167a32;
+}
+.score-tech-item.is-tech-selected .tech-name-cell::after,
+.pre-tech-item.is-tech-selected .tech-name-cell::after{
+  content:"✓";
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  display:flex;align-items:center;justify-content:center;
+  width:20px;height:20px;border-radius:50%;
+  background:var(--apple-blue);color:#fff;
+  font-size:12px;font-weight:800;
+}
+.pre-tech-item.is-tech-selected .tech-name-cell::after{background:var(--apple-green)}
+.score-tech-item .judge-btn,.pre-tech-item .judge-btn{
+  grid-area:judge!important;
+  width:42px;min-width:42px;min-height:38px!important;
+  display:flex!important;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;padding:3px!important;line-height:1.05!important;
+  white-space:normal!important;
+}
+.score-tech-item .judge-btn span,.pre-tech-item .judge-btn span{display:block;font-size:10px;font-weight:700}
+.score-tech-item .judge-btn::before,.pre-tech-item .judge-btn::before{content:none!important}
+.score-tech-item .candidate-add-btn,.pre-tech-item .candidate-add-btn{grid-area:cand!important;width:40px;min-width:40px}
+.score-tech-item .multi-toggle{grid-area:multi!important;width:46px;min-width:46px;padding:4px!important}
+
+/* =========================================================
+   v1.96 下部の主要画面切替を見つけやすくする
+========================================================= */
+.mini-nav .mini-btn[data-mode]{
+  flex:1.28;
+  min-height:50px;
+  padding:9px 8px;
+  border-radius:13px;
+  color:var(--apple-label);
+  font-size:15px;
+  font-weight:750;
+}
+.mini-nav .mini-btn[data-mode].active{
+  background:rgba(0,122,255,.1);
+  color:var(--apple-blue);
+  box-shadow:inset 0 0 0 1px rgba(0,122,255,.18);
+}
+.mini-nav .mini-btn[data-link]{
+  flex:.78;
+  min-height:42px;
+  padding:7px 4px;
+  font-size:10.5px;
+  font-weight:550;
+}
+
+/* 上部設定ボタンは内容が分かる名称にし、長い文言を2行まで許可。 */
+#ux-actions-toggle{
+  max-width:136px;
+  min-height:38px;
+  padding:5px 8px;
+  white-space:normal;
+  text-align:center;
+  line-height:1.15;
+}
+#ux-actions-toggle.is-open{
+  background:rgba(0,122,255,.1);
+  color:var(--apple-blue);
+}
+
+/* =========================================================
+   v1.98 技順編集シートの直接ドラッグ並べ替え
+========================================================= */
+.ux-sheet-group-section{margin:0 0 10px}
+.ux-sheet-group-list{
+  min-height:54px;
+  padding:1px;
+  border-radius:13px;
+}
+.ux-sheet-group-list:empty::after{
+  content:"ここへドラッグ";
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:54px;
+  margin:4px 0;
+  border:1px dashed rgba(60,60,67,.22);
+  border-radius:12px;
+  color:var(--apple-tertiary);
+  font-size:12px;
+  font-weight:600;
+}
+.ux-sheet-row{
+  grid-template-columns:36px minmax(0,1fr) auto 34px!important;
+}
+.ux-sheet-status{font-size:11px;color:var(--apple-secondary);white-space:nowrap}
+.ux-sheet-meta.is-multi{
+  color:var(--apple-red)!important;
+  font-weight:800!important;
+}
+.ux-sheet-drag{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:38px;
+  border-radius:9px;
+  background:var(--apple-fill);
+  color:var(--apple-secondary);
+  font-size:18px;
+  font-weight:800;
+  cursor:grab;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.ux-sheet-drag:active{cursor:grabbing;background:rgba(0,122,255,.12);color:var(--apple-blue)}
+.ux-sheet-row.sortable-ghost{opacity:.34;background:rgba(0,122,255,.1)}
+.ux-sheet-row.sortable-chosen,.ux-sheet-row.sortable-drag{
+  background:#fff;
+  box-shadow:0 8px 24px rgba(0,0,0,.16);
+}
+
+/* =========================================================
+   v1.100 技順編集内で候補と構成を往復する
+========================================================= */
+.ux-selection-list{padding-bottom:190px}
+.ux-sheet-limit-alert{
+  margin:0;
+  padding:10px 14px;
+  border-top:1px solid rgba(255,59,48,.18);
+  border-bottom:1px solid rgba(255,59,48,.18);
+  background:rgba(255,59,48,.1);
+  color:#c62828;
+  font-size:13px;
+  font-weight:800;
+  line-height:1.45;
+}
+.ux-selection-summary.is-limit-over{color:var(--apple-red);font-weight:800}
+#ux-candidate-list-toggle{
+  grid-column:1/-1;
+  order:-1;
+  min-height:42px;
+  background:rgba(175,82,222,.12)!important;
+  color:#8e44ad!important;
+  font-size:14px;
+  font-weight:750!important;
+}
+#ux-candidate-list-toggle.is-open{
+  background:#af52de!important;
+  color:#fff!important;
+}
+.ux-sheet-candidate-panel{
+  margin:12px 0 6px;
+  padding:10px;
+  border:1px solid rgba(175,82,222,.2);
+  border-radius:14px;
+  background:rgba(175,82,222,.06);
+}
+.ux-sheet-candidate-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin:0 2px 8px;
+  color:#7d3797;
+  font-size:14px;
+  font-weight:800;
+}
+.ux-sheet-candidate-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  min-height:52px;
+  margin:5px 0;
+  padding:7px 8px 7px 11px;
+  border-radius:11px;
+  background:#fff;
+}
+.ux-sheet-candidate-name{min-width:0;font-size:14px;font-weight:650;line-height:1.3}
+.ux-sheet-candidate-actions{display:flex;gap:5px}
+.ux-sheet-candidate-actions button{
+  min-width:54px;
+  min-height:38px;
+  padding:5px 8px;
+  border:0;
+  border-radius:9px;
+  background:rgba(0,122,255,.11);
+  color:var(--apple-blue);
+  font-size:12px;
+  font-weight:750;
+}
+.ux-sheet-candidate-empty{
+  padding:14px 8px;
+  color:var(--apple-secondary);
+  text-align:center;
+  font-size:13px;
 }
 </style>
 </head>
@@ -3125,8 +3779,13 @@ h1{
       <div class="total-chip">FMD：<span id="fmd-total">0</span></div>
       <div class="total-chip">基礎：<span id="base-total">0</span></div>
     </div>
-    <div class="total-main">総合計：<span id="final-total">0</span></div>
-    <div class="save-status is-clean" id="save-status">端末に自動保存済み</div>
+    <div class="total-main">
+      <span>総合計：<span id="final-total">0</span></span>
+      <div class="save-status is-clean" id="save-status">自動保存済み</div>
+      <span class="ux-header-controls">
+        <button type="button" id="ux-actions-toggle" class="ux-header-btn" aria-expanded="true">画面保存・リセットなど設定</button>
+      </span>
+    </div>
     <div class="total-buttons">
       <button type="button" style="background:var(--blue);color:#fff" id="btn-reset"><span>リセット</span></button>
       <button type="button" style="background:#555;color:#fff" id="btn-print"><span>印刷</span></button>
@@ -3139,7 +3798,8 @@ h1{
   </div>
 </div>
 
-<h1>オオルリカップ2026 技構成システム</h1>
+<h1>技編成</h1>
+<p class="app-subtitle">オオルリカップ2026</p>
 
 <!-- v1.70 選手情報入力 -->
 <div class="player-info-box">
@@ -3152,48 +3812,51 @@ h1{
     <input id="player-name" type="text" placeholder="選手名を入力">
   </label>
 </div>
-
-<!-- v1.85 3分タイマー -->
-<div class="timer-box" id="timer-box">
-  <div class="timer-head">
-    <div>
-      <div class="timer-title">3分タイマー</div>
-      <div class="timer-note">スタート後、タイマー表示をタップするとストップしてタイムを記録します。3分でアラームが鳴ります。</div>
-    </div>
-    <div class="timer-limit">上限 3:00</div>
-  </div>
-  <button type="button" class="timer-display" id="timer-display" aria-label="タイマーをストップ">00:00.0</button>
-  <div class="timer-progress"><div class="timer-progress-bar" id="timer-progress-bar"></div></div>
-  <div class="timer-actions">
-    <button type="button" id="timer-start">スタート</button>
-    <button type="button" id="timer-stop">ストップ記録</button>
-    <button type="button" id="timer-reset-current">現在リセット</button>
-    <button type="button" id="timer-clear-best">ベスト削除</button>
-  </div>
-  <div class="timer-records">
-    <span>前回：<strong id="timer-last">—</strong></span>
-    <span>ベスト：<strong id="timer-best">—</strong></span>
-  </div>
-  <div class="timer-status" id="timer-status">未計測</div>
-</div>
-
 <div class="data-status" id="official-data-status">技データ：読込準備中</div>
 
 
 <!-- モード切替 -->
 <div class="mode-bar">
-  <button class="mode-btn active" data-mode="score">決勝スコア</button>
-  <button class="mode-btn" data-mode="finals">決勝編成</button>
-  <button class="mode-btn" data-mode="prelims">予選編成</button>
+  <button class="mode-btn active" data-mode="score">決勝</button>
+  <button class="mode-btn" data-mode="prelims">予選</button>
 </div>
-<div class="current-mode-box" id="current-mode-box">現在：決勝スコアを選択中</div>
+<div class="current-mode-box" id="current-mode-box">決勝 — 技を選び、そのまま順番を整えます</div>
 
 <p class="warning" id="warn">⚠ 技は30個までしか選べません</p>
 
 <!-- 決勝スコアモード -->
 <div id="mode-score" class="mode-section active">
+  <div class="ux-tech-toolbar" data-ux-kind="score">
+    <button type="button" class="ux-search-toggle" aria-label="技名を検索" aria-controls="ux-score-search" aria-expanded="false">検索</button>
+    <label class="ux-search-box">
+      <span class="sr-only">決勝技を検索</span>
+      <input id="ux-score-search" type="search" placeholder="技名を検索（ひらがな・カタカナ対応）" autocomplete="off">
+    </label>
+    <div class="ux-filter-row" role="group" aria-label="決勝技の表示切替">
+      <button type="button" class="ux-filter-btn selected" data-filter="all">すべて</button>
+      <button type="button" class="ux-filter-btn" data-filter="selected">選択済み</button>
+      <button type="button" class="ux-filter-btn" data-filter="candidate">候補</button>
+      <span class="ux-search-count" aria-live="polite"></span>
+    </div>
+  </div>
+
+  <details class="ux-unified-finals" id="ux-unified-finals">
+    <summary>
+      <span>決勝編成</span>
+      <span class="ux-unified-finals-summary" id="ux-unified-finals-summary">0/30技・候補0技</span>
+    </summary>
+    <div class="ux-unified-finals-guide">
+      技名をタップして追加・解除。ここでは順番、1.5倍、候補を整えます。
+    </div>
+    <div class="ux-unified-finals-actions">
+      <button type="button" id="ux-inline-open-sheet">順番を編集</button>
+      <button type="button" id="ux-go-tech-list">技一覧を見る</button>
+    </div>
+    <div id="ux-unified-finals-body"></div>
+  </details>
+
   <details class="section" open>
-    <summary>点数別リスト（決勝スコア）</summary>
+    <summary id="ux-final-tech-list-anchor">技を選ぶ</summary>
     <div class="section-content" id="tech-list"></div>
   </details>
 
@@ -3222,7 +3885,7 @@ h1{
 <!-- 決勝編成 -->
 <div id="mode-finals" class="mode-section">
   <div class="auto-finals-note">
-    決勝画面で「使用」を押すと、この決勝編成へ自動で反映されます。<br>
+    決勝画面で技名をタップすると、この決勝編成へ自動で反映されます。<br>
     技名や☰を押したまま動かすと、技の順番を並べ替えできます。<br>
     1.5倍はこの画面でも変更でき、点数にも自動反映されます。
   </div>
@@ -3319,15 +3982,43 @@ h1{
 
 <!-- 予選編成 -->
 <div id="mode-prelims" class="mode-section">
-  <p style="font-size:13px;">予選は<strong>12技まで</strong>。第1R6技・第2R6技に分割し、スマホでは☰または技名を指で押して並べ替えできます。ラウンド間の移動もできます。</p>
   <div class="warning" id="prelimit-warn">⚠ 予選で選べる技は12個までです。</div>
 
+  <div class="ux-tech-toolbar" data-ux-kind="prelims">
+    <button type="button" class="ux-search-toggle" aria-label="技名を検索" aria-controls="ux-prelims-search" aria-expanded="false">検索</button>
+    <label class="ux-search-box">
+      <span class="sr-only">予選技を検索</span>
+      <input id="ux-prelims-search" type="search" placeholder="技名を検索（ひらがな・カタカナ対応）" autocomplete="off">
+    </label>
+    <div class="ux-filter-row" role="group" aria-label="予選技の表示切替">
+      <button type="button" class="ux-filter-btn selected" data-filter="all">すべて</button>
+      <button type="button" class="ux-filter-btn" data-filter="selected">選択済み</button>
+      <button type="button" class="ux-filter-btn" data-filter="candidate">候補</button>
+      <span class="ux-search-count" aria-live="polite"></span>
+    </div>
+  </div>
+
+  <details class="ux-unified-finals ux-unified-prelims" id="ux-unified-prelims">
+    <summary>
+      <span>予選編成</span>
+      <span class="ux-unified-finals-summary" id="ux-unified-prelims-summary">0/12技・候補0技</span>
+    </summary>
+    <div class="ux-unified-finals-guide">
+      技名をタップして追加・解除。ここではラウンド移動、順番、候補を整えます。
+    </div>
+    <div class="ux-unified-finals-actions">
+      <button type="button" id="ux-inline-open-prelims-sheet">順番を編集</button>
+      <button type="button" id="ux-go-prelims-tech-list">技一覧を見る</button>
+    </div>
+    <div id="ux-unified-prelims-body"></div>
+  </details>
+
   <details class="section" open>
-    <summary>点数別リスト（使用ボタンを押すと自動で予選へ反映）</summary>
+    <summary id="ux-prelim-tech-list-anchor">技を選ぶ</summary>
     <div class="section-content" id="pre-tech-list"></div>
   </details>
 
-  <div class="auto-prelim-note">予選の使用ボタンを押すと、第1ラウンド・第2ラウンドへ自動で振り分けられます。</div>
+  <div class="auto-prelim-note">予選の技名をタップすると、第1ラウンド・第2ラウンドへ自動で振り分けられます。</div>
 
 
   <div class="predict-box pre-predict-box" id="pre-predict-box">
@@ -3422,13 +4113,55 @@ h1{
   </div>
 </div>
 
+<!-- v1.90 片手操作・点数ジャンプ -->
+<div class="ux-point-jump" id="ux-point-jump" aria-label="点数間移動">
+  <button type="button" id="ux-point-prev" aria-label="前の点数へ">▲</button>
+  <button type="button" id="ux-point-current" aria-expanded="false" aria-controls="ux-point-menu">1点</button>
+  <button type="button" id="ux-point-next" aria-label="次の点数へ">▼</button>
+  <button type="button" id="ux-hand-toggle" aria-label="操作ボタンを反対側へ移動">↔</button>
+</div>
+<div class="ux-point-menu" id="ux-point-menu" hidden aria-label="移動する点数を選択"></div>
+
+<!-- 選択中トレイ -->
+<div class="ux-selection-tray" id="ux-selection-tray">
+  <div class="ux-selection-summary" id="ux-selection-summary">決勝 0/30技・0点</div>
+  <button type="button" id="ux-selection-open">技順編集</button>
+</div>
+
+<!-- 編成ボトムシート -->
+<div class="ux-selection-sheet" id="ux-selection-sheet" aria-hidden="true">
+  <div class="ux-selection-overlay" data-ux-sheet-close="1"></div>
+  <section class="ux-selection-dialog" role="dialog" aria-modal="true" aria-labelledby="ux-selection-title">
+    <header class="ux-selection-header">
+      <div>
+        <strong id="ux-selection-title">選択中の技</strong>
+        <span id="ux-selection-sheet-count"></span>
+      </div>
+      <button type="button" id="ux-selection-close" aria-label="編成を閉じる">閉じる</button>
+    </header>
+    <div class="ux-selection-help">右端の「≡」をドラッグして並べ替えできます。技を選んで下の固定ボタンから候補へ移し、「候補から採用」から同じ画面内で戻せます。</div>
+    <div class="ux-sheet-limit-alert" id="ux-sheet-limit-alert" role="alert" hidden></div>
+    <div class="ux-selection-list" id="ux-selection-list"></div>
+    <div class="ux-selection-actions" id="ux-selection-actions">
+      <button type="button" id="ux-candidate-list-toggle" data-ux-action="candidate-list" aria-expanded="false">候補から採用</button>
+      <button type="button" data-ux-action="up5">5つ上</button>
+      <button type="button" data-ux-action="up">↑</button>
+      <button type="button" data-ux-action="down">↓</button>
+      <button type="button" data-ux-action="down5">5つ下</button>
+      <button type="button" data-ux-action="multi">1.5倍</button>
+      <button type="button" data-ux-action="round">R移動</button>
+      <button type="button" data-ux-action="candidate">候補へ</button>
+      <button type="button" class="danger" data-ux-action="delete">削除</button>
+    </div>
+  </section>
+</div>
+
 <!-- ミニメニュー -->
 <div class="mini-nav">
   <button class="mini-btn active" data-mode="score"><span>決勝</span></button>
-  <button class="mini-btn" data-mode="finals"><span>決勝編成</span></button>
   <button class="mini-btn" data-mode="prelims"><span>予選</span></button>
-  <button class="mini-btn" data-link="judge"><span>成功基準</span></button>
-  <button class="mini-btn" data-link="official"><span>公式HP</span></button>
+  <button class="mini-btn" data-link="judge"><span>判定基準</span></button>
+  <button class="mini-btn" data-link="official"><span>公式サイト</span></button>
 </div>
 
 <!-- トースト -->
@@ -4861,11 +5594,11 @@ function updateSaveStatus(text){
     return;
   }
   if(presetDirty){
-    el.textContent = "変更あり：プリセット未保存";
+    el.textContent = "変更あり・未保存";
     el.classList.add("is-dirty");
     el.classList.remove("is-clean");
   }else{
-    el.textContent = "端末に自動保存済み";
+    el.textContent = "自動保存済み";
     el.classList.remove("is-dirty");
     el.classList.add("is-clean");
   }
@@ -4942,7 +5675,7 @@ function makeScoreItem(pt, name){
       <span class="tech-title">${escapeAttr(name)}</span>
       <span class="tech-pt-label">${pt}点技</span>
     </div>
-    <button type="button" class="judge-btn" data-name="${escapeAttr(name)}" data-pt="${pt}">動画・判定</button>
+    <button type="button" class="judge-btn" data-name="${escapeAttr(name)}" data-pt="${pt}" aria-label="${escapeAttr(name)}の動画・判定"><span>動画</span><span>判定</span></button>
     <label class="toggle-btn multi-toggle"><input type="checkbox" class="multi"><span>1.5倍</span></label>
     <label class="toggle-btn use-toggle"><input type="checkbox" class="chk" data-pt="${pt}" data-name="${escapeAttr(name)}"><span>使用</span></label>
     <button type="button" class="candidate-add-btn" data-kind="finals" data-pt="${pt}" data-name="${escapeAttr(name)}">候補</button>`;
@@ -4956,7 +5689,7 @@ function makePreItemCheck(pt, name){
       <span class="tech-title">${escapeAttr(name)}</span>
       <span class="tech-pt-label">${pt}点技</span>
     </div>
-    <button type="button" class="judge-btn" data-name="${escapeAttr(name)}" data-pt="${pt}">動画・判定</button>
+    <button type="button" class="judge-btn" data-name="${escapeAttr(name)}" data-pt="${pt}" aria-label="${escapeAttr(name)}の動画・判定"><span>動画</span><span>判定</span></button>
     <label class="toggle-btn pre-toggle"><input type="checkbox" class="pre-chk" data-pt="${pt}" data-name="${escapeAttr(name)}"><span>使用</span></label>
     <button type="button" class="candidate-add-btn" data-kind="prelims" data-pt="${pt}" data-name="${escapeAttr(name)}">候補</button>`;
   return item;
@@ -4992,7 +5725,9 @@ function buildLists(){
     /* 決勝側 */
     const sec1 = document.createElement('details');
     sec1.className = 'pt-group';
-    sec1.open = true;
+    sec1.dataset.pt = String(pt);
+    sec1.id = `score-point-${pt}`;
+    sec1.open = String(pt) === "1";
     sec1.appendChild(makePtSummary(pt));
     tricks[pt].forEach(n=> sec1.appendChild(makeScoreItem(pt, n)));
     scoreListWrap.appendChild(sec1);
@@ -5000,7 +5735,9 @@ function buildLists(){
     /* 予選側 */
     const sec2 = document.createElement('details');
     sec2.className = 'pt-group';
-    sec2.open = true;
+    sec2.dataset.pt = String(pt);
+    sec2.id = `prelims-point-${pt}`;
+    sec2.open = String(pt) === "1";
     sec2.appendChild(makePtSummary(pt));
     tricks[pt].forEach(n=> sec2.appendChild(makePreItemCheck(pt, n)));
     preTechWrap.appendChild(sec2);
@@ -5460,6 +6197,14 @@ function syncToggleButtonStates(){
     }
   });
 
+  document.querySelectorAll(".tech-item").forEach(row=>{
+    const input = row.querySelector(".chk,.pre-chk");
+    const selected = !!input?.checked;
+    row.classList.toggle("is-tech-selected", selected);
+    const cell = row.querySelector(".tech-name-cell");
+    if(cell) cell.setAttribute("aria-pressed", String(selected));
+  });
+
   // 初期化の早い段階でも落ちないよう、const変数ではなくDOMから取得する。
   // v1.54でここが初期化前のfinalsCandidateList/preCandidateListを参照し、
   // 全ボタンが反応しなくなる原因になっていた。
@@ -5582,6 +6327,14 @@ function getItemText(li){
 }
 function listContainsText(list, txt){
   return [...list.querySelectorAll('.order-name')].some(n=>n.textContent===txt);
+}
+function pruneCandidateDuplicates(mainList, candidateList){
+  if(!mainList || !candidateList) return;
+  const mainTexts = new Set([...mainList.querySelectorAll('.order-name')].map(n=>n.textContent));
+  [...candidateList.querySelectorAll('.order-item')].forEach(li=>{
+    const text = getItemText(li);
+    if(mainTexts.has(text)) li.remove();
+  });
 }
 function removeOrderTextFromList(list, txt){
   let removed = false;
@@ -7131,19 +7884,21 @@ function updateCurrentModeBox(mode){
   const el = document.getElementById("current-mode-box");
   if(!el) return;
   const labels = {
-    score:"現在：決勝スコアを選択中",
-    finals:"現在：決勝編成を調整中",
-    prelims:"現在：予選構成を作成中"
+    score:"決勝 — 技を選び、そのまま順番を整えます",
+    finals:"決勝 — 技を選び、そのまま順番を整えます",
+    prelims:"予選 — 12技を選び、第1R・第2Rを整えます"
   };
   el.textContent = labels[mode] || "";
 }
 
 function setMode(mode){
+  // v1.91以降は決勝の技選択と編成を1画面へ統合。
+  if(mode === "finals") mode = "score";
   Object.keys(sections).forEach(k=> sections[k].classList.toggle("active",k===mode));
   modeButtons.forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
   miniButtons.forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
   updateCurrentModeBox(mode);
-  window.scrollTo({top:0, behavior:"smooth"});
+  document.body.dataset.uxMode = mode;
 }
 modeButtons.forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
 miniButtons.forEach(btn=>{
@@ -7476,189 +8231,6 @@ async function copyShareUrl(){
 
 document.getElementById("btn-share-url").addEventListener("click", copyShareUrl);
 
-/* =========================================================
-   v1.85 3分タイマー
-========================================================= */
-const TIMER_LIMIT_MS = 180000;
-const TIMER_STORAGE_KEY = "ooruri2026_timer_records_v1";
-let timerRunning = false;
-let timerStartAt = 0;
-let timerElapsedMs = 0;
-let timerRafId = null;
-let timerAlarmed = false;
-let timerAudioContext = null;
-
-const timerBox = document.getElementById("timer-box");
-const timerDisplay = document.getElementById("timer-display");
-const timerProgressBar = document.getElementById("timer-progress-bar");
-const timerStatus = document.getElementById("timer-status");
-const timerLast = document.getElementById("timer-last");
-const timerBest = document.getElementById("timer-best");
-
-function loadTimerStore(){
-  try{
-    const raw = localStorage.getItem(TIMER_STORAGE_KEY);
-    if(!raw) return {best:null,last:null,history:[]};
-    const data = JSON.parse(raw);
-    return {
-      best: Number.isFinite(Number(data.best)) ? Number(data.best) : null,
-      last: Number.isFinite(Number(data.last)) ? Number(data.last) : null,
-      history: Array.isArray(data.history) ? data.history : []
-    };
-  }catch{
-    return {best:null,last:null,history:[]};
-  }
-}
-function saveTimerStore(store){
-  try{
-    localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(store));
-  }catch{}
-}
-function formatTimerMs(ms){
-  const safe = Math.max(0, Number(ms || 0));
-  const totalTenths = Math.floor(safe / 100);
-  const tenths = totalTenths % 10;
-  const totalSeconds = Math.floor(totalTenths / 10);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}.${tenths}`;
-}
-function getTimerSummary(){
-  const store = loadTimerStore();
-  return {
-    lastText: store.last == null ? "—" : formatTimerMs(store.last),
-    bestText: store.best == null ? "—" : formatTimerMs(store.best),
-    last: store.last,
-    best: store.best
-  };
-}
-function renderTimerRecords(){
-  const summary = getTimerSummary();
-  if(timerLast) timerLast.textContent = summary.lastText;
-  if(timerBest) timerBest.textContent = summary.bestText;
-}
-function renderTimer(){
-  if(!timerDisplay) return;
-  timerDisplay.textContent = formatTimerMs(timerElapsedMs);
-  const pct = Math.min(100, Math.max(0, timerElapsedMs / TIMER_LIMIT_MS * 100));
-  if(timerProgressBar) timerProgressBar.style.width = `${pct}%`;
-  if(timerBox){
-    timerBox.classList.toggle("is-running", timerRunning);
-    timerBox.classList.toggle("is-alarm", timerElapsedMs >= TIMER_LIMIT_MS);
-  }
-}
-function playTimerAlarm(){
-  try{
-    if(navigator.vibrate) navigator.vibrate([220,80,220,80,360]);
-  }catch{}
-  try{
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if(!Ctx) return;
-    timerAudioContext = timerAudioContext || new Ctx();
-    const ctx = timerAudioContext;
-    if(ctx.state === "suspended") ctx.resume();
-
-    [0, 0.24, 0.48].forEach((delay)=>{
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.001, ctx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + delay + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.18);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + delay);
-      osc.stop(ctx.currentTime + delay + 0.2);
-    });
-  }catch{}
-}
-function timerTick(){
-  if(!timerRunning) return;
-  timerElapsedMs = performance.now() - timerStartAt;
-  if(timerElapsedMs >= TIMER_LIMIT_MS && !timerAlarmed){
-    timerAlarmed = true;
-    if(timerStatus) timerStatus.textContent = "3分経過：アラーム";
-    playTimerAlarm();
-    showToast("3分経過しました", 1400);
-  }
-  renderTimer();
-  timerRafId = requestAnimationFrame(timerTick);
-}
-function startTimer(){
-  timerRunning = true;
-  timerAlarmed = timerElapsedMs >= TIMER_LIMIT_MS;
-  timerStartAt = performance.now() - timerElapsedMs;
-  if(timerStatus) timerStatus.textContent = "計測中：表示をタップでストップ";
-  cancelAnimationFrame(timerRafId);
-  timerTick();
-}
-function recordTimer(ms){
-  const elapsed = Math.max(0, Number(ms || 0));
-  if(elapsed <= 0) return;
-  const store = loadTimerStore();
-  const isBest = store.best == null || elapsed < store.best;
-  store.last = elapsed;
-  if(isBest) store.best = elapsed;
-  store.history = [{time:elapsed, at:new Date().toISOString()}, ...store.history].slice(0,20);
-  saveTimerStore(store);
-  renderTimerRecords();
-  if(timerStatus) timerStatus.textContent = isBest ? `ベスト更新：${formatTimerMs(elapsed)}` : `記録：${formatTimerMs(elapsed)}`;
-  showToast(isBest ? `ベスト更新：${formatTimerMs(elapsed)}` : `記録：${formatTimerMs(elapsed)}`);
-}
-function stopTimerAndRecord(){
-  if(!timerRunning){
-    if(timerElapsedMs > 0){
-      recordTimer(timerElapsedMs);
-    }else{
-      showToast("まだ計測していません");
-    }
-    return;
-  }
-  timerElapsedMs = performance.now() - timerStartAt;
-  timerRunning = false;
-  cancelAnimationFrame(timerRafId);
-  renderTimer();
-  recordTimer(timerElapsedMs);
-}
-function resetCurrentTimer(){
-  timerRunning = false;
-  cancelAnimationFrame(timerRafId);
-  timerElapsedMs = 0;
-  timerAlarmed = false;
-  if(timerStatus) timerStatus.textContent = "現在の計測をリセット";
-  renderTimer();
-}
-function clearBestTimer(){
-  if(!confirm("保存されているベストタイムと記録履歴を削除しますか？")) return;
-  saveTimerStore({best:null,last:null,history:[]});
-  renderTimerRecords();
-  resetCurrentTimer();
-  if(timerStatus) timerStatus.textContent = "ベストタイムを削除しました";
-  showToast("ベストタイムを削除しました");
-}
-document.getElementById("timer-start")?.addEventListener("click",()=>{
-  if(timerRunning){
-    showToast("すでに計測中です");
-    return;
-  }
-  if(timerElapsedMs > 0){
-    timerElapsedMs = 0;
-    timerAlarmed = false;
-  }
-  startTimer();
-});
-document.getElementById("timer-stop")?.addEventListener("click",stopTimerAndRecord);
-document.getElementById("timer-reset-current")?.addEventListener("click",resetCurrentTimer);
-document.getElementById("timer-clear-best")?.addEventListener("click",clearBestTimer);
-timerDisplay?.addEventListener("click",()=>{
-  if(timerRunning) stopTimerAndRecord();
-  else if(timerElapsedMs === 0) startTimer();
-  else recordTimer(timerElapsedMs);
-});
-renderTimerRecords();
-renderTimer();
-
 function getPlayerInfo(){
   const entryNo = document.getElementById("entry-no")?.value?.trim() || "";
   const playerName = document.getElementById("player-name")?.value?.trim() || "";
@@ -7667,13 +8239,10 @@ function getPlayerInfo(){
 
 function playerInfoOutputHtml(){
   const info = getPlayerInfo();
-  const timer = getTimerSummary();
   return `
     <div class="export-player-row">
       <div class="export-player-chip">エントリーNo.：${escapeHtml(info.entryNo || "—")}</div>
       <div class="export-player-chip">選手名：${escapeHtml(info.playerName || "—")}</div>
-      <div class="export-player-chip">前回タイム：${escapeHtml(timer.lastText)}</div>
-      <div class="export-player-chip">ベストタイム：${escapeHtml(timer.bestText)}</div>
     </div>
   `;
 }
@@ -7724,13 +8293,10 @@ function getExportData(){
   const baseScore = calcOrderBaseScore(finalEntries);
   const prelimScore = calcOrderBaseScore([...p1, ...p2]);
   const playerInfo = getPlayerInfo();
-  const timerInfo = getTimerSummary();
   return {
     finals, finalsCand, p1, p2, preCand, now, shareUrl, finalScore, baseScore, prelimScore,
     entryNo: playerInfo.entryNo,
     playerName: playerInfo.playerName,
-    timerLastText: timerInfo.lastText,
-    timerBestText: timerInfo.bestText,
     overallTotal: finalSpan.textContent,
     preInput: preSpan.textContent,
     presetLabel: getCurrentPresetLabel("overall")
@@ -8204,8 +8770,7 @@ document.getElementById("btn-print").addEventListener("click",()=>{
   const preCands=serializePreOrderList(preCandidateList).map(formatPrePrint);
   const now = new Date().toLocaleString();
   const playerInfo = getPlayerInfo();
-  const timerInfo = getTimerSummary();
-  const playerLine = `エントリーNo.：${playerInfo.entryNo || "—"} ／ 選手名：${playerInfo.playerName || "—"} ／ 前回タイム：${timerInfo.lastText} ／ ベストタイム：${timerInfo.bestText}`;
+  const playerLine = `エントリーNo.：${playerInfo.entryNo || "—"} ／ 選手名：${playerInfo.playerName || "—"}`;
   const block = (title, arr)=>`
     <div class="block">
       <h2>${escapePrint(title)}</h2>
@@ -8329,6 +8894,8 @@ function exportCSV(){
 function jumpToPresetAnchor(id){
   const el = document.getElementById(id);
   if(!el) return;
+  const parentDetails = el.closest("details");
+  if(parentDetails) parentDetails.open = true;
   el.scrollIntoView({behavior:"smooth", block:"center"});
   el.classList.add("pop");
   setTimeout(()=>el.classList.remove("pop"), 450);
@@ -8347,7 +8914,7 @@ function switchModeAndJump(mode, anchorId){
 }
 
 document.getElementById("btn-export").addEventListener("click",()=>{
-  switchModeAndJump("finals", "finals-preset-anchor");
+  switchModeAndJump("score", "finals-preset-anchor");
 });
 document.getElementById("btn-prelims-preset-jump").addEventListener("click",()=>{
   switchModeAndJump("prelims", "prelims-preset-anchor");
@@ -8780,9 +9347,7 @@ const tourHide=()=>tour.style.display='none';
 const tourNever=()=>{ localStorage.setItem('tsubame2025_tour','1'); tourHide(); };
 document.getElementById('tour-hide').addEventListener('click',tourHide);
 document.getElementById('tour-never').addEventListener('click',tourNever);
-if(!localStorage.getItem('tsubame2025_tour')){
-  setTimeout(()=>{ tour.style.display='flex'; }, 300);
-}
+// v1.92: 初回の自動ポップアップは廃止。画面自体の案内だけで操作できる構成にする。
 
 /* =========================================================
    21) PWA 簡易対応
@@ -8804,7 +9369,7 @@ if(!localStorage.getItem('tsubame2025_tour')){
 
 if('serviceWorker' in navigator){
   const swCode = `
-  const CACHE='ooruricup2026-v1-1';
+  const CACHE='ooruricup2026-v1-101';
   self.addEventListener('install',e=>{
     e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])));
     self.skipWaiting();
@@ -8823,7 +9388,10 @@ if('serviceWorker' in navigator){
   });`;
   const blob = new Blob([swCode], {type:'text/javascript'});
   const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl);
+  navigator.serviceWorker.register(swUrl).catch(()=>{
+    // blob URLのService Workerを許可しないブラウザではPWA登録のみスキップする。
+    URL.revokeObjectURL(swUrl);
+  });
 }
 
 /* =========================================================
@@ -8849,6 +9417,7 @@ window.addEventListener("DOMContentLoaded", async()=>{
   updateCurrentModeBox("score");
   presetDirty = false;
   updateSaveStatus();
+  initOoruriUx();
 });
 
 
@@ -8967,6 +9536,1092 @@ window.addEventListener("DOMContentLoaded", async()=>{
     document.addEventListener(ev, stop, {passive:true});
   });
 })();
+
+
+/* =========================================================
+   v1.90 スマホ片手操作・点数ジャンプ・検索・編成トレイ
+========================================================= */
+let uxInitialized = false;
+let uxPoints = [];
+let uxPointState = {score:1, prelims:1};
+let uxFilterState = {
+  score:{query:"", filter:"all"},
+  prelims:{query:"", filter:"all"}
+};
+let uxUndoState = null;
+let uxUndoLabel = "";
+let uxUndoBusy = false;
+let uxSheetItems = [];
+let uxSheetActiveSource = null;
+let uxCandidateItems = [];
+let uxCandidatePanelOpen = false;
+let uxSheetSortables = [];
+let uxSheetDraggingUntil = 0;
+let uxScrollTicking = false;
+
+function uxGetMode(){
+  if(document.getElementById("mode-score")?.classList.contains("active")) return "score";
+  if(document.getElementById("mode-prelims")?.classList.contains("active")) return "prelims";
+  if(document.getElementById("mode-finals")?.classList.contains("active")) return "finals";
+  return "score";
+}
+
+function uxGetModeSection(kind){
+  return kind === "score" ? document.getElementById("mode-score")
+    : kind === "prelims" ? document.getElementById("mode-prelims")
+    : document.getElementById("mode-finals");
+}
+
+function uxGetListWrap(kind){
+  return kind === "score" ? document.getElementById("tech-list") : document.getElementById("pre-tech-list");
+}
+
+function uxUpdateFixedHeights(){
+  const bar = document.getElementById("total-bar");
+  const nav = document.querySelector(".mini-nav");
+  const tray = document.getElementById("ux-selection-tray");
+  const root = document.documentElement;
+  if(bar) root.style.setProperty("--ux-total-bar-height", `${Math.ceil(bar.getBoundingClientRect().height)}px`);
+  if(nav) root.style.setProperty("--ux-mini-nav-height", `${Math.ceil(nav.getBoundingClientRect().height)}px`);
+  if(tray && !tray.hidden) root.style.setProperty("--ux-tray-height", `${Math.ceil(tray.getBoundingClientRect().height)}px`);
+  else root.style.setProperty("--ux-tray-height", "0px");
+}
+
+function uxUpdateHeaderButtons(){
+  const toggle = document.getElementById("ux-actions-toggle");
+  if(!toggle) return;
+  const collapsed = document.body.classList.contains("ux-actions-collapsed");
+  toggle.textContent = "画面保存・リセットなど設定";
+  toggle.setAttribute("aria-expanded", String(!collapsed));
+  toggle.setAttribute("aria-label", collapsed ? "画面保存・リセットなどの設定を開く" : "画面保存・リセットなどの設定を閉じる");
+  toggle.classList.toggle("is-open", !collapsed);
+  requestAnimationFrame(uxUpdateFixedHeights);
+}
+
+function uxSetUndoAvailable(){
+  const btn = document.getElementById("ux-undo-button");
+  if(!btn) return;
+  btn.disabled = !uxUndoState;
+  btn.textContent = uxUndoState ? `↶ ${uxUndoLabel || "戻す"}` : "↶ 戻す";
+}
+
+function uxCaptureUndo(label){
+  if(uxUndoBusy || typeof collectShortShareState !== "function") return;
+  try{
+    uxUndoState = collectShortShareState();
+    uxUndoLabel = label || "戻す";
+    uxSetUndoAvailable();
+  }catch(err){
+    console.warn("undo snapshot failed", err);
+  }
+}
+
+function uxApplyUndo(){
+  if(!uxUndoState || typeof applyShortShareState !== "function") return;
+  const state = uxUndoState;
+  uxUndoBusy = true;
+  try{
+    applyShortShareState(state);
+    uxUndoState = null;
+    uxUndoLabel = "";
+    uxSetUndoAvailable();
+    uxUpdateTray();
+    uxApplyFilter("score", true);
+    uxApplyFilter("prelims", true);
+    uxRenderSelectionSheet();
+    showToast("直前の操作を取り消しました");
+  }finally{
+    uxUndoBusy = false;
+  }
+}
+
+function uxNormalizeText(value){
+  const base = typeof kanaNormalize === "function" ? kanaNormalize(String(value || "")) : String(value || "").toLowerCase();
+  return base.normalize("NFKC").replace(/[\s　・･ー―‐-]/g, "");
+}
+
+function uxRowInfo(row, kind){
+  const input = row.querySelector(kind === "score" ? ".chk" : ".pre-chk");
+  return {
+    input,
+    pt:String(input?.dataset.pt || ""),
+    name:String(input?.dataset.name || row.querySelector(".tech-title")?.textContent || "")
+  };
+}
+
+function uxRowMatchesFilter(row, kind, filter){
+  const info = uxRowInfo(row, kind);
+  if(filter === "selected") return !!info.input?.checked;
+  if(filter === "candidate"){
+    const list = kind === "score" ? finalsCandidateList : preCandidateList;
+    return listContainsText(list, orderText(info.pt, info.name));
+  }
+  return true;
+}
+
+function uxApplyFilter(kind, keepOpen=false){
+  const wrap = uxGetListWrap(kind);
+  const toolbar = document.querySelector(`.ux-tech-toolbar[data-ux-kind="${kind}"]`);
+  if(!wrap || !toolbar) return;
+
+  const state = uxFilterState[kind];
+  const query = uxNormalizeText(state.query);
+  let visibleCount = 0;
+
+  wrap.querySelectorAll(".pt-group").forEach(group=>{
+    let groupHits = 0;
+    group.querySelectorAll(".tech-item").forEach(row=>{
+      const name = uxNormalizeText(row.querySelector(".tech-title")?.textContent || "");
+      const queryMatch = !query || name.includes(query);
+      const filterMatch = uxRowMatchesFilter(row, kind, state.filter);
+      const visible = queryMatch && filterMatch;
+      row.hidden = !visible;
+      if(visible){ groupHits++; visibleCount++; }
+    });
+    group.hidden = groupHits === 0;
+    if(query || state.filter !== "all") group.open = groupHits > 0;
+  });
+
+  if(!query && state.filter === "all" && !keepOpen){
+    const current = String(uxPointState[kind] || uxPoints[0] || 1);
+    wrap.querySelectorAll(".pt-group").forEach(group=>{
+      group.hidden = false;
+      group.open = group.dataset.pt === current;
+    });
+  }
+
+  const count = toolbar.querySelector(".ux-search-count");
+  if(count) count.textContent = `${visibleCount}技表示`;
+}
+
+function uxClearFilterForJump(kind){
+  const state = uxFilterState[kind];
+  if(!state || (!state.query && state.filter === "all")) return;
+  state.query = "";
+  state.filter = "all";
+  const toolbar = document.querySelector(`.ux-tech-toolbar[data-ux-kind="${kind}"]`);
+  const input = toolbar?.querySelector('input[type="search"]');
+  if(input) input.value = "";
+  toolbar?.classList.remove("has-query", "ux-search-open");
+  const searchToggle = toolbar?.querySelector(".ux-search-toggle");
+  if(searchToggle){
+    searchToggle.textContent = "検索";
+    searchToggle.setAttribute("aria-expanded", "false");
+    searchToggle.setAttribute("aria-label", "技名を検索");
+  }
+  toolbar?.querySelectorAll(".ux-filter-btn").forEach(btn=>btn.classList.toggle("selected", btn.dataset.filter === "all"));
+  uxApplyFilter(kind, true);
+}
+
+function uxUpdatePointControls(){
+  const mode = uxGetMode();
+  const dock = document.getElementById("ux-point-jump");
+  const menu = document.getElementById("ux-point-menu");
+  const tray = document.getElementById("ux-selection-tray");
+  const supportsPoints = mode === "score" || mode === "prelims";
+  if(dock) dock.hidden = !supportsPoints;
+  if(tray) tray.hidden = !supportsPoints;
+  if(!supportsPoints){
+    if(menu) menu.hidden = true;
+    document.getElementById("ux-point-current")?.setAttribute("aria-expanded", "false");
+    uxUpdateFixedHeights();
+    return;
+  }
+
+  const current = Number(uxPointState[mode] || uxPoints[0] || 1);
+  const index = uxPoints.indexOf(current);
+  const label = document.getElementById("ux-point-current");
+  if(label) label.textContent = `${current}点`;
+  const prev = document.getElementById("ux-point-prev");
+  const next = document.getElementById("ux-point-next");
+  if(prev) prev.disabled = index <= 0;
+  if(next) next.disabled = index < 0 || index >= uxPoints.length - 1;
+  menu?.querySelectorAll("button[data-point]").forEach(btn=>{
+    const selected = Number(btn.dataset.point) === current;
+    btn.classList.toggle("is-current", selected);
+    btn.setAttribute("aria-current", selected ? "true" : "false");
+  });
+  uxUpdateFixedHeights();
+}
+
+function uxClosePointMenu(){
+  const menu = document.getElementById("ux-point-menu");
+  const current = document.getElementById("ux-point-current");
+  if(menu) menu.hidden = true;
+  if(current) current.setAttribute("aria-expanded", "false");
+}
+
+function uxJumpToPoint(point, announce=false){
+  const kind = uxGetMode();
+  if(kind !== "score" && kind !== "prelims") return;
+  const normalized = Number(point);
+  const wrap = uxGetListWrap(kind);
+  const target = [...wrap.querySelectorAll(".pt-group")].find(group=>Number(group.dataset.pt) === normalized);
+  if(!target) return;
+
+  uxClearFilterForJump(kind);
+  wrap.querySelectorAll(".pt-group").forEach(group=>{
+    group.hidden = false;
+    group.open = group === target;
+  });
+  target.open = true;
+  uxPointState[kind] = normalized;
+  localStorage.setItem("ooruri2026_ux_points", JSON.stringify(uxPointState));
+  uxUpdatePointControls();
+  uxClosePointMenu();
+
+  requestAnimationFrame(()=>{
+    const topBarHeight = document.getElementById("total-bar")?.getBoundingClientRect().height || 0;
+    const toolbarHeight = document.querySelector(`.ux-tech-toolbar[data-ux-kind="${kind}"]`)?.getBoundingClientRect().height || 0;
+    const top = window.scrollY + target.getBoundingClientRect().top - topBarHeight - toolbarHeight - 14;
+    window.scrollTo({
+      top:Math.max(0, top),
+      behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+    });
+  });
+  if(announce) showToast(`${normalized}点技へ移動しました`, 900);
+}
+
+function uxMovePoint(step){
+  const kind = uxGetMode();
+  if(kind !== "score" && kind !== "prelims") return;
+  const current = Number(uxPointState[kind] || uxPoints[0]);
+  const index = uxPoints.indexOf(current);
+  const nextIndex = Math.max(0, Math.min(uxPoints.length - 1, index + step));
+  uxJumpToPoint(uxPoints[nextIndex], true);
+}
+
+function uxDetectPointFromScroll(){
+  const kind = uxGetMode();
+  if(kind !== "score" && kind !== "prelims") return;
+  const headerBottom = (document.getElementById("total-bar")?.getBoundingClientRect().bottom || 0)
+    + (document.querySelector(`.ux-tech-toolbar[data-ux-kind="${kind}"]`)?.getBoundingClientRect().height || 0) + 18;
+  const groups = [...uxGetListWrap(kind).querySelectorAll(".pt-group:not([hidden])")];
+  if(!groups.length) return;
+  let best = groups[0];
+  let bestDistance = Infinity;
+  groups.forEach(group=>{
+    const distance = Math.abs(group.getBoundingClientRect().top - headerBottom);
+    if(distance < bestDistance){ best = group; bestDistance = distance; }
+  });
+  const point = Number(best.dataset.pt);
+  if(point && point !== uxPointState[kind]){
+    uxPointState[kind] = point;
+    uxUpdatePointControls();
+  }
+}
+
+function uxUpdateTray(){
+  const mode = uxGetMode();
+  const summary = document.getElementById("ux-selection-summary");
+  if(!summary) return;
+  if(mode === "score"){
+    const count = finalsList?.querySelectorAll(".order-item").length || 0;
+    summary.textContent = `決勝 ${count}/30技・総合${finalSpan?.textContent || 0}点`;
+  }else if(mode === "prelims"){
+    const count = (list1?.querySelectorAll(".order-item").length || 0) + (list2?.querySelectorAll(".order-item").length || 0);
+    summary.textContent = `予選 ${count}/12技・${preSum?.textContent || 0}点`;
+  }
+  summary.classList.toggle("is-limit-over", uxGetSheetLimitState(mode).over);
+  uxUpdateUnifiedFinalsSummary();
+  uxUpdateUnifiedPrelimsSummary();
+}
+
+function uxSheetText(source){
+  return source?.querySelector(".order-name")?.textContent?.trim() || source?.innerText?.trim().split("\n")[0] || "技";
+}
+
+function uxCollectSheetItems(){
+  const mode = uxGetMode();
+  const result = [];
+  if(mode === "score"){
+    [...finalsList.querySelectorAll(":scope > .order-item")].forEach((source,index)=>result.push({source, group:"決勝編成", index:index+1}));
+  }else if(mode === "prelims"){
+    [...list1.querySelectorAll(":scope > .order-item")].forEach((source,index)=>result.push({source, group:"第1ラウンド", index:index+1}));
+    [...list2.querySelectorAll(":scope > .order-item")].forEach((source,index)=>result.push({source, group:"第2ラウンド", index:index+1}));
+  }
+  return result;
+}
+
+function uxCollectCandidateItems(){
+  const list = uxGetMode() === "prelims" ? preCandidateList : finalsCandidateList;
+  return [...list.querySelectorAll(":scope > .order-item")].map((source,index)=>({source,index:index+1}));
+}
+
+function uxCandidateCount(mode=uxGetMode()){
+  const list = mode === "prelims" ? preCandidateList : finalsCandidateList;
+  return list?.querySelectorAll(":scope > .order-item").length || 0;
+}
+
+function uxGetSheetLimitState(mode=uxGetMode()){
+  if(mode === "prelims"){
+    const round1 = list1?.querySelectorAll(":scope > .order-item").length || 0;
+    const round2 = list2?.querySelectorAll(":scope > .order-item").length || 0;
+    const total = round1 + round2;
+    return {mode,total,round1,round2,over:total > 12 || round1 > 6 || round2 > 6};
+  }
+  const total = finalsList?.querySelectorAll(":scope > .order-item").length || 0;
+  return {mode:"score",total,over:total > 30};
+}
+
+function uxUpdateSheetLimitAlert(mode=uxGetMode()){
+  const alert = document.getElementById("ux-sheet-limit-alert");
+  const count = document.getElementById("ux-selection-sheet-count");
+  if(!alert) return;
+  const state = uxGetSheetLimitState(mode);
+  alert.hidden = !state.over;
+  count?.classList.toggle("limit-over", state.over);
+  if(!state.over){
+    alert.textContent = "";
+    return;
+  }
+  if(mode === "prelims"){
+    const details = [];
+    if(state.total > 12) details.push(`合計${state.total}/12技`);
+    if(state.round1 > 6) details.push(`第1R ${state.round1}/6技`);
+    if(state.round2 > 6) details.push(`第2R ${state.round2}/6技`);
+    alert.textContent = `⚠ ${details.join("・")}。規定数を超えているため、このままでは予選で使用できません。合計12技・各ラウンド6技以内に調整してください。`;
+  }else{
+    alert.textContent = `⚠ ${state.total}/30技。規定数を超えているため、このままでは本戦で使用できません。30技以内に調整してください。`;
+  }
+}
+
+function uxUpdateSheetActions(){
+  const mode = uxGetMode();
+  const connected = !!uxSheetActiveSource?.isConnected;
+  document.querySelectorAll("#ux-selection-actions button").forEach(btn=>{
+    const action = btn.dataset.uxAction;
+    if(action === "candidate-list"){
+      const candidateCount = uxCandidateCount(mode);
+      btn.disabled = candidateCount === 0 && !uxCandidatePanelOpen;
+      btn.textContent = uxCandidatePanelOpen ? `候補を閉じる（${candidateCount}）` : `候補から採用（${candidateCount}）`;
+      btn.classList.toggle("is-open", uxCandidatePanelOpen);
+      btn.setAttribute("aria-expanded", String(uxCandidatePanelOpen));
+      return;
+    }
+    let enabled = connected;
+    if(action === "multi" && mode !== "score") enabled = false;
+    if(action === "round" && mode !== "prelims") enabled = false;
+    btn.disabled = !enabled;
+  });
+}
+
+function uxRenderCandidatePanel(container, mode){
+  if(!uxCandidatePanelOpen || !container) return;
+  const panel = document.createElement("section");
+  panel.className = "ux-sheet-candidate-panel";
+  panel.id = "ux-sheet-candidate-panel";
+
+  const heading = document.createElement("div");
+  heading.className = "ux-sheet-candidate-heading";
+  const headingText = document.createElement("span");
+  headingText.textContent = "候補技リスト";
+  const headingCount = document.createElement("span");
+  headingCount.textContent = `${uxCandidateItems.length}技`;
+  heading.append(headingText, headingCount);
+  panel.appendChild(heading);
+
+  if(!uxCandidateItems.length){
+    const empty = document.createElement("div");
+    empty.className = "ux-sheet-candidate-empty";
+    empty.textContent = "候補技はありません";
+    panel.appendChild(empty);
+    container.appendChild(panel);
+    return;
+  }
+
+  uxCandidateItems.forEach((item,index)=>{
+    const row = document.createElement("div");
+    row.className = "ux-sheet-candidate-row";
+    const name = document.createElement("div");
+    name.className = "ux-sheet-candidate-name";
+    name.textContent = uxSheetText(item.source);
+    const actions = document.createElement("div");
+    actions.className = "ux-sheet-candidate-actions";
+
+    const addButton = (label,destination)=>{
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.dataset.uxCandidateIndex = String(index);
+      button.dataset.uxAdopt = destination;
+      actions.appendChild(button);
+    };
+    if(mode === "prelims"){
+      addButton("1Rへ", "r1");
+      addButton("2Rへ", "r2");
+    }else addButton("採用", "final");
+
+    row.append(name, actions);
+    panel.appendChild(row);
+  });
+  container.appendChild(panel);
+}
+
+function uxAdoptCandidate(index,destination){
+  const mode = uxGetMode();
+  const item = uxCandidateItems[Number(index)];
+  const source = item?.source;
+  if(!source?.isConnected) return;
+  const expectedList = mode === "prelims" ? preCandidateList : finalsCandidateList;
+  if(source.parentElement !== expectedList) return;
+
+  uxCaptureUndo("候補から採用");
+  if(mode === "score"){
+    if(source.dataset.combo === "1" || source.classList.contains("is-combo")){
+      const combo = orderItemToData(source);
+      if(!combo?.combo) return;
+      source.remove();
+      finalsList.dataset.authoritative = "1";
+      finalsList.appendChild(comboOrderLiTemplate(combo, false));
+    }else{
+      const info = parseOrderText(getItemText(source));
+      if(!info) return;
+      if(listContainsText(finalsList, orderText(info.pt, info.name))){
+        showToast("この技はすでに決勝構成にあります");
+        return;
+      }
+      const predicted = source.dataset.predicted === "1" || source.classList.contains("is-predicted");
+      source.remove();
+      finalsList.dataset.authoritative = "1";
+      if(!predicted) setFinalTechChecked(info.pt, info.name, true, false);
+      finalsList.appendChild(orderLiTemplate(info.pt, info.name, false, predicted));
+    }
+    rebuildFinalsList();
+  }else{
+    const info = parseOrderText(getItemText(source));
+    if(!info) return;
+    if(listContainsText(list1, orderText(info.pt, info.name)) || listContainsText(list2, orderText(info.pt, info.name))){
+      showToast("この技はすでに予選構成にあります");
+      return;
+    }
+    const round = destination === "r2" ? 2 : 1;
+    const target = round === 2 ? list2 : list1;
+    const predicted = source.dataset.predicted === "1" || source.classList.contains("is-pre-predicted");
+    source.remove();
+    setPreTechChecked(info.pt, info.name, true);
+    target.appendChild(mkPreOrderItem(info.pt, info.name, round, predicted));
+    updatePreSummary();
+  }
+
+  uxCandidateItems = uxCollectCandidateItems();
+  if(!uxCandidateItems.length) uxCandidatePanelOpen = false;
+  uxSheetActiveSource = null;
+  uxUpdateTray();
+  uxApplyFilter("score", true);
+  uxApplyFilter("prelims", true);
+  uxRenderSelectionSheet();
+  const state = uxGetSheetLimitState(mode);
+  showToast(state.over
+    ? (mode === "prelims" ? `${state.total}/12技です。このままでは予選で使用できません` : `${state.total}/30技です。このままでは本戦で使用できません`)
+    : "候補から構成へ採用しました", 1600);
+}
+
+function uxDestroySheetDnd(){
+  uxSheetSortables.forEach(sortable=>{
+    try{ sortable?.destroy?.(); }catch{}
+  });
+  uxSheetSortables = [];
+}
+
+function uxSheetSourcesFor(group){
+  const list = document.querySelector(`.ux-sheet-group-list[data-ux-sheet-group="${group}"]`);
+  if(!list) return [];
+  return [...list.querySelectorAll(":scope > .ux-sheet-row[data-ux-sheet-index]")]
+    .map(row=>uxSheetItems[Number(row.dataset.uxSheetIndex)]?.source)
+    .filter(Boolean);
+}
+
+function uxCommitSheetDrag(mode){
+  let roundChanged = false;
+  if(mode === "score"){
+    uxSheetSourcesFor("決勝編成").forEach(source=>{
+      if(source?.isConnected) finalsList.appendChild(source);
+    });
+    finalsList.dataset.authoritative = "1";
+    rebuildFinalsList();
+  }else if(mode === "prelims"){
+    const plans = [
+      {group:"第1ラウンド", target:list1, round:1},
+      {group:"第2ラウンド", target:list2, round:2}
+    ];
+    roundChanged = plans.some(plan=>uxSheetSourcesFor(plan.group).some(source=>source?.parentElement !== plan.target));
+    plans.forEach(plan=>{
+      uxSheetSourcesFor(plan.group).forEach(source=>{
+        if(!source?.isConnected) return;
+        if(source.parentElement === plan.target){
+          plan.target.appendChild(source);
+          return;
+        }
+        const info = parseOrderText(getItemText(source));
+        if(!info) return;
+        const predicted = source.dataset.predicted === "1" || source.classList.contains("is-pre-predicted");
+        const replacement = mkPreOrderItem(info.pt, info.name, plan.round, predicted);
+        source.remove();
+        plan.target.appendChild(replacement);
+      });
+    });
+    updatePreSummary();
+  }
+
+  uxSheetActiveSource = null;
+  uxUpdateTray();
+  uxRenderSelectionSheet();
+  const state = uxGetSheetLimitState(mode);
+  showToast(state.over
+    ? (mode === "prelims" ? "規定数を超えています。このままでは予選で使用できません" : "規定数を超えています。このままでは本戦で使用できません")
+    : (roundChanged ? "ラウンド間で技を移動しました" : "ドラッグで技順を変更しました"), 1400);
+}
+
+function uxInitSheetDnd(mode){
+  uxDestroySheetDnd();
+  if(!window.Sortable) return;
+  const lists = [...document.querySelectorAll("#ux-selection-list .ux-sheet-group-list")];
+  lists.forEach(list=>{
+    const sortable = new Sortable(list, {
+      group:mode === "prelims"
+        ? {name:"ooruri-sheet-prelims", pull:true, put:true}
+        : {name:"ooruri-sheet-finals", pull:false, put:false},
+      draggable:".ux-sheet-row",
+      handle:".ux-sheet-drag",
+      animation:160,
+      ghostClass:"sortable-ghost",
+      chosenClass:"sortable-chosen",
+      dragClass:"sortable-drag",
+      forceFallback:true,
+      fallbackOnBody:true,
+      scroll:true,
+      bubbleScroll:true,
+      scrollSensitivity:90,
+      scrollSpeed:16,
+      delayOnTouchOnly:true,
+      delay:100,
+      touchStartThreshold:4,
+      onStart:()=>{
+        uxCaptureUndo("並べ替え");
+        document.body.classList.add("ux-sheet-sorting");
+      },
+      onEnd:event=>{
+        document.body.classList.remove("ux-sheet-sorting");
+        uxSheetDraggingUntil = Date.now() + 350;
+        const changed = event.from !== event.to || event.oldIndex !== event.newIndex;
+        if(changed) requestAnimationFrame(()=>uxCommitSheetDrag(mode));
+      }
+    });
+    uxSheetSortables.push(sortable);
+  });
+}
+
+function uxRenderSelectionSheet(){
+  const container = document.getElementById("ux-selection-list");
+  const count = document.getElementById("ux-selection-sheet-count");
+  const title = document.getElementById("ux-selection-title");
+  if(!container || !count || !title) return;
+  uxDestroySheetDnd();
+  const mode = uxGetMode();
+  uxSheetItems = uxCollectSheetItems();
+  uxCandidateItems = uxCollectCandidateItems();
+  if(uxSheetActiveSource && !uxSheetActiveSource.isConnected) uxSheetActiveSource = null;
+  title.textContent = mode === "prelims" ? "予選の編成" : "決勝の編成";
+  count.textContent = mode === "prelims" ? `${uxSheetItems.length}/12技` : `${uxSheetItems.length}/30技`;
+  container.innerHTML = "";
+
+  if(!uxSheetItems.length){
+    const empty = document.createElement("div");
+    empty.className = "ux-selection-help";
+    empty.textContent = uxCandidateItems.length
+      ? "構成技はまだありません。「候補から採用」から追加できます。"
+      : "まだ技が選択されていません。技一覧で技名をタップしてください。";
+    container.appendChild(empty);
+  }else{
+    const groupNames = mode === "prelims" ? ["第1ラウンド", "第2ラウンド"] : ["決勝編成"];
+    const groupLists = new Map();
+    groupNames.forEach(group=>{
+      const section = document.createElement("section");
+      section.className = "ux-sheet-group-section";
+      const heading = document.createElement("div");
+      heading.className = "ux-sheet-group";
+      heading.textContent = group;
+      const list = document.createElement("div");
+      list.className = "ux-sheet-group-list";
+      list.dataset.uxSheetGroup = group;
+      section.append(heading, list);
+      container.appendChild(section);
+      groupLists.set(group, list);
+    });
+
+    uxSheetItems.forEach((item,globalIndex)=>{
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "ux-sheet-row";
+      if(item.source === uxSheetActiveSource) button.classList.add("selected");
+      button.dataset.uxSheetIndex = String(globalIndex);
+
+      const index = document.createElement("span");
+      index.className = "ux-sheet-index";
+      index.textContent = String(item.index);
+      const textWrap = document.createElement("span");
+      const text = document.createElement("span");
+      text.textContent = uxSheetText(item.source);
+      const meta = document.createElement("span");
+      meta.className = "ux-sheet-meta";
+      const multiSelected = item.source.dataset.multi === "1";
+      meta.textContent = multiSelected ? "1.5倍選択中" : item.group;
+      meta.classList.toggle("is-multi", multiSelected);
+      textWrap.append(text, meta);
+      const mark = document.createElement("span");
+      mark.className = "ux-sheet-status";
+      mark.textContent = item.source === uxSheetActiveSource ? "選択中" : "選ぶ";
+      const drag = document.createElement("span");
+      drag.className = "ux-sheet-drag";
+      drag.textContent = "≡";
+      drag.setAttribute("aria-hidden", "true");
+      drag.title = "ドラッグして並べ替え";
+      button.append(index, textWrap, mark, drag);
+      groupLists.get(item.group)?.appendChild(button);
+    });
+  }
+  uxRenderCandidatePanel(container, mode);
+  uxUpdateSheetLimitAlert(mode);
+  uxUpdateSheetActions();
+  if(uxSheetItems.length) uxInitSheetDnd(mode);
+}
+
+function uxOpenSelectionSheet(){
+  const sheet = document.getElementById("ux-selection-sheet");
+  if(!sheet) return;
+  uxSheetActiveSource = null;
+  uxCandidatePanelOpen = false;
+  uxRenderSelectionSheet();
+  sheet.classList.add("open");
+  sheet.setAttribute("aria-hidden", "false");
+  document.body.classList.add("ux-sheet-open");
+  document.getElementById("ux-selection-close")?.focus();
+}
+
+function uxCloseSelectionSheet(){
+  const sheet = document.getElementById("ux-selection-sheet");
+  if(!sheet) return;
+  uxDestroySheetDnd();
+  sheet.classList.remove("open");
+  sheet.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("ux-sheet-open");
+  uxSheetActiveSource = null;
+  uxCandidatePanelOpen = false;
+  document.getElementById("ux-selection-open")?.focus();
+}
+
+function uxReorderSource(source, delta){
+  const parent = source?.parentElement;
+  if(!parent) return false;
+  const items = [...parent.querySelectorAll(":scope > .order-item")];
+  const from = items.indexOf(source);
+  if(from < 0) return false;
+  const to = Math.max(0, Math.min(items.length - 1, from + delta));
+  if(to === from) return false;
+  items.splice(from, 1);
+  items.splice(to, 0, source);
+  items.forEach(item=>parent.appendChild(item));
+  if(parent === finalsList) rebuildFinalsList();
+  else updatePreSummary();
+  return true;
+}
+
+function uxDeleteSource(source){
+  if(!source?.isConnected) return;
+  if(source.parentElement === finalsList){
+    if(source.dataset.predicted !== "1" && !source.classList.contains("is-combo")){
+      const info = parseOrderText(getItemText(source));
+      if(info) uncheckFinalTech(info.pt, info.name);
+    }
+    source.remove();
+    rebuildFinalsList();
+  }else if(source.parentElement === list1 || source.parentElement === list2){
+    const info = parseOrderText(getItemText(source));
+    if(info) setPreTechChecked(info.pt, info.name, false);
+    source.remove();
+    updatePreSummary();
+  }
+}
+
+function uxRunSheetAction(action){
+  if(action === "candidate-list"){
+    uxCandidatePanelOpen = !uxCandidatePanelOpen;
+    uxRenderSelectionSheet();
+    if(uxCandidatePanelOpen){
+      requestAnimationFrame(()=>{
+        const panel = document.getElementById("ux-sheet-candidate-panel");
+        const list = document.getElementById("ux-selection-list");
+        if(!panel || !list) return;
+        const top = list.scrollTop + panel.getBoundingClientRect().top - list.getBoundingClientRect().top - 8;
+        list.scrollTo({
+          top:Math.max(0, top),
+          behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+        });
+      });
+    }
+    return;
+  }
+  const source = uxSheetActiveSource;
+  if(!source?.isConnected) return;
+  const label = action === "delete" ? "削除" : action === "candidate" ? "候補移動" : "並べ替え";
+  uxCaptureUndo(label);
+  let changed = true;
+
+  if(action === "up5") changed = uxReorderSource(source, -5);
+  else if(action === "up") changed = uxReorderSource(source, -1);
+  else if(action === "down") changed = uxReorderSource(source, 1);
+  else if(action === "down5") changed = uxReorderSource(source, 5);
+  else if(action === "multi"){
+    const button = source.querySelector('[data-act="multi"]');
+    if(button) button.click(); else changed = false;
+  }else if(action === "round"){
+    if(source.parentElement === list1) swapMove(source, true);
+    else if(source.parentElement === list2) swapMove(source, false);
+    else changed = false;
+    updatePreSummary();
+  }else if(action === "candidate"){
+    const button = source.querySelector('[data-act="cand"],[data-act="combo-cand"]');
+    if(button) button.click(); else changed = false;
+  }else if(action === "delete"){
+    uxDeleteSource(source);
+  }else changed = false;
+
+  if(changed){
+    if(action === "delete" || action === "candidate" || action === "round") uxSheetActiveSource = null;
+    uxUpdateTray();
+    uxApplyFilter("score", true);
+    uxApplyFilter("prelims", true);
+    uxRenderSelectionSheet();
+    showToast(action === "delete" ? "削除しました" : "編成を更新しました", 1300);
+  }
+}
+
+function uxToggleTechniqueCell(cell){
+  const row = cell?.closest(".tech-item");
+  if(!row) return;
+  const input = row.querySelector(".chk,.pre-chk");
+  if(!input || input.disabled) return;
+  uxCaptureUndo(input.classList.contains("pre-chk") ? "予選選択" : "決勝選択");
+  input.checked = !input.checked;
+  input.dispatchEvent(new Event("change", {bubbles:true}));
+  vibrate(12);
+  requestAnimationFrame(()=>{
+    uxUpdateTray();
+    uxApplyFilter(input.classList.contains("pre-chk") ? "prelims" : "score", true);
+  });
+}
+
+function uxEnhanceTechniqueRows(){
+  document.querySelectorAll(".tech-name-cell").forEach(cell=>{
+    cell.tabIndex = 0;
+    cell.setAttribute("role", "button");
+    const name = cell.querySelector(".tech-title")?.textContent || "技";
+    cell.setAttribute("aria-label", `${name}を選択・解除`);
+  });
+}
+
+function uxWrapAdvanced(nodes, label, open=false){
+  const valid = nodes.filter(node=>node?.isConnected);
+  if(!valid.length || valid[0].closest(".ux-advanced-tools")) return;
+  const details = document.createElement("details");
+  details.className = "ux-advanced-tools";
+  details.open = !!open;
+  const summary = document.createElement("summary");
+  summary.textContent = label;
+  const inner = document.createElement("div");
+  inner.className = "ux-advanced-tools-inner";
+  valid[0].parentNode.insertBefore(details, valid[0]);
+  details.append(summary, inner);
+  valid.forEach(node=>inner.appendChild(node));
+}
+
+function uxCreateAdvancedGroups(){
+  uxWrapAdvanced([
+    document.querySelector("#mode-finals .predict-box"),
+    document.getElementById("combo-box")
+  ], "高度な編集（予想技・コンボ技）", false);
+  uxWrapAdvanced([
+    document.getElementById("pre-predict-box")
+  ], "高度な編集（予選用の予想技）", false);
+
+  uxWrapAdvanced([
+    document.querySelector(".player-info-box"),
+    document.getElementById("official-data-status")
+  ], "選手情報・技データ", false);
+}
+
+function uxUpdateUnifiedFinalsSummary(){
+  const summary = document.getElementById("ux-unified-finals-summary");
+  if(!summary) return;
+  const mainCount = finalsList?.querySelectorAll(":scope > .order-item").length || 0;
+  const candidateCount = finalsCandidateList?.querySelectorAll(":scope > .order-item").length || 0;
+  summary.textContent = `${mainCount}/30技・候補${candidateCount}技`;
+}
+
+function uxUpdateUnifiedPrelimsSummary(){
+  const summary = document.getElementById("ux-unified-prelims-summary");
+  if(!summary) return;
+  const round1Count = list1?.querySelectorAll(":scope > .order-item").length || 0;
+  const round2Count = list2?.querySelectorAll(":scope > .order-item").length || 0;
+  const candidateCount = preCandidateList?.querySelectorAll(":scope > .order-item").length || 0;
+  summary.textContent = `${round1Count + round2Count}/12技・候補${candidateCount}技`;
+}
+
+function uxUnifyFinalsScreen(){
+  const body = document.getElementById("ux-unified-finals-body");
+  const oldMode = document.getElementById("mode-finals");
+  if(!body || !oldMode || body.dataset.ready === "1") return;
+
+  const autoNote = oldMode.querySelector(".auto-finals-note");
+  const mainBox = finalsList?.closest(".order-box");
+  const candidateBox = finalsCandidateList?.closest(".order-box");
+  const advanced = oldMode.querySelector(".ux-advanced-tools");
+  const preset = document.getElementById("finals-preset-anchor");
+
+  if(autoNote) autoNote.hidden = true;
+  [mainBox, candidateBox, advanced, preset].filter(Boolean).forEach(node=>body.appendChild(node));
+  body.dataset.ready = "1";
+  oldMode.hidden = true;
+  oldMode.setAttribute("aria-hidden", "true");
+  uxUpdateUnifiedFinalsSummary();
+}
+
+function uxUnifyPrelimsScreen(){
+  const body = document.getElementById("ux-unified-prelims-body");
+  const mode = document.getElementById("mode-prelims");
+  if(!body || !mode || body.dataset.ready === "1") return;
+
+  const autoNote = mode.querySelector(".auto-prelim-note");
+  const firstRound = list1?.closest(".order-box");
+  const secondRound = list2?.closest(".order-box");
+  const candidateBox = preCandidateList?.closest(".order-box");
+  const scoreBox = preSum?.closest(".pre-sum");
+  const preset = document.getElementById("prelims-preset-anchor");
+  const advanced = mode.querySelector(".ux-advanced-tools");
+
+  if(autoNote) autoNote.hidden = true;
+  [firstRound, secondRound, preMainLimitAlert, candidateBox, scoreBox, preset, advanced]
+    .filter(Boolean)
+    .forEach(node=>body.appendChild(node));
+  body.dataset.ready = "1";
+  uxUpdateUnifiedPrelimsSummary();
+}
+
+function uxSyncMode(){
+  uxUpdatePointControls();
+  uxUpdateTray();
+  uxUpdateUnifiedFinalsSummary();
+  uxUpdateUnifiedPrelimsSummary();
+  uxApplyFilter("score", true);
+  uxApplyFilter("prelims", true);
+  uxClosePointMenu();
+  requestAnimationFrame(uxUpdateFixedHeights);
+}
+
+function initOoruriUx(){
+  if(uxInitialized) return;
+  uxInitialized = true;
+  uxPoints = Object.keys(tricks).map(Number).filter(Number.isFinite).sort((a,b)=>a-b);
+  if(!uxPoints.length) uxPoints = [1,2,3,4,5,6,7,8,9,10];
+
+  try{
+    const stored = JSON.parse(localStorage.getItem("ooruri2026_ux_points") || "null");
+    if(stored && typeof stored === "object") uxPointState = {...uxPointState, ...stored};
+  }catch{}
+
+  const compactPref = localStorage.getItem("ooruri2026_compact_actions");
+  const compact = compactPref == null ? window.matchMedia("(max-width:640px)").matches : compactPref === "1";
+  document.body.classList.toggle("ux-actions-collapsed", compact);
+  document.body.classList.toggle("ux-left-hand", localStorage.getItem("ooruri2026_left_hand") === "1");
+  uxUpdateHeaderButtons();
+
+  const pointMenu = document.getElementById("ux-point-menu");
+  if(pointMenu){
+    pointMenu.innerHTML = "";
+    uxPoints.forEach(point=>{
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.point = String(point);
+      button.textContent = `${point}点`;
+      button.setAttribute("aria-label", `${point}点技へ移動`);
+      pointMenu.appendChild(button);
+    });
+  }
+
+  document.querySelectorAll(".ux-tech-toolbar").forEach(toolbar=>{
+    const kind = toolbar.dataset.uxKind;
+    const input = toolbar.querySelector('input[type="search"]');
+    const searchToggle = toolbar.querySelector(".ux-search-toggle");
+    const syncCompactSearch = ()=>{
+      const open = toolbar.classList.contains("ux-search-open");
+      const hasQuery = !!input?.value.trim();
+      toolbar.classList.toggle("has-query", hasQuery);
+      if(searchToggle){
+        searchToggle.textContent = open ? "閉じる" : (hasQuery ? "検索中" : "検索");
+        searchToggle.setAttribute("aria-expanded", String(open));
+        searchToggle.setAttribute("aria-label", open ? "検索を閉じる" : (hasQuery ? "検索条件を編集" : "技名を検索"));
+      }
+    };
+    searchToggle?.addEventListener("click", ()=>{
+      const open = !toolbar.classList.contains("ux-search-open");
+      toolbar.classList.toggle("ux-search-open", open);
+      syncCompactSearch();
+      if(open) input?.focus();
+      requestAnimationFrame(uxUpdateFixedHeights);
+    });
+    input?.addEventListener("input", ()=>{
+      uxFilterState[kind].query = input.value;
+      syncCompactSearch();
+      uxApplyFilter(kind, true);
+    });
+    input?.addEventListener("keydown", event=>{
+      if(event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      toolbar.classList.remove("ux-search-open");
+      input.blur();
+      syncCompactSearch();
+      requestAnimationFrame(uxUpdateFixedHeights);
+    });
+    toolbar.querySelectorAll(".ux-filter-btn").forEach(button=>{
+      button.addEventListener("click", ()=>{
+        uxFilterState[kind].filter = button.dataset.filter || "all";
+        toolbar.querySelectorAll(".ux-filter-btn").forEach(item=>item.classList.toggle("selected", item === button));
+        uxApplyFilter(kind, false);
+      });
+    });
+    syncCompactSearch();
+  });
+
+  document.getElementById("ux-actions-toggle")?.addEventListener("click", ()=>{
+    const collapsed = document.body.classList.toggle("ux-actions-collapsed");
+    localStorage.setItem("ooruri2026_compact_actions", collapsed ? "1" : "0");
+    uxUpdateHeaderButtons();
+  });
+  document.getElementById("ux-point-prev")?.addEventListener("click", ()=>uxMovePoint(-1));
+  document.getElementById("ux-point-next")?.addEventListener("click", ()=>uxMovePoint(1));
+  document.getElementById("ux-point-current")?.addEventListener("click", ()=>{
+    const menu = document.getElementById("ux-point-menu");
+    if(!menu) return;
+    menu.hidden = !menu.hidden;
+    document.getElementById("ux-point-current")?.setAttribute("aria-expanded", String(!menu.hidden));
+    uxUpdatePointControls();
+  });
+  pointMenu?.addEventListener("click", event=>{
+    const button = event.target.closest("button[data-point]");
+    if(button) uxJumpToPoint(Number(button.dataset.point), true);
+  });
+  document.getElementById("ux-hand-toggle")?.addEventListener("click", ()=>{
+    const left = document.body.classList.toggle("ux-left-hand");
+    localStorage.setItem("ooruri2026_left_hand", left ? "1" : "0");
+    showToast(left ? "左手モードにしました" : "右手モードにしました", 1000);
+  });
+
+  document.getElementById("ux-selection-open")?.addEventListener("click", uxOpenSelectionSheet);
+  document.getElementById("ux-inline-open-sheet")?.addEventListener("click", uxOpenSelectionSheet);
+  document.getElementById("ux-inline-open-prelims-sheet")?.addEventListener("click", uxOpenSelectionSheet);
+  document.getElementById("ux-go-tech-list")?.addEventListener("click", ()=>{
+    const details = document.getElementById("ux-unified-finals");
+    const anchor = document.getElementById("ux-final-tech-list-anchor");
+    if(details) details.open = false;
+    anchor?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block:"start"});
+  });
+  document.getElementById("ux-go-prelims-tech-list")?.addEventListener("click", ()=>{
+    const details = document.getElementById("ux-unified-prelims");
+    const anchor = document.getElementById("ux-prelim-tech-list-anchor");
+    if(details) details.open = false;
+    anchor?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block:"start"});
+  });
+  document.getElementById("ux-selection-close")?.addEventListener("click", uxCloseSelectionSheet);
+  document.querySelector("[data-ux-sheet-close]")?.addEventListener("click", uxCloseSelectionSheet);
+  document.getElementById("ux-selection-list")?.addEventListener("click", event=>{
+    const adopt = event.target.closest("button[data-ux-candidate-index][data-ux-adopt]");
+    if(adopt){
+      uxAdoptCandidate(Number(adopt.dataset.uxCandidateIndex), adopt.dataset.uxAdopt);
+      return;
+    }
+    if(Date.now() < uxSheetDraggingUntil || event.target.closest(".ux-sheet-drag")) return;
+    const row = event.target.closest(".ux-sheet-row[data-ux-sheet-index]");
+    if(!row) return;
+    const item = uxSheetItems[Number(row.dataset.uxSheetIndex)];
+    uxSheetActiveSource = item?.source || null;
+    uxRenderSelectionSheet();
+  });
+  document.getElementById("ux-selection-actions")?.addEventListener("click", event=>{
+    const button = event.target.closest("button[data-ux-action]");
+    if(button && !button.disabled) uxRunSheetAction(button.dataset.uxAction);
+  });
+
+  document.addEventListener("click", event=>{
+    const cell = event.target.closest(".tech-name-cell");
+    if(cell) uxToggleTechniqueCell(cell);
+  });
+  document.addEventListener("keydown", event=>{
+    const cell = event.target.closest?.(".tech-name-cell");
+    if(cell && (event.key === "Enter" || event.key === " ")){
+      event.preventDefault();
+      uxToggleTechniqueCell(cell);
+    }
+    if(event.key === "Escape"){
+      uxClosePointMenu();
+      if(document.getElementById("ux-selection-sheet")?.classList.contains("open")) uxCloseSelectionSheet();
+    }
+  });
+
+  document.addEventListener("click", event=>{
+    const action = event.target.closest(".use-toggle,.pre-toggle,.multi-toggle,.candidate-add-btn");
+    if(action) uxCaptureUndo(action.classList.contains("candidate-add-btn") ? "候補" : "選択");
+    requestAnimationFrame(()=>{
+      uxUpdateTray();
+      uxApplyFilter("score", true);
+      uxApplyFilter("prelims", true);
+    });
+  }, true);
+
+  document.querySelectorAll(".mode-btn,.mini-btn[data-mode]").forEach(button=>{
+    button.addEventListener("click", ()=>setTimeout(uxSyncMode, 0));
+  });
+
+  window.addEventListener("scroll", ()=>{
+    if(uxScrollTicking) return;
+    uxScrollTicking = true;
+    requestAnimationFrame(()=>{
+      uxScrollTicking = false;
+      uxDetectPointFromScroll();
+    });
+  }, {passive:true});
+
+  const observer = new MutationObserver(()=>{
+    uxUpdateTray();
+    if(document.getElementById("ux-selection-sheet")?.classList.contains("open")) uxRenderSelectionSheet();
+  });
+  [finalsList, finalsCandidateList, list1, list2, preCandidateList, finalSpan, preSum].filter(Boolean).forEach(node=>{
+    observer.observe(node, {childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:["class","data-multi"]});
+  });
+
+  if(window.ResizeObserver){
+    const resizeObserver = new ResizeObserver(uxUpdateFixedHeights);
+    [document.getElementById("total-bar"), document.querySelector(".mini-nav"), document.getElementById("ux-selection-tray")].filter(Boolean).forEach(node=>resizeObserver.observe(node));
+  }else window.addEventListener("resize", uxUpdateFixedHeights);
+
+  uxEnhanceTechniqueRows();
+  uxCreateAdvancedGroups();
+  uxUnifyFinalsScreen();
+  uxUnifyPrelimsScreen();
+  const finalAdvanced = document.querySelector("#ux-unified-finals .ux-advanced-tools");
+  finalAdvanced?.addEventListener("toggle", ()=>{
+    document.getElementById("ux-unified-finals")?.classList.toggle("ux-combo-mode", finalAdvanced.open);
+  });
+  uxApplyFilter("score", false);
+  uxApplyFilter("prelims", false);
+  uxUpdatePointControls();
+  uxUpdateTray();
+  uxUpdateUnifiedFinalsSummary();
+  uxUpdateUnifiedPrelimsSummary();
+  uxSetUndoAvailable();
+  requestAnimationFrame(uxUpdateFixedHeights);
+}
 
 
 </script>
