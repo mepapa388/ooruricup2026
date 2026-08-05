@@ -2756,6 +2756,168 @@ h1{
 }
 
 
+
+/* ===== v1.104 決勝音楽リピートモード：Apple風・プルダウン一行配置 ===== */
+.final-music-loop{
+  margin:9px 0 10px;
+  padding:11px;
+  border:1px solid rgba(60,60,67,.14);
+  border-radius:16px;
+  background:rgba(255,255,255,.92);
+  box-shadow:0 4px 14px rgba(0,0,0,.045);
+}
+.final-music-loop-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+.final-music-loop-title{
+  margin:0;
+  color:#1c1c1e;
+  font-size:15px;
+  font-weight:850;
+  letter-spacing:-.01em;
+}
+.final-music-loop-note{
+  margin:3px 0 0;
+  color:#636366;
+  font-size:11px;
+  line-height:1.45;
+  font-weight:650;
+}
+.final-music-loop-badge{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  min-height:25px;
+  padding:4px 9px;
+  border-radius:999px;
+  background:#f2f2f7;
+  color:#636366;
+  font-size:11px;
+  font-weight:750;
+}
+.final-music-loop-row{
+  display:grid;
+  grid-template-columns:auto minmax(112px,1fr) minmax(116px,1fr) minmax(70px,.62fr) minmax(112px,.82fr);
+  gap:7px;
+  align-items:center;
+}
+.final-music-loop-select-label{
+  color:#3a3a3c;
+  font-size:12px;
+  font-weight:780;
+  white-space:nowrap;
+}
+.final-music-loop-select{
+  width:100%;
+  min-height:38px;
+  border:1px solid rgba(60,60,67,.18);
+  border-radius:11px;
+  padding:7px 30px 7px 10px;
+  background:#fff;
+  color:#1c1c1e;
+  font-size:13px;
+  font-weight:750;
+}
+.final-music-loop-controls button,
+.final-music-loop-row button{
+  min-height:38px;
+  border:0;
+  border-radius:11px;
+  padding:7px 10px;
+  font-size:12px;
+  font-weight:800;
+  touch-action:manipulation;
+  white-space:nowrap;
+}
+.final-music-loop-play{
+  background:#007aff;
+  color:#fff;
+}
+.final-music-loop-stop{
+  background:#f2f2f7;
+  color:#3a3a3c;
+}
+.final-music-loop-repeat{
+  background:#f2f2f7;
+  color:#3a3a3c;
+  border:1px solid rgba(60,60,67,.12) !important;
+}
+.final-music-loop-repeat.is-on{
+  background:rgba(52,199,89,.12);
+  color:#197437;
+  border-color:rgba(52,199,89,.24) !important;
+}
+.final-music-loop-status{
+  min-height:19px;
+  margin-top:7px;
+  color:#636366;
+  font-size:11px;
+  line-height:1.45;
+  font-weight:700;
+}
+.final-music-loop-player-wrap{
+  margin-top:7px;
+  border-top:1px solid rgba(60,60,67,.12);
+  padding-top:7px;
+}
+.final-music-loop-player-wrap summary{
+  color:#007aff;
+  font-size:12px;
+  font-weight:750;
+  cursor:pointer;
+}
+.final-music-loop-player{
+  width:min(100%,360px);
+  min-width:200px;
+  min-height:200px;
+  aspect-ratio:16/9;
+  margin:8px auto 0;
+  overflow:hidden;
+  border-radius:12px;
+  background:#000;
+}
+.final-music-loop-player-note{
+  margin:7px 0 0;
+  color:#636366;
+  font-size:10px;
+  line-height:1.45;
+  text-align:center;
+}
+@media (max-width:720px){
+  .final-music-loop-row{
+    grid-template-columns:auto minmax(98px,1fr) minmax(104px,1fr) minmax(62px,.55fr) minmax(106px,.8fr);
+    gap:6px;
+  }
+  .final-music-loop-row button,
+  .final-music-loop-select{
+    font-size:12px;
+    padding-left:8px;
+    padding-right:8px;
+  }
+}
+@media (max-width:520px){
+  .final-music-loop{padding:10px}
+  .final-music-loop-head{flex-direction:column;gap:5px}
+  .final-music-loop-row{
+    grid-template-columns:auto 1fr 1fr 1fr;
+    grid-template-areas:
+      "label select select select"
+      "play play stop repeat";
+  }
+  .final-music-loop-select-label{grid-area:label;}
+  .final-music-loop-select{grid-area:select;}
+  .final-music-loop-play{grid-area:play;}
+  .final-music-loop-stop{grid-area:stop;}
+  .final-music-loop-repeat{grid-area:repeat;}
+  .final-music-loop-player{min-height:190px;}
+}
+
+
+
 /* ===== v1.74 コンボ技・候補40件表示改善 ===== */
 .combo-box{
   margin:12px 0;
@@ -4163,6 +4325,57 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
     <div class="practice-timer-youtube-frame" id="practice-timer-youtube-player"></div>
     <p class="practice-timer-youtube-note">YouTube音源では、冒頭の3カウント後にタイマーが00:00.0から始まります。音が出ない場合は、プレーヤー中央の再生ボタンを1回タップしてください。</p>
   </details>
+
+  <!-- v1.104 決勝音楽リピートモード：YouTubeプレーヤー・音量調整の下に配置 -->
+  <section class="final-music-loop" id="final-music-loop" aria-labelledby="final-music-loop-title">
+    <div class="final-music-loop-head">
+      <div>
+        <h2 class="final-music-loop-title" id="final-music-loop-title">決勝音楽リピート</h2>
+        <p class="final-music-loop-note">
+          既存のタイマー連動BGM 1〜16を使い、選んだ音楽だけをタイマーとは別にリピート再生します。
+        </p>
+      </div>
+      <div class="final-music-loop-badge">別モード</div>
+    </div>
+
+    <div class="final-music-loop-row">
+      <label class="final-music-loop-select-label" for="final-music-loop-select">音楽</label>
+      <select id="final-music-loop-select" class="final-music-loop-select" aria-label="決勝音楽番号を選択">
+        <option value="1">音楽 1</option>
+        <option value="2">音楽 2</option>
+        <option value="3">音楽 3</option>
+        <option value="4">音楽 4</option>
+        <option value="5">音楽 5</option>
+        <option value="6">音楽 6</option>
+        <option value="7">音楽 7</option>
+        <option value="8">音楽 8</option>
+        <option value="9">音楽 9</option>
+        <option value="10">音楽 10</option>
+        <option value="11">音楽 11</option>
+        <option value="12">音楽 12</option>
+        <option value="13">音楽 13</option>
+        <option value="14">音楽 14</option>
+        <option value="15">音楽 15</option>
+        <option value="16">音楽 16</option>
+      </select>
+      <button type="button" class="final-music-loop-play" id="final-music-loop-play">選択音楽再生</button>
+      <button type="button" class="final-music-loop-stop" id="final-music-loop-stop">停止</button>
+      <button type="button" class="final-music-loop-repeat is-on" id="final-music-loop-repeat">リピート ON</button>
+    </div>
+
+    <div class="final-music-loop-status" id="final-music-loop-status" role="status" aria-live="polite">
+      音楽番号を選んでください。
+    </div>
+
+    <details class="final-music-loop-player-wrap" id="final-music-loop-player-wrap" open>
+      <summary>決勝音楽プレーヤー・音量調整</summary>
+      <div class="final-music-loop-player" id="final-music-loop-player"></div>
+      <p class="final-music-loop-player-note">
+        スマホで自動再生されない場合は、プレーヤー中央の再生ボタンを1回タップしてください。タイマー連動BGMとは別のプレーヤーです。
+      </p>
+    </details>
+  </section>
+
   <div class="practice-timer-tools">
     <details class="practice-timer-history" id="practice-timer-history">
       <summary>計測履歴 <span id="practice-timer-history-count">0件</span></summary>
@@ -9248,6 +9461,184 @@ function initPracticeTimer(){
   }
 }
 
+/* =========================================================
+   v1.104 決勝音楽リピートモード
+   タイマー連動BGMとは別プレーヤーで、同じ1〜16音源をリピート再生。
+========================================================= */
+const FINAL_MUSIC_LOOP_KEY = "ooruricup2026_final_music_loop_v1";
+const FINAL_MUSIC_LOOP_MAX = 16;
+let finalMusicLoopPlayer = null;
+let finalMusicLoopPlayerPromise = null;
+let finalMusicLoopReady = false;
+let finalMusicLoopState = {
+  selected:1,
+  repeat:true,
+  playing:false,
+  userStopped:false
+};
+
+function loadFinalMusicLoopState(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(FINAL_MUSIC_LOOP_KEY) || "null");
+    if(!saved || typeof saved !== "object") return;
+    finalMusicLoopState.selected = Math.max(1, Math.min(FINAL_MUSIC_LOOP_MAX, Math.trunc(Number(saved.selected) || 1)));
+    finalMusicLoopState.repeat = saved.repeat !== false;
+    finalMusicLoopState.playing = false;
+    finalMusicLoopState.userStopped = false;
+  }catch{
+    localStorage.removeItem(FINAL_MUSIC_LOOP_KEY);
+  }
+}
+function saveFinalMusicLoopState(){
+  localStorage.setItem(FINAL_MUSIC_LOOP_KEY, JSON.stringify({
+    selected:finalMusicLoopState.selected,
+    repeat:finalMusicLoopState.repeat
+  }));
+}
+function setFinalMusicLoopStatus(message){
+  const status = document.getElementById("final-music-loop-status");
+  if(status) status.textContent = message;
+}
+function finalMusicLoopPayload(index=finalMusicLoopState.selected, startSeconds=0){
+  return {
+    listType:"playlist",
+    list:PRACTICE_TIMER_YOUTUBE_PLAYLIST,
+    index:Math.max(0, Math.min(FINAL_MUSIC_LOOP_MAX - 1, Number(index) - 1)),
+    startSeconds:Math.max(0, Number(startSeconds) || 0)
+  };
+}
+function renderFinalMusicLoop(){
+  const select = document.getElementById("final-music-loop-select");
+  if(select) select.value = String(finalMusicLoopState.selected);
+  const playBtn = document.getElementById("final-music-loop-play");
+  if(playBtn) playBtn.textContent = finalMusicLoopState.playing ? `音楽 ${finalMusicLoopState.selected} 再生中` : "選択音楽再生";
+  const repeatBtn = document.getElementById("final-music-loop-repeat");
+  if(repeatBtn){
+    repeatBtn.textContent = finalMusicLoopState.repeat ? "リピート ON" : "リピート OFF";
+    repeatBtn.classList.toggle("is-on", finalMusicLoopState.repeat);
+  }
+}
+function ensureFinalMusicLoopPlayer(){
+  if(finalMusicLoopReady && finalMusicLoopPlayer) return Promise.resolve(finalMusicLoopPlayer);
+  if(finalMusicLoopPlayerPromise) return finalMusicLoopPlayerPromise;
+  setFinalMusicLoopStatus("決勝音楽プレーヤーを読み込み中…");
+  finalMusicLoopPlayerPromise = loadPracticeTimerYouTubeApi().then(()=>new Promise((resolve,reject)=>{
+    const playerVars = {
+      playsinline:1,
+      controls:1,
+      rel:0,
+      listType:"playlist",
+      list:PRACTICE_TIMER_YOUTUBE_PLAYLIST
+    };
+    if(location.origin && location.origin !== "null") playerVars.origin = location.origin;
+    try{
+      finalMusicLoopPlayer = new YT.Player("final-music-loop-player", {
+        width:"100%",
+        height:"100%",
+        playerVars,
+        events:{
+          onReady:event=>{
+            finalMusicLoopReady = true;
+            resolve(event.target);
+          },
+          onStateChange:event=>{
+            if(!window.YT?.PlayerState) return;
+            if(event.data === YT.PlayerState.PLAYING){
+              finalMusicLoopState.playing = true;
+              finalMusicLoopState.userStopped = false;
+              renderFinalMusicLoop();
+              const title = finalMusicLoopPlayer.getVideoData?.().title || `音楽 ${finalMusicLoopState.selected}`;
+              setFinalMusicLoopStatus(`${title}・音楽 ${finalMusicLoopState.selected} を再生中${finalMusicLoopState.repeat ? "（リピート）" : ""}`);
+            }else if(event.data === YT.PlayerState.ENDED){
+              if(finalMusicLoopState.repeat && !finalMusicLoopState.userStopped){
+                playFinalMusicLoop(true);
+              }else{
+                finalMusicLoopState.playing = false;
+                renderFinalMusicLoop();
+                setFinalMusicLoopStatus(`音楽 ${finalMusicLoopState.selected} の再生が終了しました`);
+              }
+            }else if(event.data === YT.PlayerState.PAUSED && !finalMusicLoopState.userStopped){
+              setFinalMusicLoopStatus(`音楽 ${finalMusicLoopState.selected} 一時停止中`);
+            }
+          },
+          onError:()=>{
+            finalMusicLoopState.playing = false;
+            renderFinalMusicLoop();
+            setFinalMusicLoopStatus("この音楽を再生できませんでした。音源リストを確認してください");
+          },
+          onAutoplayBlocked:()=>{
+            const details = document.getElementById("final-music-loop-player-wrap");
+            if(details) details.open = true;
+            setFinalMusicLoopStatus("スマホではプレーヤー中央の再生ボタンを1回タップしてください");
+          }
+        }
+      });
+    }catch(error){
+      finalMusicLoopPlayerPromise = null;
+      reject(error);
+    }
+  })).catch(error=>{
+    console.error("final music loop player error", error);
+    setFinalMusicLoopStatus("決勝音楽プレーヤーを読み込めませんでした");
+    finalMusicLoopPlayerPromise = null;
+    return null;
+  });
+  return finalMusicLoopPlayerPromise;
+}
+function playFinalMusicLoop(fromEnded=false){
+  finalMusicLoopState.userStopped = false;
+  const selected = finalMusicLoopState.selected;
+  ensureFinalMusicLoopPlayer().then(player=>{
+    if(!player) return;
+    try{
+      player.loadPlaylist(finalMusicLoopPayload(selected, 0));
+      setTimeout(()=>{
+        try{ player.playVideo(); }catch{}
+      }, fromEnded ? 80 : 0);
+      finalMusicLoopState.playing = true;
+      renderFinalMusicLoop();
+      setFinalMusicLoopStatus(`音楽 ${selected} を再生中${finalMusicLoopState.repeat ? "（リピート）" : ""}`);
+    }catch{
+      setFinalMusicLoopStatus("決勝音楽を再生できませんでした");
+    }
+  });
+}
+function stopFinalMusicLoop(){
+  finalMusicLoopState.userStopped = true;
+  finalMusicLoopState.playing = false;
+  if(finalMusicLoopReady && finalMusicLoopPlayer){
+    try{ finalMusicLoopPlayer.pauseVideo(); }catch{}
+  }
+  renderFinalMusicLoop();
+  setFinalMusicLoopStatus(`音楽 ${finalMusicLoopState.selected} を停止しました`);
+}
+function selectFinalMusicLoop(n, autoplay=false){
+  const selected = Math.max(1, Math.min(FINAL_MUSIC_LOOP_MAX, Math.trunc(Number(n) || 1)));
+  finalMusicLoopState.selected = selected;
+  finalMusicLoopState.playing = false;
+  saveFinalMusicLoopState();
+  renderFinalMusicLoop();
+  setFinalMusicLoopStatus(`音楽 ${selected} を選択しました`);
+  if(autoplay) playFinalMusicLoop(false);
+}
+function toggleFinalMusicLoopRepeat(){
+  finalMusicLoopState.repeat = !finalMusicLoopState.repeat;
+  saveFinalMusicLoopState();
+  renderFinalMusicLoop();
+  setFinalMusicLoopStatus(finalMusicLoopState.repeat ? "決勝音楽のリピートをONにしました" : "決勝音楽のリピートをOFFにしました");
+}
+function initFinalMusicLoop(){
+  loadFinalMusicLoopState();
+  renderFinalMusicLoop();
+  setFinalMusicLoopStatus(`音楽 ${finalMusicLoopState.selected} を選択中。番号を押すと再生します。`);
+  document.getElementById("final-music-loop-select")?.addEventListener("change", event=>{
+    selectFinalMusicLoop(event.target.value, false);
+  });
+  document.getElementById("final-music-loop-play")?.addEventListener("click", ()=>playFinalMusicLoop(false));
+  document.getElementById("final-music-loop-stop")?.addEventListener("click", stopFinalMusicLoop);
+  document.getElementById("final-music-loop-repeat")?.addEventListener("click", toggleFinalMusicLoopRepeat);
+}
+
 
 function serializePreOrderList(list){
   return [...list.querySelectorAll(".order-item")].map(li=>orderItemToData(li)).filter(Boolean);
@@ -10420,6 +10811,7 @@ window.addEventListener("DOMContentLoaded", async()=>{
   presetDirty = false;
   updateSaveStatus();
   initPracticeTimer();
+  initFinalMusicLoop();
   initOoruriUx();
 });
 
