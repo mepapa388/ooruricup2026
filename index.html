@@ -99,6 +99,7 @@ button{border:none;border-radius:8px;cursor:pointer}
 .section-title.pt-8{background:#e0f2f1;border-left:4px solid #00796b;}
 .section-title.pt-9{background:#fff8e1;border-left:4px solid #ffb300;}
 .section-title.pt-10{background:#fce4ec;border-left:4px solid #c2185b;}
+.pt-group[data-pt="0.5"] .section-title{background:#e8f5ff;border-left:4px solid #007aff;}
 
 /* ===== 点数ごとの折りたたみ ===== */
 .pt-group{
@@ -4222,6 +4223,87 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
   text-align:center;
   font-size:13px;
 }
+
+/* =========================================================
+   v1.105 正式技公開準備・編成操作の明確化
+========================================================= */
+/* 予想技機能は正式技の公開準備中につき停止する。既存DOMも操作対象にしない。 */
+.predict-box,
+#pre-predict-box{display:none!important}
+
+/* 選択済み一覧から、対象技を迷わず編集画面へ開けるようにする。 */
+#ux-unified-finals-body #finals-list>.order-item,
+#ux-unified-prelims-body #prelims1-list>.order-item,
+#ux-unified-prelims-body #prelims2-list>.order-item{
+  grid-template-columns:30px minmax(0,1fr) 46px!important;
+  grid-template-areas:"number name edit"!important;
+}
+#ux-unified-finals-body #finals-list>.order-item>.ux-inline-edit,
+#ux-unified-prelims-body #prelims1-list>.order-item>.ux-inline-edit,
+#ux-unified-prelims-body #prelims2-list>.order-item>.ux-inline-edit{
+  grid-area:edit!important;
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  min-height:34px;
+  padding:5px 8px;
+  border-radius:9px;
+  background:rgba(0,122,255,.1);
+  color:var(--apple-blue);
+  font-size:12px;
+  font-weight:750;
+}
+#ux-unified-finals-body #finals-list>.order-item.is-combo>.combo-main{
+  grid-area:name!important;
+}
+#ux-unified-finals.ux-combo-mode #finals-list>.order-item{
+  grid-template-areas:"number name edit" "number pick edit"!important;
+}
+.ux-inline-edit{display:none}
+
+.ux-selection-help.is-active{
+  background:rgba(0,122,255,.1);
+  color:#0755a5;
+  font-weight:750;
+}
+.ux-selection-actions button[hidden]{display:none!important}
+.ux-selection-actions button[data-ux-action="candidate"]{
+  background:rgba(175,82,222,.12);
+  color:#8e44ad;
+}
+.ux-selection-actions button[data-ux-action="round"]{
+  background:rgba(52,199,89,.12);
+  color:#167a32;
+}
+
+/* 選択中・候補入りの意味を色だけに頼らず文字でも示す。 */
+.candidate-add-btn.selected{font-size:0!important}
+.candidate-add-btn.selected::after{content:"候補中";font-size:10px;font-weight:750}
+.score-tech-item.is-tech-selected .tech-name-cell::after,
+.pre-tech-item.is-tech-selected .tech-name-cell::after{
+  content:"✓";
+}
+
+/* =========================================================
+   v1.107 2026年公式110技・動画／判定の公開待ち対応
+========================================================= */
+/* 後日公開予定の各技動画・判定導線は、旧データを含めて画面から隠す。 */
+.score-tech-item .judge-btn,
+.pre-tech-item .judge-btn,
+.mini-btn[data-link="judge"],
+#media-modal{display:none!important}
+
+/* 非表示にした列の空きを残さず、技名・候補・倍率を読みやすく並べる。 */
+.score-tech-item{
+  grid-template-columns:minmax(0,1fr) 44px 46px!important;
+  grid-template-areas:"name cand multi"!important;
+}
+.pre-tech-item{
+  grid-template-columns:minmax(0,1fr) 44px!important;
+  grid-template-areas:"name cand"!important;
+}
+.score-tech-item .candidate-add-btn,
+.pre-tech-item .candidate-add-btn{width:44px!important;min-width:44px!important}
 </style>
 </head>
 <body>
@@ -4254,7 +4336,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
   </div>
 </div>
 
-<h1>技編成</h1>
+<h1>オオルリカップ2026技構成システム</h1>
 <p class="app-subtitle">オオルリカップ2026</p>
 
 <!-- v1.70 選手情報入力 -->
@@ -4416,7 +4498,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
     </div>
   </div>
 
-  <details class="ux-unified-finals" id="ux-unified-finals">
+  <details class="ux-unified-finals" id="ux-unified-finals" open>
     <summary>
       <span>決勝編成</span>
       <span class="ux-unified-finals-summary" id="ux-unified-finals-summary">0/30技・候補0技</span>
@@ -4574,7 +4656,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
     </div>
   </div>
 
-  <details class="ux-unified-finals ux-unified-prelims" id="ux-unified-prelims">
+  <details class="ux-unified-finals ux-unified-prelims" id="ux-unified-prelims" open>
     <summary>
       <span>予選編成</span>
       <span class="ux-unified-finals-summary" id="ux-unified-prelims-summary">0/12技・候補0技</span>
@@ -4715,7 +4797,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
       </div>
       <button type="button" id="ux-selection-close" aria-label="編成を閉じる">閉じる</button>
     </header>
-    <div class="ux-selection-help">右端の「≡」をドラッグして並べ替えできます。技を選んで下の固定ボタンから候補へ移し、「候補から採用」から同じ画面内で戻せます。</div>
+    <div class="ux-selection-help" id="ux-selection-help">右端の「≡」をドラッグして並べ替えできます。技をタップすると、その技に使える操作が下に表示されます。</div>
     <div class="ux-sheet-limit-alert" id="ux-sheet-limit-alert" role="alert" hidden></div>
     <div class="ux-selection-list" id="ux-selection-list"></div>
     <div class="ux-selection-actions" id="ux-selection-actions">
@@ -4798,7 +4880,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
     <ul>
       <li>決勝スコアで技を選びつつ、予選は最大12技にチェック。</li>
       <li>合計は自動保存。次回開いても続きから再開できます。</li>
-      <li>各技の「動画・判定」から区間再生＆判定基準を確認。</li>
+      <li>技名をタップして選択し、迷う技は「候補」に一時保管できます。</li>
       <li>削除は長押しで誤操作防止。並べ替えはドラッグも可。</li>
     </ul>
     <div class="tour-actions">
@@ -4814,14 +4896,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 <script>
 /* =========================================================
    v1.72 外部技データ読み込み
-   9月1日の正式技一覧・動画・審査基準・成功判定は data/official_tricks_2026.json を差し替える
+   2026年公式技一覧は data/official_tricks_2026.json から読み込む。
+   点数別動画は公開済み。各技の開始位置・審査基準・成功判定は後日公開予定。
 ========================================================= */
 const OFFICIAL_TRICK_DATA_PATH = "./data/official_tricks_2026.json";
+const ENABLE_PREDICTED_TRICKS = false;
 let officialDataInfo = {
   loaded:false,
   source:"内蔵データ",
   version:"built-in",
-  updated:""
+  updated:"",
+  trickCount:0,
+  hasHalfPoint:false
 };
 
 function extractYouTubeId(url){
@@ -4848,6 +4934,8 @@ function buildJudgingTextFromOfficialItem(item, pt){
   const reviewCriteria = firstDefinedValue(item, ["reviewCriteria", "shinsaCriteria", "審査基準"]);
   const successJudgment = firstDefinedValue(item, ["successJudgment", "successCriteria", "成功判定"]);
 
+  if(!reviewCriteria && !successJudgment) return "";
+
   const parts = [`【点数】${pt}`];
 
   if(reviewCriteria){
@@ -4867,7 +4955,7 @@ function updateOfficialDataStatus(){
   const el = document.getElementById("official-data-status");
   if(!el) return;
   const label = officialDataInfo.loaded
-    ? `外部データ読込済み：${officialDataInfo.version || "official_tricks_2026.json"}${officialDataInfo.updated ? " / 更新 " + officialDataInfo.updated : ""}`
+    ? `外部データ読込済み：${officialDataInfo.version || "official_tricks_2026.json"}${officialDataInfo.updated ? " / 更新 " + officialDataInfo.updated : ""} / ${officialDataInfo.trickCount || 0}技${officialDataInfo.hasHalfPoint ? " / 0.5点対応" : ""}`
     : "内蔵データで動作中（data/official_tricks_2026.json が未読込）";
   el.textContent = `技データ：${label}`;
   el.classList.toggle("is-external", !!officialDataInfo.loaded);
@@ -4919,7 +5007,9 @@ function applyOfficialTrickData(data){
       loaded:true,
       source:OFFICIAL_TRICK_DATA_PATH,
       version:data.version || data.name || "official_tricks_2026.json",
-      updated:data.updated || ""
+      updated:data.updated || "",
+      trickCount:Object.values(nextTricks).reduce((sum,list)=>sum + list.length, 0),
+      hasHalfPoint:Array.isArray(nextTricks["0.5"]) && nextTricks["0.5"].length > 0
     };
     return true;
   }
@@ -4947,7 +5037,9 @@ function applyOfficialTrickData(data){
     loaded:true,
     source:OFFICIAL_TRICK_DATA_PATH,
     version:data.version || data.name || "official_tricks_2026.json",
-    updated:data.updated || ""
+    updated:data.updated || "",
+    trickCount:Object.values(tricks || {}).reduce((sum,list)=>sum + (Array.isArray(list) ? list.length : 0), 0),
+    hasHalfPoint:Array.isArray(tricks?.["0.5"]) && tricks["0.5"].length > 0
   };
   return true;
 }
@@ -4960,7 +5052,14 @@ async function loadOfficialTrickData(){
     applyOfficialTrickData(data);
     console.log("official trick data loaded", officialDataInfo, data);
   }catch(err){
-    officialDataInfo = {loaded:false, source:"内蔵データ", version:"built-in", updated:""};
+    officialDataInfo = {
+      loaded:false,
+      source:"内蔵データ",
+      version:"built-in",
+      updated:"",
+      trickCount:Object.values(tricks || {}).reduce((sum,list)=>sum + (Array.isArray(list) ? list.length : 0), 0),
+      hasHalfPoint:Array.isArray(tricks?.["0.5"]) && tricks["0.5"].length > 0
+    };
     console.warn("official trick data fallback", err);
   }
   updateOfficialDataStatus();
@@ -4970,1156 +5069,171 @@ async function loadOfficialTrickData(){
    0) 点数別 全動画URL
 ========================================================= */
 let fullVideoByPoint = {
-  1:"https://youtu.be/-21xaBq6eO0?si=TaHeRTlGXAqChguf",
-  2:"https://youtu.be/KqYhciXs9QQ?si=aYwcpmxiG5PRPeF9",
-  3:"https://youtu.be/7KqlE9a6fe0?si=bxqDRPa6RIdYN9IH",
-  4:"https://youtu.be/MyxnZEb6fQE?si=xB3vu58eQfLlaUbb",
-  5:"https://youtu.be/yPGRWcCYvYA?si=GEEWdeK50L2bu75C",
-  6:"https://youtu.be/JM_Xny9NBQs?si=YQAN_pyz1kE2xOZx",
-  7:"https://youtu.be/YkgL-pkNRR0?si=8Hbi_cxz4v3NPC7M",
-  8:"https://youtu.be/FH46y1E1NfU?si=LzjeyRHy73FXYa9y",
-  9:"https://youtu.be/mkXk2JpGYCo?si=A7wFANhO-UkeGF8j",
- 10:"https://youtu.be/twdbwAdapjE?si=kRdp82sjUuOBB3bd"
+  "0.5": "https://youtu.be/ZW9fcf8qxR4?si=U5Vpw7XmkJKyJiuO",
+  "1": "https://youtu.be/hqvXubwUb_8?si=1NxQvVn05sjA-O6t",
+  "2": "https://youtu.be/J0Figk5M7zU?si=Aq2Rt2tK4f0JroLL",
+  "3": "https://youtu.be/KdtCdwh04dM?si=uoUhajQy4FvkRb_v",
+  "4": "https://youtu.be/3MYh5vfp-2s?si=XbiOyzUMUl6OpbLY",
+  "5": "https://youtu.be/40soHG3vDM8?si=1fEpYQ6ZOcyeLIR6",
+  "6": "https://youtu.be/kXPBvvpthgU?si=crpx-vDAMPyn6Vu-",
+  "7": "https://youtu.be/Hjr-BtxVUK8?si=zH9fvfzydDVEsr_s",
+  "8": "https://youtu.be/rTmGTnaKHNg?si=73mN7rVBpXehgJm7",
+  "9": "https://youtu.be/ypwijzvPz7k?si=EBtz2apXNMJd2C6v",
+  "10": "https://youtu.be/nIovB6wyzNk?si=RdMSnI--FIDtz0XO"
 };
 let videoIdByPoint = {
-  1:"-21xaBq6eO0",
-  2:"KqYhciXs9QQ",
-  3:"7KqlE9a6fe0",
-  4:"MyxnZEb6fQE",
-  5:"yPGRWcCYvYA",
-  6:"JM_Xny9NBQs",
-  7:"YkgL-pkNRR0",
-  8:"FH46y1E1NfU",
-  9:"mkXk2JpGYCo",
- 10:"twdbwAdapjE"
+  "0.5": "ZW9fcf8qxR4",
+  "1": "hqvXubwUb_8",
+  "2": "J0Figk5M7zU",
+  "3": "KdtCdwh04dM",
+  "4": "3MYh5vfp-2s",
+  "5": "40soHG3vDM8",
+  "6": "kXPBvvpthgU",
+  "7": "Hjr-BtxVUK8",
+  "8": "rTmGTnaKHNg",
+  "9": "ypwijzvPz7k",
+  "10": "nIovB6wyzNk"
 };
 
-/* =========================================================
-   1) 技データ（表記統一）
-========================================================= */
- let tricks = {
-  1:["紐かけ手乗せ","お手玉","どじょうすくい","メリーゴーランド","初詣","手乗せジャンプ","脚下から回す","線香花火","ブーメランキャッチ","ベルト"],
-  2:["つばめ返し","ひばり返し","リフティング","つなわたり","紐のせ","日本一周","ツイスト片道","お手玉足抜き","カメレオン","フック"],
-  3:["トンネルつなわたり","腰かけ","手からメリーゴーランド（3周）","ツイスト往復","トランポリン（3回）","おちょこ","タケコプター","二段ゴマ","サンズ（1回）","燈籠","クロスキャッチ"],
-  4:["指のせ","大車輪","かざぐるま","竜巻","へび（3周）","牛若丸片道","渦潮（上下2回）","メダル","舞妓かけ","コメタ","ムチ1回","胴回し","脚くぐし（1回）","脚回し","空中ブランコ"],
-  5:["砂時計","はやぶさ返し","鯉の滝登り","両手へび","足かけ","空中大車輪","足乗せ","縦へび（3周）","シングルクロック","チョップスティック","リキャプチャー型グリーントライアングル","ゼロスタ","クロスキャッチフォール","ダイレクト綱渡り"],
-  6:["地獄車3周","白刃取り","燕尾返し","オープンウィップ1回","背くぐし1回","トルネード1回","リフティング〜直大車輪","ピルエット（ひものせ〜ひものせ）","ザリガニ釣り","片白刃","登り龍（5周）"],
-  7:["鎖鎌","夜叉車","首切り〜腰切り〜脚切り","忍者","脚くぐしin out","かまいたち3セットin両手へび","レール","むち3","ゼロスタウィップ","リリーススタート","ストリングトルネード","オロチ"],
-  8:["同時2個空中手乗せ","くるりんぱ（3回）","背面ムチ","かまいたち3セット〜太陽系1周","縦ヘビ4周〜灯籠","歯車","二回転白刃取り","砂時計〜裏燈籠","Vレール（2回）","背面チョップスティック","侍ウィップ","侍キャッチ","ダイレクトむち3","へび2往復","脚下オープンウィップ","ニシキヘビ","背面燈籠"],
-  9:["リュウグウノツカイ","ウロボロス","スラックライン","背面オープンウィップ","背面両手へび","サイドワインダー2.0","両面ちょんかけ","夜刀神","クエンティン・ウィップ","渦潮〜燈籠","4DEX","フットクラッチ","フットトス蛇","ダブルピルエット白刃取り","アームグラインドウィップ","背面ダイレクトむち3"],
- 10:["ダイレク燈籠","2個同時うずしお3回","てじなーにゃむち","ヤトボロス"]
+/* 2026年公式110技。外部JSONが読めない場合も同じ一覧で動作する。 */
+let tricks = {
+  "0.5": [
+    "手のせコマジャンプ",
+    "脚下コマホップ",
+    "背面コマホップ",
+    "コマ散歩",
+    "捻ってキノコ回し",
+    "コマを持ってツイスト",
+    "ひもを巻く（半時計回り）",
+    "ひもを巻く（時計回り）",
+    "タイヤ回し",
+    "床で回す（紐）"
+  ],
+  "1": [
+    "紐かけ手のせ",
+    "お手玉（3回）",
+    "どじょうすくい",
+    "メリーゴーランド",
+    "初詣",
+    "手乗せジャンプ",
+    "脚下から回す",
+    "線香花火",
+    "ブーメランキャッチ",
+    "犬の散歩（10cm）"
+  ],
+  "2": [
+    "つばめ返し",
+    "ひばり返し",
+    "つなわたり",
+    "紐のせ",
+    "日本一周",
+    "ツイスト片道",
+    "お手玉脚抜き",
+    "フック",
+    "滑車",
+    "つむじ風"
+  ],
+  "3": [
+    "トンネルつなわたり",
+    "腰かけ",
+    "手からメリーゴランド（3周）",
+    "ツイスト往復",
+    "リフティング",
+    "大車輪",
+    "タケコプター",
+    "ヴェイパー",
+    "燈籠",
+    "指のせ"
+  ],
+  "4": [
+    "トランポリン（3回）",
+    "二段ゴマ",
+    "かざぐるま",
+    "へび（3周）",
+    "牛若丸片道",
+    "渦潮（上下2回）",
+    "舞妓かけ",
+    "むち1回",
+    "脚くぐし（1回）",
+    "脚回し"
+  ],
+  "5": [
+    "砂時計",
+    "両手へび",
+    "足かけ",
+    "空中大車輪",
+    "足乗せ",
+    "シングルクロック",
+    "ゼロスタ",
+    "胴回し",
+    "コメタ",
+    "ポニーテール"
+  ],
+  "6": [
+    "地獄車3周",
+    "白刃取り",
+    "燕尾返し",
+    "オープンウィップ1回",
+    "背くぐし1回",
+    "トルネード1回",
+    "縦へび3周",
+    "レール",
+    "むち3",
+    "オロチ"
+  ],
+  "7": [
+    "鎖鎌",
+    "夜叉車",
+    "首切り〜腰切り〜脚切り",
+    "背面むち",
+    "Vレール（2回）",
+    "ダイレクトくるりんぱ",
+    "サンズ4種盛り",
+    "無限へび",
+    "抜刀大車輪",
+    "ミニトラ（正面〜右上〜左上）"
+  ],
+  "8": [
+    "同時2個空中手のせ",
+    "歯車",
+    "砂時計〜裏燈籠",
+    "ウロボロス",
+    "スラックライン",
+    "サイドワインダー2.0",
+    "ダイレクトむち3",
+    "へび２往復",
+    "脚下オープンウィップ",
+    "脚下通し〜逆脚下アウトサイドウィップ"
+  ],
+  "9": [
+    "侍キャッチ",
+    "背面両手へび",
+    "夜刀神",
+    "クエンティン・ウィップ",
+    "渦潮〜燈籠",
+    "アームグラインドウィップ",
+    "背面ダイレクトむち３",
+    "空中大車輪〜リフティング3回〜横むち",
+    "水車7連",
+    "首巻きウィップ"
+  ],
+  "10": [
+    "ダイレク燈籠",
+    "2個うずしお3回",
+    "ヤトボロス",
+    "ピルエットリュウグウノツカイノツカイ",
+    "両手燈籠",
+    "むち10連",
+    "ピルエット同時2個空中手のせ",
+    "リバーストルネード〜線香花火",
+    "お手玉足抜き（30回）",
+    "紐コマジャグ〜ウィップ"
+  ]
 };
 
-/* =========================================================
-   2) 判定基準データ（あなたの貼付内容を保持）
-   ※必要に応じて今後追加OK
-========================================================= */
-let judgeCriteria = {
-  "紐かけ手乗せ": `【点数】1
-【審査基準】
-・紐のかけ方は問わない
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが手に乗った瞬間`,
-
-  "お手玉": `【点数】1
-【審査基準】
-・右手⇔左手を5回移動する（2.5往復）
-・移動の際、こまは「投げて」移動していること
-　※こまが手の間を滑って移動しているものは失敗
-【成功判定（フィニッシュ）】
-5回目でこまが手に乗った瞬間
-【成功判定（コンボ中）】
-5回目でこまが手に乗った瞬間`,
-
-  "どじょうすくい": `【点数】1
-【審査基準】
-・「カモーン」の掛け声でも OK
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが手に乗った瞬間`,
-
-  "メリーゴーランド": `【点数】1
-【審査基準】
-・3周すること
-・床からスタートし、床でゴールすること
-【成功判定（フィニッシュ／コンボ中）】
-こまが床に回った瞬間`,
-
-  "初詣": `【点数】1
-【審査基準】
-・手を2回叩いていること
-・投げ上げる手とキャッチする手は同じでなくてもよい
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "手乗せジャンプ": `【点数】1
-【審査基準】
-・こまが手に乗った状態で両足が床から離れること
-・ジャンプ後にも手の上でこまが回っていること
-【成功判定（フィニッシュ／コンボ中）】
-ジャンプ後に脚が床についた瞬間`,
-
-  "脚下から回す": `【点数】1
-【スタート技】
-【審査基準】
-・脚の下からこまを回すこと
-・どちらの脚でもよい
-・足が床についていても、宙に浮いていてもよい
-・脚の内側／外側は問わない
-【成功判定（フィニッシュ／コンボ中）】
-こまが床に回った瞬間`,
-
-  "線香花火": `【点数】1
-【審査基準】
-・最後は回転がなくなる状態で終わること
-【成功判定（フィニッシュ／コンボ中）】
-こまが床に落ちた瞬間`,
-
-  "ブーメランキャッチ": `【点数】1
-【スタート技】
-【審査基準】
-・こまから紐が解けて回転がかかっていること
-【成功判定（フィニッシュ／コンボ中）】
-こまをキャッチした瞬間`,
-
-  "ベルト": `【点数】1
-【審査基準】
-・紐2本にこまが均等に乗っていること
-　（綱渡りのように片側に寄っている状態は不可）
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "つばめ返し": `【点数】2
-【スタート技】
-【審査基準】
-・外投げでこまを投げる
-・右手で投げる場合：紐は時計回りに巻く
-・左手で投げる場合：紐は半時計回りに巻く
-・投げた手と同じ手でこまを取る
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "ひばり返し": `【点数】2
-【スタート技】
-【審査基準】
-・外投げでこまを投げる
-・右手で投げる場合：紐は時計回り
-・左手で投げる場合：紐は半時計回り
-・投げた手と逆の手でこまを取る
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "リフティング": `【点数】2
-【スタート技】
-【審査基準】
-・こまを投げ手から直接脚で蹴って浮かせる
-・投げてから手に乗るまでに脚以外の部分に触れない
-・途中で手のひらなどのストールを経由しない
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "つなわたり": `【点数】2
-【審査基準】
-・紐の長さは肩幅以上
-・手から手の間で、こまが紐から離れないこと
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "紐のせ": `【点数】2
-【審査基準】
-・身体の正面で取ること
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "日本一周": `【点数】2
-【審査基準】
-・こまは遠心力と重力によって紐の上に乗っていること
-　（紐のせ状態で一周回るだけは失敗）
-・自分が一周しても良い／背面で紐を持ち替えても良い
-【成功判定（フィニッシュ／コンボ中）】
-こまが床に戻ってきた瞬間`,
-
-  "ツイスト片道": `【点数】2
-【審査基準】
-・動作後に手が身体の正面まで戻ってくること
-・動作中にこまが手から離れないこと
-【成功判定（フィニッシュ／コンボ中）】
-手が身体の正面に戻ってきた瞬間`,
-
-  "お手玉足抜き": `【点数】2
-【審査基準】
-・どちらの脚を使ってもよい
-・こまを投げた手とキャッチする手は同じ手であること
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "カメレオン": `【点数】2
-【審査基準】
-・紐を弾く動きでこまに紐をかける
-・こまを持ち上げる際、手に紐を複数束ねて持たない
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "フック": `【点数】2
-【審査基準】
-・こまは人差し指のみに触れていること
-・曲げた指の腹側（内側）にこまが乗っていること
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "トンネルつなわたり": `【点数】3
-【審査基準】
-・脚の下でつなわたりができていること
-・脚の左右は問わない
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "腰かけ": `【点数】3
-【審査基準】
-・身体の後ろ側で行っていること
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "手からメリーゴーランド（3周）": `【点数】3
-【審査基準】
-・手から直接メリーゴーランドの動きに入る
-・3周すること
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-3周し終わった瞬間`,
-
-  "ツイスト往復": `【点数】3
-【審査基準】
-・片道・往復ともに、毎回手が身体の正面まで戻ってくること
-・動作中にこまが手から離れないこと
-【成功判定（フィニッシュ／コンボ中）】
-手が身体の正面に戻ってきた瞬間`,
-
-  "トランポリン（3回）": `【点数】3
-【審査基準】
-・こまは頭より高く上げる
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "おちょこ": `【点数】3
-【スタート技】
-【審査基準】
-・投げてから手に乗るまでに、手の甲以外の部分に触れない
-【成功判定（フィニッシュ／コンボ中）】
-こまが手の甲に乗った瞬間`,
-
-  "タケコプター": `【点数】3
-【審査基準】
-・頭への乗せ方は問わない
-・頭の上でこまが静止していること（瞬間でも可）
-【成功判定（フィニッシュ／コンボ中）】
-こまが頭の上に乗った瞬間`,
-
-  "二段ゴマ": `【点数】3
-【審査基準】
-・手の上で行うこと
-・こまが重なっている時、2つとも回転していること
-【成功判定（フィニッシュ／コンボ中）】
-こまがこまの上に乗った瞬間`,
-
-  "サンズ（1回）": `【点数】3
-【審査基準】
-・手の間（手の上または下）を一周すること
-【成功判定（フィニッシュ／コンボ中）】
-一周後に紐が地面に対して垂直に向いた瞬間`,
-
-  "燈籠": `【点数】3
-【審査基準】
-・親指以外がこまに触れていないこと
-・乗せ方は問わない
-【成功判定（フィニッシュ／コンボ中）】
-こまが親指の上に乗り、親指のみに触れた瞬間`,
-
-  "クロスキャッチ": `【点数】3
-【審査基準】
-・腕を交差させた時、右手が上になるようにする
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "指のせ": `【点数】4
-【審査基準】
-・水かき部分に乗っていないこと
-・真っ直ぐ伸ばした指の上に乗せる
-・指に当たって弾くだけの状態は失敗
-【成功判定（フィニッシュ／コンボ中）】
-こまが指の上で静止した瞬間`,
-
-  "大車輪": `【点数】4
-【審査基準】
-・こまが身体の周りを一周していること
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが身体の周りを1周し切った瞬間`,
-
-  "かざぐるま": `【点数】4
-【審査基準】
-・手のひらが上を向くこと
-【成功判定（フィニッシュ／コンボ中）】
-手のひらが上を向き、こまが親指と人差し指の間で静止した瞬間`,
-
-  "竜巻": `【点数】4
-【審査基準】
-・大車輪が適切に成立していること
-・こまが身体の周りを2周していること
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが身体の周りを2周し切った瞬間`,
-
-  "へび（3周）": `【点数】4
-【審査基準】
-・こま本体に紐が1周巻かれている
-・腕に紐が3周以上巻かれている
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-3周分回り切った瞬間`,
-
-  "牛若丸片道": `【点数】4
-【審査基準】
-・こまが頭の後ろを通っていること
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "渦潮（上下2回）": `【点数】4
-【審査基準】
-・上下交互に通っていること
-　（上→下→上→下 または 下→上→下→上）
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-2往復した瞬間`,
-
-  "メダル": `【点数】4
-【審査基準】
-・紐の上でこまが静止していること
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐の上で静止した瞬間`,
-
-  "舞妓かけ": `【点数】4
-【審査基準】
-・両手の位置が肩より上にあること
-・頭の後ろでこまを取ること
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "コメタ": `【点数】4
-【審査基準】
-・こまと紐が途中で離れないこと
-・紐を持ち続ける手と、紐を離す手は別の手である
-【成功判定（フィニッシュ／コンボ中）】
-飛んだ紐を手で掴み、こまが紐に乗った瞬間`,
-
-  "ムチ1回": `【点数】4
-【審査基準】
-・紐で輪を作り、肩で持っていること
-・紐を半周以上回してかける
-・サディスティック状態になっていないこと
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "胴回し": `【点数】4
-【審査基準】
-・ハーフターン禁止
-・左右どちらからでも良いが、こまの向きが身体に対して反転しないこと
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "脚くぐし（1回）": `【点数】4
-【審査基準】
-・紐のかけ方が適切であること
-　（紐を上から＝外側からかけているか）
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "脚回し": `【点数】4
-【審査基準】
-・ハーフターン禁止
-・左右どちらからでも良いが、こまの向きが身体に対して反転しないこと
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "空中ブランコ": `【点数】4
-【審査基準】
-・こまと身体の間に紐が位置した状態から始める
-・手より前側にこまが出てから引き上げる
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "砂時計": `【点数】5
-【審査基準】
-・軸の両端以外でこまに触れていないこと
-・こまが裏返った時に、親指がこまから離れていること
-・燈籠から行う
-・片手のみで行う
-【成功判定（フィニッシュ／コンボ中）】
-こまの向きが戻り、親指のみにこまが触れている状態になった瞬間`,
-
-  "はやぶさ返し": `【点数】5
-【審査基準】
-・こまが伝う紐の長さは肩幅以上
-・スタートの手が、もう一方の手より上に位置していること
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "鯉の滝登り": `【点数】5
-【審査基準】
-・こまが伝う紐の長さは「腰から肩」の長さ以上
-【成功判定（フィニッシュ／コンボ中）】
-登ったこまが上の手に触れた瞬間`,
-
-  "両手へび": `【点数】5
-【審査基準】
-・こまに紐が1周巻き付いている
-・腕に紐が5周以上巻き付いている
-・こまは適切に紐を伝っている
-・少なくとも1周は左右両方の腕に巻かれていること
-　（例：右1周＋左4周などOK）
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-5周分回り切った瞬間`,
-
-  "足かけ": `【点数】5
-【審査基準】
-・紐が脚で挟まれている
-・補助手で紐さばきをサポートしてもよい
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "空中大車輪": `【点数】5
-【スタート技】
-【審査基準】
-・手のひらを経由していないこと
-・大車輪が成立していること
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが身体の周りを1周し切った瞬間`,
-
-  "足乗せ": `【点数】5
-【スタート技】
-【審査基準】
-・投げてから足の甲に乗るまでに、身体の膝より上の部分に触れない
-・足の甲にストールされていること
-【成功判定（フィニッシュ／コンボ中）】
-こまが足の甲に乗った瞬間`,
-
-  "縦へび（3周）": `【点数】5
-【審査基準】
-・腕の周りを3周すること
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-3周分回り切った瞬間`,
-
-  "シングルクロック": `【点数】5
-【審査基準】
-・こまが浮いている最中に、紐の回転方向が反転すること
-・サディスティック状態になっていないこと
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "チョップスティック": `【点数】5
-【審査基準】
-・紐の形が適切であること
-・こまは空中に浮いた状態から、チョップスティックの紐の上に乗ること
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "リキャプチャー型グリーントライアングル": `【点数】5
-【審査基準】
-・正しい過程で行うこと
-・途中で違う紐の乗り方をした場合は失敗
-【成功判定（フィニッシュ／コンボ中）】
-グリーントライアングルの形が成立した瞬間`,
-
-  "ゼロスタ": `【点数】5
-【スタート技】
-【審査基準】
-・こまが止まった状態から技に入る
-・ちょんかけ（リジェネ）の要領で紐に乗せる
-・空中に飛ばしてから紐で取る
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "クロスキャッチフォール": `【点数】5
-【スタート技】
-【審査基準】
-・こまが手に乗る際、以下を満たすこと
-　1. 左手と左膝が触れている
-　2. 左手と左膝の間から右手が出ている
-・こまが手に乗った後、掌落としを行う
-【成功判定（フィニッシュ）】
-掌落としの後にこまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "ダイレクト綱渡り": `【点数】5
-【スタート技】
-【審査基準】
-・ひものせ状態にならない（こまの高さが両手の間の高さにならない）
-・こまが紐に乗る際、紐は肩幅以上の幅で持つ
-・こまが左回転の場合、紐の中心より左側で取り、そこから右手に戻る
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "地獄車3周": `【点数】6
-【審査基準】
-・3周は連続で行うこと
-　（1周ごとに止めると失敗）
-【成功判定（フィニッシュ／コンボ中）】
-3周後に紐が地面に対して垂直に向いた瞬間`,
-
-  "白刃取り": `【点数】6
-【審査基準】
-・投げ上げた際、紐から両手が離れていること
-【成功判定（フィニッシュ／コンボ中）】
-浮いた紐を掴んだ瞬間（かつこまが紐に乗っていること）`,
-
-  "燕尾返し": `【点数】6
-【スタート技】
-【審査基準】
-・投げた手で取ること
-・背面で取ること
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "オープンウィップ1回": `【点数】6
-【審査基準】
-・紐は束ねずに持つ
-・サディスティック状態になっていない
-・紐の左手側でこまを取る（リキャプ状態にする）
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "背くぐし1回": `【点数】6
-【審査基準】
-・紐のかけ方が適切であること
-　（紐を上から＝外側からかけているか）
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "トルネード1回": `【点数】6
-【審査基準】
-・空中大車輪のかけ方で始める
-　（手から投げたこまを紐で空中キャッチしてもよい）
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-1周後にこまが紐から離れた瞬間`,
-
-  "リフティング〜直大車輪": `【点数】6
-【スタート技】
-【審査基準】
-・最初のリフティングについて：
-　投げてから紐にかけるまでに脚以外の部分に触れない
-・その後、身体の周りを大車輪で1周する
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが身体の周りを1周し切った瞬間`,
-
-  "ピルエット（ひものせ〜ひものせ）": `【点数】6
-【審査基準】
-・身体の正面でこまを跳ね上げ、一回転し、再び身体の正面で取る
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "ザリガニ釣り": `【点数】6
-【審査基準】
-・チョップスティック状態から始める
-・こまがつり下がっている時、紐は1本だけを掴んでいる
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐の上で保持された瞬間`,
-
-  "片白刃": `【点数】6
-【審査基準】
-・紐は片手で持つ
-・紐を片方だけ離す
-・紐を離した手と、紐を掴み直す手は同じ手である
-【成功判定（フィニッシュ／コンボ中）】
-一度離した紐を同じ手で掴み直し、こまが紐の上に乗っていることが確認された瞬間`,
-
-  "登り龍（5周）": `【点数】6
-【審査基準】
-・こまの回転で紐を巻き込む力で登ること
-・こまを振り回して動かしているものは失敗
-・5周回り切ること
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-5周回り切った瞬間`,
-
-  "鎖鎌": `【点数】7
-【審査基準】
-・紐は片手で輪になっている
-・紐は頭上で回っている
-・紐は3周以上回っている
-・こまが紐にかかった後、こまが身体の周りを1周している
-・サディスティック状態になっていない
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが身体の周りを1周し切った瞬間`,
-
-  "夜叉車": `【点数】7
-【審査基準】
-・5周を淀みなく連続して回す（1周ごとに止めると失敗）
-・体の左右を交互に回している
-・紐が短すぎるものは失敗
-・こまは肘より大きい軌道で振り回す
-【成功判定（フィニッシュ／コンボ中）】
-5周後に紐が地面に対して垂直に向いた瞬間`,
-
-  "首切り〜腰切り〜脚切り": `【点数】7
-【審査基準】
-・紐は片手で束ねた後に放し、片手で掴み直す
-・掴み直す際に、紐に手が一切触れていない時間が存在すること
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-脚切りの後に紐を掴んだ瞬間`,
-
-  "忍者": `【点数】7
-【審査基準】
-・こまが登る際、紐が背面にあること
-・こまが伝う紐の長さは腰から肩の長さ以上
-【成功判定（フィニッシュ／コンボ中）】
-登ったこまが上の手に触れた瞬間`,
-
-  "脚くぐしin out": `【点数】7
-【審査基準】
-・イン→アウトの順に連続して行う
-・インの際はリキャプチャー、アウトの際はドラムビートでかける
-・こまが左回転なら右脚、右回転なら左脚を使う
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "かまいたち3セットin両手へび": `【点数】7
-【審査基準】
-・両手へびは左右合わせて5周する
-・かまいたちは3セット行う
-・かまいたちの直前にメリーゴーランドなど余分なトリックを入れない
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが腕に巻かれた紐を回り切った瞬間`,
-
-  "レール": `【点数】7
-【審査基準】
-・紐の形の作り方は問わない
-・スタートはこまの上から紐をかけて始める
-【成功判定（フィニッシュ）】
-こまが腕に巻かれた紐を回り切って、両腕の間に位置した瞬間
-【成功判定（コンボ中）】
-同上`,
-
-  "むち3": `【点数】7
-【審査基準】
-・紐の片方は手から離れた状態でこまに紐が当たること
-・紐が当たった後、紐を持っている手と同じ手で逆側の紐を掴む
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "ゼロスタウィップ": `【点数】7
-【スタート技】
-【審査基準】
-・こまに回転をかける手と、ウィップをする手が別であること
-・紐を半周以上回してかけている
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "リリーススタート": `【点数】7
-【スタート技】
-【審査基準】
-・こまの軸に紐を半周以上巻きつけてはいけない
-・こまに回転をかける手と、紐を掴む手は同じ手である
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "ストリングトルネード": `【点数】7
-【審査基準】
-・ラップ状態（こまの軸に紐が一周巻かれた状態）で行う
-・こまが紐に重力で乗っていない時間に、紐がこまの周りを1周以上する
-・最後は引き上げて紐でこまをキャッチする
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "オロチ": `【点数】7
-【審査基準】
-・右腕に3回以上、首に1回、左腕に2回以上巻く
-・左腕に3回以上巻いた場合は、2周分通った時点でオロチ成立とみなす
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが腕に巻かれた紐を回り切った瞬間`,
-
-  "同時2個空中手乗せ": `【点数】8
-【スタート技】
-【審査基準】
-・2個のこまのどちらも、紐が解けることで回転が始まっている
-・こまを投げる際は一挙動で行う
-【成功判定（フィニッシュ／コンボ中）】
-2つのこまが回った状態で手に乗った瞬間`,
-
-  "くるりんぱ（3回）": `【点数】8
-【審査基準】
-・紐の巻き方は適切であること
-・連続で3回行う
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-3周後にこまが紐から離れた瞬間`,
-
-  "背面ムチ": `【点数】8
-【審査基準】
-・こまを上げる位置は身体の前側
-・ムチが成立する位置は背面
-・サディスティック状態になっていない
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "かまいたち3セット〜太陽系1周": `【点数】8
-【審査基準】
-・「両手渦潮」になっていないこと
-・かまいたちを3セット適切に行う
-・途中で誤った軌道を通った場合、その時点で失敗
-・太陽系を1周する
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが腕に巻いた紐を周り切った瞬間`,
-
-  "縦ヘビ4周〜灯籠": `【点数】8
-【審査基準】
-・こまの角度が適切（水平になっていない）
-・腕の周りを4周している
-・縦へびと灯籠の間に余分なトリックを入れない
-【成功判定（フィニッシュ／コンボ中）】
-こまが親指の上に乗り、親指のみに触れた瞬間`,
-
-  "歯車": `【点数】8
-【審査基準】
-・紐の軌道が地面に対して垂直になっていない
-　（白刃取りになっているものは不可）
-【成功判定（フィニッシュ／コンボ中）】
-浮いた紐を掴んだ瞬間（かつこまが紐に乗っていること）`,
-
-  "二回転白刃取り": `【点数】8
-【審査基準】
-・紐は2周している
-・投げ上げた際に紐から両手が離れている
-【成功判定（フィニッシュ／コンボ中）】
-浮いた紐を掴んだ瞬間（かつこまが紐に乗っていること）`,
-
-  "砂時計〜裏燈籠": `【点数】8
-【審査基準】
-・軸の両端以外でこまに触れていない
-・こまが裏返った時に親指がこまから離れている
-・裏燈籠の際はこまを一度空中に浮かせる
-【成功判定（フィニッシュ／コンボ中）】
-こまが親指の上に乗り、親指のみに触れた瞬間`,
-
-  "Vレール（2回）": `【点数】8
-【審査基準】
-・紐の形の作り方は問わない
-・スタートは空中大車輪のかけ方で紐をかけて始める
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが腕に巻かれた紐を回り切って、両腕の間に位置した瞬間`,
-
-  "背面チョップスティック": `【点数】8
-【審査基準】
-・紐の形が適切である
-・こまは空中に浮いた状態からチョップスティックの紐の上に乗る
-・背面で行う
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "侍ウィップ": `【点数】8
-【審査基準】
-・一度左手で紐を持つ
-・紐を弾く動きでこまに紐を当て、輪の中にこまを入れる
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "侍キャッチ": `【点数】8
-【スタート技】
-【審査基準】
-・こまが空中に浮いている間に紐で輪を作り、そこにこまを入れる
-・こまが空中から紐にかかるまで、身体に触れない
-・こまは身体の周りを1周している
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが身体の周りを1周し切った瞬間`,
-
-  "ダイレクトむち3": `【点数】8
-【スタート技】
-【審査基準】
-・紐の片方の端が手から離れている間に、紐とこまが触れる
-・片手のみで行う
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "へび2往復": `【点数】8
-【審査基準】
-・こま本体に紐が1周巻かれている
-・腕に紐が3周以上巻かれている
-・2往復目も、へびが3周以上回っている
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが腕に巻かれた紐を回り切った瞬間`,
-
-  "脚下オープンウィップ": `【点数】8
-【審査基準】
-・紐を束ねずに持っている
-・脚の下でこまを取る
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "ニシキヘビ": `【点数】8
-【審査基準】
-・こま本体に紐が1周巻かれている
-・右手1周→首→右手1周の順に紐が巻かれている
-・右手に戻ってきた際、首に巻いた紐の「下」を通る
-　（輪の中を通るのは失敗）
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが腕に巻かれた紐を回り切った瞬間`,
-
-  "背面燈籠": `【点数】8
-【スタート技】
-【審査基準】
-・親指以外がこまに触れていない
-・乗せ方は問わない
-・手のひらを経由しない
-【成功判定（フィニッシュ／コンボ中）】
-こまが親指の上に乗り、親指のみに触れた瞬間`,
-
-  "リュウグウノツカイ": `【点数】9
-【審査基準】
-・紐の身体への巻き方が適切である
-・最後は足の間を後ろからこまを投げ上げる
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-足の間からこまを投げ上げた瞬間`,
-
-  "ウロボロス": `【点数】9
-【審査基準】
-・紐は右手に3回以上、左手に2回以上巻く
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが腕に巻かれた紐を回り切った瞬間`,
-
-  "スラックライン": `【点数】9
-【審査基準】
-・紐2本にこまが均等に乗っている（綱渡りのように片側寄りは不可）
-・こまは空中から紐2本のすき間に入っている
-・こまを空中に投げ上げる場合、紐に乗った状態から投げ上げる
-　（手から直接投げ上げるのは不可）
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが紐2本の間に入った瞬間`,
-
-  "背面オープンウィップ": `【点数】9
-【審査基準】
-・こまを上げる位置は身体の前側
-・ムチが成立する位置は背面
-・紐は束ねずに持つ
-・サディスティック状態になっていない
-・紐の左手側でこまを取る（リキャプ状態）
-・背面で行う
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "背面両手へび": `【点数】9
-【審査基準】
-・紐は右手に3回以上、左手に2回以上巻く
-・背面で行う
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが腕に巻かれた紐を回り切った瞬間`,
-
-  "サイドワインダー2.0": `【点数】9
-【スタート技】
-【審査基準】
-・こまを投げ出して手に戻るまでの間に、腕に紐を2周巻いて形を完成させる
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが腕に巻かれた紐を回り切った瞬間`,
-
-  "両面ちょんかけ": `【点数】9
-【審査基準】
-・右→左の順で行う
-・右側：右手でこまの上から紐をかける
-・左側：左手でこまの上から紐をかける
-・脚の左右は問わない
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "夜刀神": `【点数】9
-【審査基準】
-・紐を適切に巻くこと
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`,
-
-  "クエンティン・ウィップ": `【点数】9
-【審査基準】
-・ウィップの位置が適切である
-・こまは身体の上を通る
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "渦潮〜燈籠": `【点数】9
-【審査基準】
-・渦潮は1往復行う
-・渦潮からこまを空中に浮かせ、直接親指の腹に乗せる
-【成功判定（フィニッシュ／コンボ中）】
-こまが親指の上に乗り、親指のみに触れた瞬間`,
-
-  "4DEX": `【点数】9
-【審査基準】
-・こまの周りを紐が4周している
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "フットクラッチ": `【点数】9
-【審査基準】
-・紐をキャッチする時、脚以外で紐に触れていない
-・紐をキャッチする際には脚で挟む
-　（紐が脚に乗っているだけの状態は不可）
-【成功判定（フィニッシュ／コンボ中）】
-紐を脚で挟んだ瞬間（かつこまが紐に乗っていること）`,
-
-  "フットトス蛇": `【点数】9
-【審査基準】
-・フットストールへの入り方は問わない
-【成功判定（フィニッシュ）】
-こまが手に乗った瞬間
-【成功判定（コンボ中）】
-こまが腕に巻かれた紐を回り切った瞬間`,
-
-  "ダブルピルエット白刃取り": `【点数】9
-【審査基準】
-・投げ上げた際に紐から両手が離れている
-・ピルエットは2周回り切る
-【成功判定（フィニッシュ／コンボ中）】
-浮いた紐を掴んだ瞬間（かつこまが紐に乗っていること）`,
-
-  "アームグラインドウィップ": `【点数】9
-【審査基準】
-・こまは指から前腕の真ん中までの距離を、最低でも走る
-・ウィップは裏かけで行う
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "背面ダイレクトむち3": `【点数】9
-【スタート技】
-【審査基準】
-・紐の片方の端が手から離れている間に、紐とこまが触れる
-・片手のみで行う
-・背面で行う
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "ダイレク燈籠": `【点数】10
-【スタート技】
-【審査基準】
-・つばめ返しから一発で親指の上にこまが乗る
-・親指以外の体の箇所がこまに触れた場合は失敗
-【成功判定（フィニッシュ／コンボ中）】
-こまが親指に乗った瞬間`,
-
-  "2個同時うずしお3回": `【点数】10
-【審査基準】
-・2個のこまを回す方法は問わない
-・上下3回行う
-・手のひらから行う
-【成功判定（フィニッシュ／コンボ中）】
-2つのこまが回った状態で手に乗った瞬間`,
-
-  "てじなーにゃむち": `【点数】10
-【審査基準】
-・こまを跳ね上げた勢いで飛んだ紐を掴み、輪にする
-・輪になった紐にこまが入る
-・こまが浮いてから紐に乗るまで、左手は動かさない
-・右手は水平に動かす
-　（右手を振って紐の軌道を輪のように操作してはいけない）
-【成功判定（フィニッシュ／コンボ中）】
-こまが紐に乗った瞬間`,
-
-  "ヤトボロス": `【点数】10
-【審査基準】
-・紐を適切に巻くこと
-【成功判定（フィニッシュ／コンボ中）】
-こまが手に乗った瞬間`
-};
-
-/* =========================================================
-   3) 個別タイムスタンプ（開始秒）
-========================================================= */
-let trickStartSecondsByPoint = {
-  1: {
-    "紐かけ手乗せ": 4,
-    "お手玉": 18,
-    "どじょうすくい": 26,
-    "メリーゴーランド": 36,
-    "初詣": 44,
-    "手乗せジャンプ": 52,
-    "脚下から回す": 57,
-    "線香花火": 62,
-    "ブーメランキャッチ": 75,
-    "ベルト": 80
-  },
-  2: {
-    "つばめ返し": 5,
-    "ひばり返し": 18,
-    "リフティング": 27,
-    "つなわたり": 36,
-    "紐のせ": 53,
-    "日本一周": 66,
-    "ツイスト片道": 75,
-    "お手玉足抜き": 88,
-    "カメレオン": 102,
-    "フック": 120
-  },
-  3: {
-    "トンネルつなわたり": 5,
-    "腰かけ": 18,
-    "手からメリーゴーランド（3周）": 26,
-    "ツイスト往復": 51,
-    "トランポリン（3回）": 70,
-    "おちょこ": 83,
-    "タケコプター": 94,
-    "二段ゴマ": 109,
-    "サンズ（1回）": 122,
-    "燈籠": 128,
-    "クロスキャッチ": 137
-  },
-  4: {
-    "指のせ": 4,
-    "大車輪": 12,
-    "かざぐるま": 21,
-    "竜巻": 35,
-    "へび（3周）": 47,
-    "牛若丸片道": 63,
-    "渦潮（上下2回）": 81,
-    "メダル": 90,
-    "舞妓かけ": 101,
-    "コメタ": 109,
-    "ムチ1回": 114,
-    "胴回し": 124,
-    "脚くぐし（1回）": 131,
-    "脚回し": 138,
-    "空中ブランコ": 146
-  },
-  5: {
-    "砂時計": 4,
-    "はやぶさ返し": 20,
-    "鯉の滝登り": 33,
-    "両手へび": 46,
-    "足かけ": 65,
-    "空中大車輪": 73,
-    "足乗せ": 81,
-    "縦へび（3周）": 88,
-    "シングルクロック": 97,
-    "チョップスティック": 105,
-    "リキャプチャー型グリーントライアングル": 112,
-    "ゼロスタ": 120,
-    "クロスキャッチフォール": 126,
-    "ダイレクト綱渡り": 134
-  },
-  6: {
-    "地獄車3周": 5,
-    "白刃取り": 15,
-    "燕尾返し": 24,
-    "オープンウィップ1回": 33,
-    "背くぐし1回": 39,
-    "トルネード1回": 50,
-    "リフティング〜直大車輪": 58,
-    "ピルエット（ひものせ〜ひものせ）": 68,
-    "ザリガニ釣り": 74,
-    "片白刃": 83,
-    "登り龍（5周）": 93
-  },
-  7: {
-    "鎖鎌": 4,
-    "夜叉車": 14,
-    "首切り〜腰切り〜脚切り": 27,
-    "忍者": 39,
-    "脚くぐしin out": 52,
-    "かまいたち3セットin両手へび": 60,
-    "レール": 75,
-    "むち3": 90,
-    "ゼロスタウィップ": 103,
-    "リリーススタート": 108,
-    "ストリングトルネード": 117,
-    "オロチ": 126
-  },
-  8: {
-    "同時2個空中手乗せ": 4,
-    "くるりんぱ（3回）": 13,
-    "背面ムチ": 26,
-    "かまいたち3セット〜太陽系1周": 34,
-    "縦ヘビ4周〜灯籠": 47,
-    "歯車": 66,
-    "二回転白刃取り": 79,
-    "砂時計〜裏燈籠": 89,
-    "Vレール（2回）": 101,
-    "背面チョップスティック": 113,
-    "侍ウィップ": 122,
-    "侍キャッチ": 138,
-    "ダイレクトむち3": 147,
-    "へび2往復": 153,
-    "脚下オープンウィップ": 167,
-    "ニシキヘビ": 179,
-    "背面燈籠": 195
-  },
-  9: {
-    "リュウグウノツカイ": 5,
-    "ウロボロス": 25,
-    "スラックライン": 40,
-    "背面オープンウィップ": 52,
-    "背面両手へび": 61,
-    "サイドワインダー2.0": 81,
-    "両面ちょんかけ": 92,
-    "夜刀神": 100,
-    "クエンティン・ウィップ": 112,
-    "渦潮〜燈籠": 125,
-    "4DEX": 137,
-    "フットクラッチ": 146,
-    "フットトス蛇": 162,
-    "ダブルピルエット白刃取り": 181,
-    "アームグラインドウィップ": 195,
-    "背面ダイレクトむち3": 206
-  },
-  10: {
-    "ダイレク燈籠": 5,
-    "2個同時うずしお3回": 17,
-    "てじなーにゃむち": 44,
-    "ヤトボロス": 51
-  }
-};
+/* 各技の開始位置・審査基準・成功判定は後日公開予定。 */
+let judgeCriteria = {};
+let trickStartSecondsByPoint = {};
 
 /* =========================================================
    4) DOM参照
@@ -6156,7 +5270,10 @@ const showToast = (msg, ms=1800)=>{
   setTimeout(()=>toastEl.classList.remove('show'), ms);
 };
 const vibrate = (ms=15)=>{ if(navigator.vibrate) navigator.vibrate(ms); };
-const formatScore = v => Number.isInteger(v)?v:Math.round(v*10)/10;
+const formatScore = v => {
+  const n = Number(v) || 0;
+  return Number.isInteger(n) ? n : Math.round((n + Number.EPSILON) * 1000) / 1000;
+};
 
 let presetDirty = false;
 let suppressDirty = false;
@@ -6297,13 +5414,17 @@ function buildLists(){
   scoreListWrap.innerHTML='';
   preTechWrap.innerHTML='';
 
-  Object.keys(tricks).forEach(pt=>{
+  const availablePoints = Object.keys(tricks)
+    .filter(pt=>Array.isArray(tricks[pt]) && tricks[pt].length > 0)
+    .sort((a,b)=>Number(a)-Number(b));
+
+  availablePoints.forEach((pt,index)=>{
     /* 決勝側 */
     const sec1 = document.createElement('details');
     sec1.className = 'pt-group';
     sec1.dataset.pt = String(pt);
     sec1.id = `score-point-${pt}`;
-    sec1.open = String(pt) === "1";
+    sec1.open = index === 0;
     sec1.appendChild(makePtSummary(pt));
     tricks[pt].forEach(n=> sec1.appendChild(makeScoreItem(pt, n)));
     scoreListWrap.appendChild(sec1);
@@ -6313,7 +5434,7 @@ function buildLists(){
     sec2.className = 'pt-group';
     sec2.dataset.pt = String(pt);
     sec2.id = `prelims-point-${pt}`;
-    sec2.open = String(pt) === "1";
+    sec2.open = index === 0;
     sec2.appendChild(makePtSummary(pt));
     tricks[pt].forEach(n=> sec2.appendChild(makePreItemCheck(pt, n)));
     preTechWrap.appendChild(sec2);
@@ -6789,11 +5910,17 @@ function syncToggleButtonStates(){
 
   document.querySelectorAll('.candidate-add-btn[data-kind="finals"]').forEach(btn=>{
     const txt = orderText(btn.dataset.pt, btn.dataset.name);
-    btn.classList.toggle("selected", finalCandListEl ? listContainsText(finalCandListEl, txt) : false);
+    const selected = finalCandListEl ? listContainsText(finalCandListEl, txt) : false;
+    btn.classList.toggle("selected", selected);
+    btn.textContent = selected ? "候補中" : "候補";
+    btn.setAttribute("aria-pressed", String(selected));
   });
   document.querySelectorAll('.candidate-add-btn[data-kind="prelims"]').forEach(btn=>{
     const txt = orderText(btn.dataset.pt, btn.dataset.name);
-    btn.classList.toggle("selected", preCandListEl ? listContainsText(preCandListEl, txt) : false);
+    const selected = preCandListEl ? listContainsText(preCandListEl, txt) : false;
+    btn.classList.toggle("selected", selected);
+    btn.textContent = selected ? "候補中" : "候補";
+    btn.setAttribute("aria-pressed", String(selected));
   });
 }
 
@@ -6897,6 +6024,20 @@ const predictCount=document.getElementById("predict-count");
 
 function orderText(pt,name){
   return `[${pt}点] ${name}`;
+}
+function isOfficialTechnique(pt,name){
+  const numericPoint = Number(pt);
+  if(!Number.isFinite(numericPoint)) return false;
+  const list = tricks[String(numericPoint)] || tricks[String(pt)] || [];
+  return Array.isArray(list) && list.includes(String(name || ""));
+}
+function isOfficialOrderData(data){
+  if(!data || data.predicted) return false;
+  if(data.combo){
+    const combo = normalizeComboData(data);
+    return !!combo && combo.items.every(item=>!item.predicted && isOfficialTechnique(item.pt, item.name));
+  }
+  return isOfficialTechnique(data.pt, data.name);
 }
 function getItemText(li){
   return li?.querySelector('.order-name')?.textContent || "";
@@ -7211,6 +6352,7 @@ function orderLiTemplate(pt,name,multi=false,predicted=false){
     <span class="drag-handle" aria-label="並び替え">☰</span>
     <label class="combo-pick-wrap"><input type="checkbox" class="combo-pick">コンボ選択</label>
     <span class="order-name">${orderText(pt,name)}</span>
+    <button type="button" class="ux-inline-edit">編集</button>
     <div class="order-controls">
       <button class="order-btn final-multi-btn ${multi ? 'selected' : ''}" data-act="multi">1.5倍</button>
       <button class="order-btn order-btn-cand" data-act="cand">候補へ</button>
@@ -7233,11 +6375,13 @@ function orderLiTemplate(pt,name,multi=false,predicted=false){
   return li;
 }
 
-function finalCandidateLiTemplate(pt,name,predicted=false){
+function finalCandidateLiTemplate(pt,name,predicted=false,multi=false){
   const li=document.createElement('li');
   li.className='order-item'; li.draggable=true;
+  if(multi) li.classList.add("finals-multi-on");
   li.dataset.pt = String(pt);
   li.dataset.name = String(name);
+  li.dataset.multi = multi ? "1" : "0";
   li.dataset.predicted = predicted ? "1" : "0";
   if(predicted) li.classList.add("is-predicted");
   li.innerHTML=`
@@ -7346,6 +6490,7 @@ function comboOrderLiTemplate(combo, candidate=false){
       </div>
       <div class="combo-sequence"><span class="combo-sequence-label">構成</span>${seqHtml}</div>
     </div>
+    ${candidate ? "" : '<button type="button" class="ux-inline-edit">編集</button>'}
     <div class="order-controls">
       ${candidate
         ? `<button class="order-btn combo-main-btn" data-act="combo-main">採用</button>`
@@ -7358,13 +6503,13 @@ function comboOrderLiTemplate(combo, candidate=false){
   return li;
 }
 function appendOrderDataToList(list, data, mode="final"){
-  if(!data) return;
+  if(!isOfficialOrderData(data)) return;
   if(data.combo){
     list.appendChild(comboOrderLiTemplate(data, mode === "candidate"));
     return;
   }
   if(mode === "candidate"){
-    list.appendChild(finalCandidateLiTemplate(data.pt, data.name, !!data.predicted));
+    list.appendChild(finalCandidateLiTemplate(data.pt, data.name, !!data.predicted, !!data.multi));
   }else{
     list.appendChild(orderLiTemplate(data.pt, data.name, !!data.multi, !!data.predicted));
   }
@@ -7723,6 +6868,7 @@ finalsCandidateList.addEventListener("click",e=>{
 });
 
 function serializePredictedList(){
+  if(!ENABLE_PREDICTED_TRICKS) return [];
   return [...predictList.querySelectorAll(".predict-item")].map(li=>({
     pt:Number(li.dataset.pt),
     name:li.dataset.name
@@ -7748,6 +6894,7 @@ function predictedLiTemplate(pt,name){
 }
 
 function addPredictedTech(pt,name){
+  if(!ENABLE_PREDICTED_TRICKS) return false;
   const cleanName = String(name||"").trim();
   if(!cleanName){ showToast("予想技名を入力してください"); return false; }
   if(predictList.querySelectorAll(".predict-item").length >= 10){
@@ -7765,6 +6912,7 @@ function addPredictedTech(pt,name){
 }
 
 function addPredictedToFinals(pt,name){
+  if(!ENABLE_PREDICTED_TRICKS) return false;
   const txt = orderText(pt,name);
   if(listContainsText(finalsList, txt)){
     showToast("この予想技はすでに決勝編成にあります");
@@ -7866,11 +7014,12 @@ finalsList.addEventListener("click",e=>{
       return;
     }
     const wasPredicted = li.dataset.predicted === "1" || li.classList.contains("is-predicted");
+    const wasMulti = li.dataset.multi === "1";
     if(!wasPredicted){
       uncheckFinalTech(info.pt, info.name);
     }
     li.remove();
-    finalsCandidateList.appendChild(finalCandidateLiTemplate(info.pt, info.name, wasPredicted));
+    finalsCandidateList.appendChild(finalCandidateLiTemplate(info.pt, info.name, wasPredicted, wasMulti));
   }
   rebuildFinalsList();
 });
@@ -7888,12 +7037,13 @@ finalsCandidateList.addEventListener('click',e=>{
       return;
     }
     const wasPredicted = li.dataset.predicted === "1" || li.classList.contains("is-predicted");
+    const wasMulti = li.dataset.multi === "1";
     li.remove();
     finalsList.dataset.authoritative = "1";
     if(!wasPredicted){
-      setFinalTechChecked(info.pt, info.name, true, false);
+      setFinalTechChecked(info.pt, info.name, true, wasMulti);
     }
-    finalsList.appendChild(orderLiTemplate(info.pt, info.name, false, wasPredicted));
+    finalsList.appendChild(orderLiTemplate(info.pt, info.name, wasMulti, wasPredicted));
   }else if(act==='del'){
     showToast('削除は長押しで実行');
     return;
@@ -8022,6 +7172,7 @@ function mkPreOrderItem(pt,name,round,predicted=false){
   li.innerHTML=`
     <span class="drag-handle" aria-label="並び替え">☰</span>
     <span class="order-name">${orderText(pt,name)}</span>
+    <button type="button" class="ux-inline-edit">編集</button>
     <div class="order-controls">
       <button class="order-btn" data-act="up">↑</button>
       <button class="order-btn" data-act="down">↓</button>
@@ -8107,7 +7258,7 @@ function preCandidateLiTemplate(pt,name,predicted=false){
 
 /* ===== v1.82 予選用の予想技 ===== */
 function serializePrePredictedList(){
-  if(!prePredictList) return [];
+  if(!ENABLE_PREDICTED_TRICKS || !prePredictList) return [];
   return [...prePredictList.querySelectorAll(".predict-item")].map(li=>({
     pt:Number(li.dataset.pt),
     name:li.dataset.name
@@ -8135,7 +7286,7 @@ function prePredictedLiTemplate(pt,name){
 }
 
 function addPrePredictedTech(pt,name){
-  if(!prePredictList) return false;
+  if(!ENABLE_PREDICTED_TRICKS || !prePredictList) return false;
   const cleanName = String(name||"").trim();
   if(!cleanName){ showToast("予選用の予想技名を入力してください"); return false; }
   if(prePredictList.querySelectorAll(".predict-item").length >= 10){
@@ -8153,6 +7304,7 @@ function addPrePredictedTech(pt,name){
 }
 
 function addPrePredictedToRound(pt,name,round){
+  if(!ENABLE_PREDICTED_TRICKS) return false;
   const target = round === 1 ? list1 : list2;
   if(getPreMainCount() >= 12){
     preMainLimitAlert.style.display='block';
@@ -8171,6 +7323,7 @@ function addPrePredictedToRound(pt,name,round){
 }
 
 function addPrePredictedToCandidate(pt,name){
+  if(!ENABLE_PREDICTED_TRICKS) return false;
   if(preCandidateList.querySelectorAll('.order-item').length >= PRE_CANDIDATE_LIMIT){
     preCandidateWarn.style.display='block';
     showToast(`予選の技選択候補は${PRE_CANDIDATE_LIMIT}技までです`);
@@ -8551,14 +7704,18 @@ function trickFromCode(code){
   if(!Array.isArray(code) || code.length < 2) return null;
   const pt = code[0];
   const ref = code[1];
-  if(pt === "combo") return normalizeComboData(ref);
+  if(pt === "combo"){
+    const combo = normalizeComboData(ref);
+    return isOfficialOrderData(combo) ? combo : null;
+  }
   if(typeof ref === "number"){
     const arr = tricks[pointKey(pt)] || tricks[Number(pt)] || [];
     const name = arr[ref];
     if(name) return {pt, name};
     return null;
   }
-  return {pt, name:String(ref)};
+  const item = {pt, name:String(ref)};
+  return isOfficialOrderData(item) ? item : null;
 }
 
 function orderTextsToCodes(list){
@@ -8597,7 +7754,7 @@ function collectShortShareState(){
     }),
     q:[...document.querySelectorAll(".pre-chk:checked")].map(c=>trickCodeFromPtName(c.dataset.pt, c.dataset.name)),
     f:orderItemsToCodes(finalsList),
-    fc:orderTextsToCodes(finalsCandidateList),
+    fc:orderItemsToCodes(finalsCandidateList),
     y:serializePredictedList().map(d=>trickCodeFromPtName(d.pt, d.name)),
     py:serializePrePredictedList().map(d=>trickCodeFromPtName(d.pt, d.name)),
     r1:preItemsToCodes(list1),
@@ -8650,16 +7807,16 @@ function applyShortShareState(data){
   (data.fc||[]).forEach(code=>{
     const item = trickFromCode(code);
     if(item?.combo) appendOrderDataToList(finalsCandidateList, item, "candidate");
-    else if(item) finalsCandidateList.appendChild(finalCandidateLiTemplate(item.pt, item.name));
+    else if(item) finalsCandidateList.appendChild(finalCandidateLiTemplate(item.pt, item.name, false, !!code[2]));
   });
   predictList.innerHTML="";
-  (data.y||[]).forEach(code=>{
+  if(ENABLE_PREDICTED_TRICKS) (data.y||[]).forEach(code=>{
     const item = trickFromCode(code);
     if(item) predictList.appendChild(predictedLiTemplate(item.pt, item.name));
   });
   updatePredictCount();
   if(prePredictList) prePredictList.innerHTML="";
-  (data.py||[]).forEach(code=>{
+  if(ENABLE_PREDICTED_TRICKS) (data.py||[]).forEach(code=>{
     const item = trickFromCode(code);
     if(item && prePredictList) prePredictList.appendChild(prePredictedLiTemplate(item.pt, item.name));
   });
@@ -8677,6 +7834,7 @@ function applyShortShareState(data){
     if(item) preCandidateList.appendChild(preCandidateLiTemplate(item.pt, item.name, !!code[3]));
   });
 
+  sanitizeCompositionForOfficialData();
   calcTotal();
   syncPreChecksFromLists();
   updatePreSummary();
@@ -8721,7 +7879,7 @@ function applyCompactState(data){
     const m=String(txt).match(/^\[(.+?)点]\s*(.+)$/);
     if(m) finalsList.appendChild(orderLiTemplate(m[1], m[2]));
   });
-  (data.predicted||[]).forEach(d=>{
+  if(ENABLE_PREDICTED_TRICKS) (data.predicted||[]).forEach(d=>{
     if(d && d.name) predictList.appendChild(predictedLiTemplate(d.pt, d.name));
   });
   updatePredictCount();
@@ -8742,6 +7900,7 @@ function applyCompactState(data){
     if(m) preCandidateList.appendChild(preCandidateLiTemplate(m[1], m[2]));
   });
 
+  sanitizeCompositionForOfficialData();
   calcTotal();
   syncPreChecksFromLists();
   updatePreSummary();
@@ -9648,13 +8807,14 @@ function appendPreOrderEntry(entry, list, roundOrCandidate){
   if(typeof entry === "string"){
     const m=entry.match(/^\[(.+?)点]\s*(.+)$/);
     if(!m) return;
+    if(!isOfficialTechnique(m[1], m[2])) return;
     if(roundOrCandidate === "candidate") list.appendChild(preCandidateLiTemplate(m[1], m[2], false));
     else list.appendChild(mkPreOrderItem(m[1], m[2], roundOrCandidate, false));
     return;
   }
-  if(entry && entry.name){
-    if(roundOrCandidate === "candidate") list.appendChild(preCandidateLiTemplate(entry.pt, entry.name, !!entry.predicted));
-    else list.appendChild(mkPreOrderItem(entry.pt, entry.name, roundOrCandidate, !!entry.predicted));
+  if(entry && entry.name && isOfficialOrderData(entry)){
+    if(roundOrCandidate === "candidate") list.appendChild(preCandidateLiTemplate(entry.pt, entry.name, false));
+    else list.appendChild(mkPreOrderItem(entry.pt, entry.name, roundOrCandidate, false));
   }
 }
 
@@ -10255,7 +9415,7 @@ function exportCSV(){
     if(d.combo){
       rows.push(["final_combo_candidate", JSON.stringify(d), d.baseScore || "", "", "combo_candidate", i+1]);
     }else{
-      rows.push(["final_candidate", d.name, d.pt, "", d.predicted ? "predicted" : "", i+1]);
+      rows.push(["final_candidate", d.name, d.pt, d.multi ? 1.5 : "", d.predicted ? "predicted" : "", i+1]);
     }
   });
   serializePredictedList().forEach((d,i)=>{
@@ -10328,14 +9488,15 @@ document.getElementById("csv-import").addEventListener("change",async(e)=>{
     const cols=parseCsvLine(line);
     const type=cols[idx("type")]; const name=cols[idx("name")]; const point=cols[idx("point")];
 
+    if(type === "predicted_final" || String(cols[idx("round")] || "").includes("predicted")) continue;
+    if(type !== "final_combo" && type !== "final_combo_candidate" && !isOfficialTechnique(point, name)) continue;
+
     if(type==="final"){
       finalsList.dataset.authoritative = "1";
       const mul = cols[idx("mult15")];
-      finalsList.appendChild(orderLiTemplate(point,name, !!mul, cols[idx("round")] === "predicted"));
+      finalsList.appendChild(orderLiTemplate(point,name, !!mul, false));
     }else if(type==="final_candidate"){
-      finalsCandidateList.appendChild(finalCandidateLiTemplate(point,name));
-    }else if(type==="predicted_final"){
-      predictList.appendChild(predictedLiTemplate(point,name));
+      finalsCandidateList.appendChild(finalCandidateLiTemplate(point,name,false,!!cols[idx("mult15")]));
     }else if(type==="prelim"){
       const rnd = Number(cols[idx("round")])===2;
       (rnd?list2:list1).appendChild(mkPreOrderItem(point,name, rnd?2:1));
@@ -10350,6 +9511,7 @@ document.getElementById("csv-import").addEventListener("change",async(e)=>{
       }
     }
   }
+  sanitizeCompositionForOfficialData();
   calcTotal(); updatePreSummary(); rebuildFinalsList();
   showToast("CSVを取り込みました");
 });
@@ -10360,6 +9522,7 @@ document.getElementById("csv-import").addEventListener("change",async(e)=>{
 function saveState(){
   const playerInfo = getPlayerInfo();
   const state={
+    dataVersion: officialDataInfo.version || "built-in",
     entryNo: playerInfo.entryNo,
     playerName: playerInfo.playerName,
     pre: +preInput.value,
@@ -10431,7 +9594,7 @@ function loadState(){
       }
     });
     if((s.finals||[]).length) finalsList.dataset.authoritative = "1";
-    (s.predicted||[]).forEach(d=>{
+    if(ENABLE_PREDICTED_TRICKS) (s.predicted||[]).forEach(d=>{
       if(d && d.name) predictList.appendChild(predictedLiTemplate(d.pt, d.name));
     });
     updatePredictCount();
@@ -10442,12 +9605,12 @@ function loadState(){
       }else if(entry && entry.combo){
         appendOrderDataToList(finalsCandidateList, entry, "candidate");
       }else if(entry && entry.name){
-        finalsCandidateList.appendChild(finalCandidateLiTemplate(entry.pt, entry.name, !!entry.predicted));
+        finalsCandidateList.appendChild(finalCandidateLiTemplate(entry.pt, entry.name, !!entry.predicted, !!entry.multi));
       }
     });
 
     if(prePredictList) prePredictList.innerHTML="";
-    (s.prePredicted||[]).forEach(d=>{
+    if(ENABLE_PREDICTED_TRICKS) (s.prePredicted||[]).forEach(d=>{
       if(d && d.name && prePredictList) prePredictList.appendChild(prePredictedLiTemplate(d.pt, d.name));
     });
     updatePrePredictCount();
@@ -10460,13 +9623,61 @@ function loadState(){
     (s.p2||[]).forEach(entry=>appendPreOrderEntry(entry, list2, 2));
     (s.preCands||[]).forEach(entry=>appendPreOrderEntry(entry, preCandidateList, "candidate"));
 
+    sanitizeCompositionForOfficialData();
     rebuildFinalsList(); syncPreChecksFromLists();
-  updatePreSummary();
+    updatePreSummary();
     presetDirty = false;
     updateSaveStatus();
   }catch{} finally{
     suppressDirty = false;
   }
+}
+
+/* 正式リスト差し替え時に、旧リスト由来の技と停止中の予想技を残さない。 */
+function sanitizeCompositionForOfficialData(){
+  let removed = 0;
+  const listSpecs = [
+    {list:finalsList, main:"final"},
+    {list:finalsCandidateList, main:"candidate"},
+    {list:list1, main:"prelim"},
+    {list:list2, main:"prelim"},
+    {list:preCandidateList, main:"candidate"}
+  ];
+
+  listSpecs.forEach(({list,main})=>{
+    if(!list) return;
+    [...list.querySelectorAll(":scope > .order-item")].forEach(li=>{
+      const data = orderItemToData(li);
+      if(isOfficialOrderData(data)) return;
+      if(main === "final" && data && !data.combo) uncheckFinalTech(data.pt, data.name);
+      if(main === "prelim" && data && !data.combo) setPreTechChecked(data.pt, data.name, false);
+      li.remove();
+      removed++;
+    });
+  });
+
+  if(predictList){
+    removed += predictList.querySelectorAll(".predict-item").length;
+    predictList.innerHTML = "";
+  }
+  if(prePredictList){
+    removed += prePredictList.querySelectorAll(".predict-item").length;
+    prePredictList.innerHTML = "";
+  }
+
+  let comboChanged = false;
+  comboDefinitions = comboDefinitions.map(combo=>{
+    if(!combo || isOfficialOrderData(combo)) return combo;
+    comboChanged = true;
+    removed++;
+    return null;
+  });
+  if(comboChanged) renderComboDefinitions();
+
+  updatePredictCount();
+  updatePrePredictCount();
+  syncToggleButtonStates();
+  return removed;
 }
 
 /* =========================================================
@@ -10623,8 +9834,9 @@ document.getElementById("load-finals-preset").addEventListener("click",()=>{
   renderComboDefinitions();
   main.slice(0,30).forEach(d=> appendOrderDataToList(finalsList, d, "final"));
   cand.slice(0,FINAL_CANDIDATE_LIMIT).forEach(d=> appendOrderDataToList(finalsCandidateList, d, "candidate"));
-  predicted.slice(0,10).forEach(d=> predictList.appendChild(predictedLiTemplate(d.pt, d.name)));
+  if(ENABLE_PREDICTED_TRICKS) predicted.slice(0,10).forEach(d=> predictList.appendChild(predictedLiTemplate(d.pt, d.name)));
   updatePredictCount();
+  sanitizeCompositionForOfficialData();
   rebuildFinalsList();
   document.getElementById("finals-preset-name").value = pack.name || "";
   updateAllPresetOptionLabels();
@@ -10670,11 +9882,12 @@ document.getElementById("load-prelims-preset").addEventListener("click",()=>{
 
   list1.innerHTML=""; list2.innerHTML=""; preCandidateList.innerHTML="";
   if(prePredictList) prePredictList.innerHTML="";
-  prePredicted.slice(0,10).forEach(d=>{ if(d && d.name && prePredictList) prePredictList.appendChild(prePredictedLiTemplate(d.pt,d.name)); });
+  if(ENABLE_PREDICTED_TRICKS) prePredicted.slice(0,10).forEach(d=>{ if(d && d.name && prePredictList) prePredictList.appendChild(prePredictedLiTemplate(d.pt,d.name)); });
   updatePrePredictCount();
   r1.slice(0,6).forEach(d=> appendPreOrderEntry(d, list1, 1));
   r2.slice(0,6).forEach(d=> appendPreOrderEntry(d, list2, 2));
   cand.slice(0,PRE_CANDIDATE_LIMIT).forEach(d=> appendPreOrderEntry(d, preCandidateList, "candidate"));
+  sanitizeCompositionForOfficialData();
   syncPreChecksFromLists();
   updatePreSummary();
   document.getElementById("prelims-preset-name").value = pack.name || "";
@@ -10762,9 +9975,9 @@ document.getElementById('tour-never').addEventListener('click',tourNever);
 
 if('serviceWorker' in navigator){
   const swCode = `
-  const CACHE='ooruricup2026-v1-104';
+  const CACHE='ooruricup2026-v1-107';
   self.addEventListener('install',e=>{
-    e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])));
+    e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./data/official_tricks_2026.json'])));
     self.skipWaiting();
   });
   self.addEventListener('activate',e=>{
@@ -10774,9 +9987,16 @@ if('serviceWorker' in navigator){
   self.addEventListener('fetch',e=>{
     const url=new URL(e.request.url);
     if(url.origin===location.origin){
-      e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
-        const clone=res.clone(); caches.open(CACHE).then(c=>c.put(e.request,clone)); return res;
-      }).catch(()=>caches.match('./'))));
+      const isOfficialData=url.pathname.endsWith('/data/official_tricks_2026.json');
+      const isNavigation=e.request.mode==='navigate';
+      if(isOfficialData || isNavigation){
+        const cacheKey=isOfficialData ? './data/official_tricks_2026.json' : './';
+        e.respondWith(fetch(e.request).then(res=>{
+          const clone=res.clone(); caches.open(CACHE).then(c=>c.put(cacheKey,clone)); return res;
+        }).catch(()=>caches.match(cacheKey)));
+      }else{
+        e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+      }
     }
   });`;
   const blob = new Blob([swCode], {type:'text/javascript'});
@@ -11123,7 +10343,11 @@ function uxUpdatePointControls(){
     return;
   }
 
-  const current = Number(uxPointState[mode] || uxPoints[0] || 1);
+  let current = Number(uxPointState[mode] || uxPoints[0] || 1);
+  if(!uxPoints.includes(current)){
+    current = uxPoints[0] || 1;
+    uxPointState[mode] = current;
+  }
   const index = uxPoints.indexOf(current);
   const label = document.getElementById("ux-point-current");
   if(label) label.textContent = `${current}点`;
@@ -11284,6 +10508,7 @@ function uxUpdateSheetLimitAlert(mode=uxGetMode()){
 function uxUpdateSheetActions(){
   const mode = uxGetMode();
   const connected = !!uxSheetActiveSource?.isConnected;
+  const activeIsCombo = uxSheetActiveSource?.dataset.combo === "1" || uxSheetActiveSource?.classList.contains("is-combo");
   document.querySelectorAll("#ux-selection-actions button").forEach(btn=>{
     const action = btn.dataset.uxAction;
     if(action === "candidate-list"){
@@ -11294,10 +10519,19 @@ function uxUpdateSheetActions(){
       btn.setAttribute("aria-expanded", String(uxCandidatePanelOpen));
       return;
     }
+    btn.hidden = (action === "multi" && (mode !== "score" || activeIsCombo)) || (action === "round" && mode !== "prelims");
     let enabled = connected;
     if(action === "multi" && mode !== "score") enabled = false;
     if(action === "round" && mode !== "prelims") enabled = false;
     btn.disabled = !enabled;
+    if(action === "up5") btn.textContent = "5つ前へ";
+    if(action === "up") btn.textContent = "1つ前へ";
+    if(action === "down") btn.textContent = "1つ後へ";
+    if(action === "down5") btn.textContent = "5つ後へ";
+    if(action === "candidate") btn.textContent = "候補に移す";
+    if(action === "delete") btn.textContent = "選択から外す";
+    if(action === "multi") btn.textContent = uxSheetActiveSource?.dataset.multi === "1" ? "1.5倍を解除" : "1.5倍にする";
+    if(action === "round") btn.textContent = uxSheetActiveSource?.parentElement === list1 ? "第2Rへ移す" : "第1Rへ移す";
   });
 }
 
@@ -11330,7 +10564,7 @@ function uxRenderCandidatePanel(container, mode){
     row.className = "ux-sheet-candidate-row";
     const name = document.createElement("div");
     name.className = "ux-sheet-candidate-name";
-    name.textContent = uxSheetText(item.source);
+    name.textContent = `${uxSheetText(item.source)}${item.source.dataset.multi === "1" ? "（1.5倍設定を保持）" : ""}`;
     const actions = document.createElement("div");
     actions.className = "ux-sheet-candidate-actions";
 
@@ -11377,10 +10611,11 @@ function uxAdoptCandidate(index,destination){
         return;
       }
       const predicted = source.dataset.predicted === "1" || source.classList.contains("is-predicted");
+      const multi = source.dataset.multi === "1";
       source.remove();
       finalsList.dataset.authoritative = "1";
-      if(!predicted) setFinalTechChecked(info.pt, info.name, true, false);
-      finalsList.appendChild(orderLiTemplate(info.pt, info.name, false, predicted));
+      if(!predicted) setFinalTechChecked(info.pt, info.name, true, multi);
+      finalsList.appendChild(orderLiTemplate(info.pt, info.name, multi, predicted));
     }
     rebuildFinalsList();
   }else{
@@ -11511,6 +10746,7 @@ function uxRenderSelectionSheet(){
   const container = document.getElementById("ux-selection-list");
   const count = document.getElementById("ux-selection-sheet-count");
   const title = document.getElementById("ux-selection-title");
+  const help = document.getElementById("ux-selection-help");
   if(!container || !count || !title) return;
   uxDestroySheetDnd();
   const mode = uxGetMode();
@@ -11519,6 +10755,15 @@ function uxRenderSelectionSheet(){
   if(uxSheetActiveSource && !uxSheetActiveSource.isConnected) uxSheetActiveSource = null;
   title.textContent = mode === "prelims" ? "予選の編成" : "決勝の編成";
   count.textContent = mode === "prelims" ? `${uxSheetItems.length}/12技` : `${uxSheetItems.length}/30技`;
+  if(help){
+    const activeName = uxSheetActiveSource ? uxSheetText(uxSheetActiveSource) : "";
+    help.textContent = activeName
+      ? `「${activeName}」を選択中です。下のボタンで移動・候補保管・解除ができます。`
+      : (mode === "prelims"
+        ? "≡をドラッグすると、順番変更と第1R・第2R間の移動ができます。技をタップすると個別操作ができます。"
+        : "≡をドラッグして順番を変更できます。技をタップすると、1.5倍・候補保管・解除ができます。");
+    help.classList.toggle("is-active", !!activeName);
+  }
   container.innerHTML = "";
 
   if(!uxSheetItems.length){
@@ -11582,10 +10827,10 @@ function uxRenderSelectionSheet(){
   if(uxSheetItems.length) uxInitSheetDnd(mode);
 }
 
-function uxOpenSelectionSheet(){
+function uxOpenSelectionSheet(source=null){
   const sheet = document.getElementById("ux-selection-sheet");
   if(!sheet) return;
-  uxSheetActiveSource = null;
+  uxSheetActiveSource = source?.isConnected ? source : null;
   uxCandidatePanelOpen = false;
   uxRenderSelectionSheet();
   sheet.classList.add("open");
@@ -11699,11 +10944,19 @@ function uxToggleTechniqueCell(cell){
   if(!input || input.disabled) return;
   uxCaptureUndo(input.classList.contains("pre-chk") ? "予選選択" : "決勝選択");
   input.checked = !input.checked;
+  const selected = input.checked;
   input.dispatchEvent(new Event("change", {bubbles:true}));
   vibrate(12);
   requestAnimationFrame(()=>{
     uxUpdateTray();
     uxApplyFilter(input.classList.contains("pre-chk") ? "prelims" : "score", true);
+    if(input.classList.contains("pre-chk") && selected){
+      const text = orderText(input.dataset.pt, input.dataset.name);
+      const round = listContainsText(list1, text) ? "第1R" : "第2R";
+      showToast(`${round}に追加しました`, 1000);
+    }else{
+      showToast(selected ? "決勝編成に追加しました" : "選択から外しました", 1000);
+    }
   });
 }
 
@@ -11733,12 +10986,8 @@ function uxWrapAdvanced(nodes, label, open=false){
 
 function uxCreateAdvancedGroups(){
   uxWrapAdvanced([
-    document.querySelector("#mode-finals .predict-box"),
     document.getElementById("combo-box")
-  ], "高度な編集（予想技・コンボ技）", false);
-  uxWrapAdvanced([
-    document.getElementById("pre-predict-box")
-  ], "高度な編集（予選用の予想技）", false);
+  ], "高度な編集（コンボ技）", false);
 
   uxWrapAdvanced([
     document.querySelector(".player-info-box"),
@@ -11817,7 +11066,9 @@ function uxSyncMode(){
 function initOoruriUx(){
   if(uxInitialized) return;
   uxInitialized = true;
-  uxPoints = Object.keys(tricks).map(Number).filter(Number.isFinite).sort((a,b)=>a-b);
+  uxPoints = Object.keys(tricks)
+    .filter(point=>Array.isArray(tricks[point]) && tricks[point].length > 0)
+    .map(Number).filter(Number.isFinite).sort((a,b)=>a-b);
   if(!uxPoints.length) uxPoints = [1,2,3,4,5,6,7,8,9,10];
 
   try{
@@ -11834,6 +11085,7 @@ function initOoruriUx(){
   const pointMenu = document.getElementById("ux-point-menu");
   if(pointMenu){
     pointMenu.innerHTML = "";
+    pointMenu.style.gridTemplateRows = `repeat(${Math.max(1, uxPoints.length)}, minmax(38px, 1fr))`;
     uxPoints.forEach(point=>{
       const button = document.createElement("button");
       button.type = "button";
@@ -11942,6 +11194,13 @@ function initOoruriUx(){
     const item = uxSheetItems[Number(row.dataset.uxSheetIndex)];
     uxSheetActiveSource = item?.source || null;
     uxRenderSelectionSheet();
+  });
+  document.addEventListener("click", event=>{
+    const edit = event.target.closest(".ux-inline-edit");
+    if(!edit) return;
+    event.preventDefault();
+    event.stopPropagation();
+    uxOpenSelectionSheet(edit.closest(".order-item"));
   });
   document.getElementById("ux-selection-actions")?.addEventListener("click", event=>{
     const button = event.target.closest("button[data-ux-action]");
