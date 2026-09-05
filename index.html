@@ -4285,25 +4285,34 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 }
 
 /* =========================================================
-   v1.107 2026年公式110技・動画／判定の公開待ち対応
+   v1.108 2026年公式110技・判定基準ポップアップ
 ========================================================= */
-/* 後日公開予定の各技動画・判定導線は、旧データを含めて画面から隠す。 */
-.score-tech-item .judge-btn,
-.pre-tech-item .judge-btn,
-.mini-btn[data-link="judge"],
-#media-modal{display:none!important}
+.mini-btn[data-link="judge"]{display:none!important}
 
-/* 非表示にした列の空きを残さず、技名・候補・倍率を読みやすく並べる。 */
+/* 技名の横に「判定基準」ボタンを戻し、既存の候補・倍率操作も保つ。 */
 .score-tech-item{
-  grid-template-columns:minmax(0,1fr) 44px 46px!important;
-  grid-template-areas:"name cand multi"!important;
+  grid-template-columns:minmax(0,1fr) 44px 44px 46px!important;
+  grid-template-areas:"name judge cand multi"!important;
 }
 .pre-tech-item{
-  grid-template-columns:minmax(0,1fr) 44px!important;
-  grid-template-areas:"name cand"!important;
+  grid-template-columns:minmax(0,1fr) 44px 44px!important;
+  grid-template-areas:"name judge cand"!important;
 }
+.score-tech-item .judge-btn,
+.pre-tech-item .judge-btn{
+  display:flex!important;
+  width:44px!important;
+  min-width:44px!important;
+  border-color:#90caf9!important;
+  background:#e3f2fd!important;
+  color:#0d47a1!important;
+  box-shadow:none!important;
+}
+.score-tech-item .judge-btn:hover,
+.pre-tech-item .judge-btn:hover{background:#bbdefb!important}
 .score-tech-item .candidate-add-btn,
 .pre-tech-item .candidate-add-btn{width:44px!important;min-width:44px!important}
+.media-criteria{padding-top:12px}
 </style>
 </head>
 <body>
@@ -4744,28 +4753,19 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
   </div>
 </div>
 
-<!-- 統合：動画＋判定基準モーダル -->
-<div id="media-modal" class="media-modal">
+<!-- 各技の判定基準モーダル -->
+<div id="media-modal" class="media-modal" aria-hidden="true">
   <div class="media-overlay" data-close="1"></div>
-  <div class="media-dialog" role="dialog" aria-modal="true">
+  <div class="media-dialog" role="dialog" aria-modal="true" aria-labelledby="media-name">
     <div class="media-header">
       <div class="media-title">
         <span id="media-name">技名</span>
         <span class="media-pt-chip" id="media-pt-chip">-点</span>
       </div>
-      <button type="button" id="media-close">✕</button>
+      <button type="button" id="media-close" aria-label="判定基準を閉じる">✕</button>
     </div>
 
     <div class="media-body">
-      <div class="media-video">
-        <div class="media-player-shell">
-          <div id="yt-player"></div>
-        </div>
-        <div class="media-video-actions">
-          <a class="media-link" id="media-trick-link" href="#" target="_blank" rel="noopener">この技をYouTubeで開く</a>
-          <a class="media-link" id="media-full-link" href="#" target="_blank" rel="noopener">この点数の全動画</a>
-        </div>
-      </div>
       <div class="media-criteria" id="media-criteria"></div>
     </div>
   </div>
@@ -4897,7 +4897,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 /* =========================================================
    v1.72 外部技データ読み込み
    2026年公式技一覧は data/official_tricks_2026.json から読み込む。
-   点数別動画は公開済み。各技の開始位置・審査基準・成功判定は後日公開予定。
+   点数別動画と、各技の開始状態・審査基準・成功判定を収録する。
 ========================================================= */
 const OFFICIAL_TRICK_DATA_PATH = "./data/official_tricks_2026.json";
 const ENABLE_PREDICTED_TRICKS = false;
@@ -5258,8 +5258,6 @@ const mediaName   = document.getElementById('media-name');
 const mediaPtChip = document.getElementById('media-pt-chip');
 const mediaClose  = document.getElementById('media-close');
 const mediaCriteriaWrap = document.getElementById('media-criteria');
-const mediaTrickLink = document.getElementById('media-trick-link');
-const mediaFullLink  = document.getElementById('media-full-link');
 
 /* =========================================================
    5) ユーティリティ
@@ -5368,7 +5366,7 @@ function makeScoreItem(pt, name){
       <span class="tech-title">${escapeAttr(name)}</span>
       <span class="tech-pt-label">${pt}点技</span>
     </div>
-    <button type="button" class="judge-btn" data-name="${escapeAttr(name)}" data-pt="${pt}" aria-label="${escapeAttr(name)}の動画・判定"><span>動画</span><span>判定</span></button>
+    <button type="button" class="judge-btn" data-name="${escapeAttr(name)}" data-pt="${pt}" aria-label="${escapeAttr(name)}の判定基準を開く"><span>判定</span><span>基準</span></button>
     <label class="toggle-btn multi-toggle"><input type="checkbox" class="multi"><span>1.5倍</span></label>
     <label class="toggle-btn use-toggle"><input type="checkbox" class="chk" data-pt="${pt}" data-name="${escapeAttr(name)}"><span>使用</span></label>
     <button type="button" class="candidate-add-btn" data-kind="finals" data-pt="${pt}" data-name="${escapeAttr(name)}">候補</button>`;
@@ -5382,7 +5380,7 @@ function makePreItemCheck(pt, name){
       <span class="tech-title">${escapeAttr(name)}</span>
       <span class="tech-pt-label">${pt}点技</span>
     </div>
-    <button type="button" class="judge-btn" data-name="${escapeAttr(name)}" data-pt="${pt}" aria-label="${escapeAttr(name)}の動画・判定"><span>動画</span><span>判定</span></button>
+    <button type="button" class="judge-btn" data-name="${escapeAttr(name)}" data-pt="${pt}" aria-label="${escapeAttr(name)}の判定基準を開く"><span>判定</span><span>基準</span></button>
     <label class="toggle-btn pre-toggle"><input type="checkbox" class="pre-chk" data-pt="${pt}" data-name="${escapeAttr(name)}"><span>使用</span></label>
     <button type="button" class="candidate-add-btn" data-kind="prelims" data-pt="${pt}" data-name="${escapeAttr(name)}">候補</button>`;
   return item;
@@ -5549,120 +5547,12 @@ function renderCriteria(text){
 }
 
 /* =========================================================
-   8) 個別動画セグメント取得
+   8) 判定基準モーダル open/close
 ========================================================= */
-function getSegment(pt, name){
-  const list = tricks[pt] || [];
-  const startsMap = trickStartSecondsByPoint[pt] || {};
-  const videoId = videoIdByPoint[pt];
+let mediaModalTrigger = null;
 
-  const startV = lookupStart(startsMap, name);
-  const start = (startV != null) ? Number(startV) : null;
-
-  // 次の技の開始を end にする
-  let end = null;
-  const idx = list.indexOf(name);
-  if(idx >= 0 && idx < list.length - 1){
-    const nextName = list[idx+1];
-    const nextStartV = lookupStart(startsMap, nextName);
-    if(nextStartV != null && start != null && Number(nextStartV) > start){
-      end = Number(nextStartV);
-    }
-  }
-
-  return { videoId, start, end };
-}
-
-/* =========================================================
-   9) YouTube IFrame API（区間再生）
-========================================================= */
-let ytPlayer = null;
-let ytReady = false;
-let endTimer = null;
-let currentSegment = null;
-
-(function loadYT(){
-  const tag = document.createElement("script");
-  tag.src = "https://www.youtube.com/iframe_api";
-  document.head.appendChild(tag);
-})();
-
-window.onYouTubeIframeAPIReady = function(){
-  ytReady = true;
-};
-
-function ensurePlayer(videoId){
-  return new Promise(resolve=>{
-    const make = ()=>{
-      if(ytPlayer){
-        resolve(ytPlayer);
-        return;
-      }
-      ytPlayer = new YT.Player("yt-player", {
-        videoId: videoId || videoIdByPoint[1],
-        playerVars: {
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1
-        },
-        events: {
-          onReady: ()=>resolve(ytPlayer)
-        }
-      });
-    };
-
-    if(ytReady && window.YT && window.YT.Player){
-      make();
-    }else{
-      const t = setInterval(()=>{
-        if(ytReady && window.YT && window.YT.Player){
-          clearInterval(t);
-          make();
-        }
-      }, 80);
-    }
-  });
-}
-
-function clearEndTimer(){
-  if(endTimer){
-    clearTimeout(endTimer);
-    endTimer = null;
-  }
-}
-
-function playSegment(seg){
-  currentSegment = seg;
-  const { videoId, start, end } = seg;
-
-  ensurePlayer(videoId).then(p=>{
-    clearEndTimer();
-
-    if(start != null){
-      // endSeconds は API が無視するケースがあるので保険タイマー併用
-      p.loadVideoById({
-        videoId,
-        startSeconds: start,
-        endSeconds: end != null ? end : undefined
-      });
-    }else{
-      p.loadVideoById({ videoId });
-    }
-
-    // 保険タイマー
-    if(start != null && end != null){
-      const ms = Math.max(500, (end - start) * 1000);
-      endTimer = setTimeout(()=>{
-        try{ p.pauseVideo(); }catch{}
-      }, ms);
-    }
-  });
-}
-
-/* =========================================================
-   10) 統合モーダル open/close
-========================================================= */
-function openMediaModal(pt, name){
+function openMediaModal(pt, name, trigger=null){
+  mediaModalTrigger = trigger || document.activeElement;
   mediaName.textContent = name;
   mediaPtChip.textContent = `${pt}点`;
 
@@ -5670,40 +5560,27 @@ function openMediaModal(pt, name){
   const critText = lookupCriteria(name);
   mediaCriteriaWrap.innerHTML = renderCriteria(critText);
 
-  // リンク
-  const baseVid = videoIdByPoint[pt];
-  const startsMap = trickStartSecondsByPoint[pt];
-  const start = lookupStart(startsMap, name);
-  const trickUrl = baseVid
-    ? `https://youtu.be/${baseVid}${start!=null ? `?t=${start}` : ""}`
-    : "#";
-  mediaTrickLink.href = trickUrl;
-  mediaFullLink.href = fullVideoByPoint[pt] || "#";
-
-  // 動画
-  const seg = getSegment(pt, name);
-  if(!seg.videoId){
-    showToast("この点数の動画IDが未登録です");
-  }else{
-    playSegment(seg);
-  }
-
   mediaModal.style.display = "flex";
+  mediaModal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  mediaClose.focus();
 }
 
 function closeMediaModal(){
   mediaModal.style.display = "none";
-  clearEndTimer();
-  try{ ytPlayer && ytPlayer.pauseVideo(); }catch{}
+  mediaModal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  if(mediaModalTrigger && typeof mediaModalTrigger.focus === "function") mediaModalTrigger.focus();
+  mediaModalTrigger = null;
 }
 
-/* 判定/動画ボタン */
+/* 判定基準ボタン */
 document.addEventListener("click",(e)=>{
   const btn = e.target.closest(".judge-btn");
   if(btn){
     const name = btn.dataset.name;
     const pt = Number(btn.dataset.pt);
-    openMediaModal(pt, name);
+    openMediaModal(pt, name, btn);
     return;
   }
   if(e.target === mediaClose || e.target?.dataset?.close === "1"){
@@ -9975,7 +9852,7 @@ document.getElementById('tour-never').addEventListener('click',tourNever);
 
 if('serviceWorker' in navigator){
   const swCode = `
-  const CACHE='ooruricup2026-v1-107';
+  const CACHE='ooruricup2026-v1-108';
   self.addEventListener('install',e=>{
     e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./data/official_tricks_2026.json'])));
     self.skipWaiting();
