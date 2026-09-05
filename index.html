@@ -425,7 +425,7 @@ button{border:none;border-radius:8px;cursor:pointer}
   margin-top:6px;
 }
 
-/* ===== 統合メディアモーダル ===== */
+/* ===== 動画＋判定基準モーダル ===== */
 .media-modal{
   position:fixed;
   inset:0;
@@ -488,15 +488,56 @@ button{border:none;border-radius:8px;cursor:pointer}
   background:#000;
 }
 #yt-player{
+  display:block;
   width:100%;
   aspect-ratio:16/9;
   background:#000;
+}
+#yt-player iframe{
+  display:block;
+  width:100%;
+  height:100%;
+  border:0;
+}
+.media-segment-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-top:8px;
+  font-size:12px;
+  color:#555;
+}
+.media-segment-range{
+  font-weight:800;
+  color:#0d47a1;
 }
 .media-video-actions{
   display:flex;
   gap:6px;
   flex-wrap:wrap;
   margin:8px 0 10px 0;
+}
+.media-play-btn{
+  flex:1;
+  min-width:140px;
+  min-height:42px;
+  padding:8px 12px;
+  border:1px solid #0a84ff;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:800;
+}
+.media-play-start{background:#0a84ff;color:#fff}
+.media-play-start:hover{background:#006edb}
+.media-play-replay{background:#eef6ff;color:#0b4aa6}
+.media-play-replay:hover{background:#dcecff}
+.media-play-btn:disabled{opacity:.55;cursor:wait}
+.media-video-status{
+  min-height:20px;
+  margin:-4px 0 8px;
+  font-size:11px;
+  color:#555;
 }
 .media-link{
   display:inline-flex;
@@ -4285,7 +4326,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 }
 
 /* =========================================================
-   v1.108 2026年公式110技・判定基準ポップアップ
+   v1.109 2026年公式110技・区間動画付き判定基準ポップアップ
 ========================================================= */
 .mini-btn[data-link="judge"]{display:none!important}
 
@@ -4766,6 +4807,21 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
     </div>
 
     <div class="media-body">
+      <div class="media-video">
+        <div class="media-player-shell">
+          <div id="yt-player" aria-label="選択した技の動画"></div>
+        </div>
+        <div class="media-segment-meta">
+          <span class="media-segment-range" id="media-segment-range">再生区間を準備中</span>
+          <span>区間終了で停止</span>
+        </div>
+        <div class="media-video-actions">
+          <button type="button" class="media-play-btn media-play-start" id="media-start">▶ スタート</button>
+          <button type="button" class="media-play-btn media-play-replay" id="media-replay">↻ もう一度見る</button>
+          <a class="media-link" id="media-youtube-link" href="#" target="_blank" rel="noopener">YouTubeでこの位置を開く</a>
+        </div>
+        <div class="media-video-status" id="media-video-status" aria-live="polite">スタート位置で待機中</div>
+      </div>
       <div class="media-criteria" id="media-criteria"></div>
     </div>
   </div>
@@ -5258,6 +5314,11 @@ const mediaName   = document.getElementById('media-name');
 const mediaPtChip = document.getElementById('media-pt-chip');
 const mediaClose  = document.getElementById('media-close');
 const mediaCriteriaWrap = document.getElementById('media-criteria');
+const mediaStart = document.getElementById('media-start');
+const mediaReplay = document.getElementById('media-replay');
+const mediaSegmentRange = document.getElementById('media-segment-range');
+const mediaVideoStatus = document.getElementById('media-video-status');
+const mediaYouTubeLink = document.getElementById('media-youtube-link');
 
 /* =========================================================
    5) ユーティリティ
@@ -5547,7 +5608,194 @@ function renderCriteria(text){
 }
 
 /* =========================================================
-   8) 判定基準モーダル open/close
+   8) 技別動画区間
+========================================================= */
+let currentMediaSegment = null;
+let youtubeApiPromise = null;
+let ytPlayerReadyPromise = null;
+let ytPlayer = null;
+let segmentMonitor = null;
+
+function formatVideoTime(totalSeconds){
+  const value = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const minutes = Math.floor(value / 60);
+  const seconds = value % 60;
+  return `${minutes}:${String(seconds).padStart(2,"0")}`;
+}
+
+function getMediaSegment(pt, name){
+  const pointKey = String(pt);
+  const list = tricks[pointKey] || [];
+  const startsMap = trickStartSecondsByPoint[pointKey] || {};
+  const index = list.indexOf(name);
+  const startValue = lookupStart(startsMap, name);
+  const start = startValue == null ? null : Number(startValue);
+  let end = null;
+
+  if(index >= 0 && index < list.length - 1){
+    const nextValue = lookupStart(startsMap, list[index + 1]);
+    if(nextValue != null && start != null && Number(nextValue) > start){
+      end = Number(nextValue);
+    }
+  }
+
+  return {
+    pt:pointKey,
+    name,
+    videoId:videoIdByPoint[pointKey] || "",
+    start,
+    end
+  };
+}
+
+function loadYouTubeApi(){
+  if(window.YT?.Player) return Promise.resolve();
+  if(youtubeApiPromise) return youtubeApiPromise;
+
+  youtubeApiPromise = new Promise((resolve, reject)=>{
+    const previousReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = ()=>{
+      if(typeof previousReady === "function") previousReady();
+      resolve();
+    };
+
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    script.async = true;
+    script.onerror = ()=>reject(new Error("YouTube API load failed"));
+    document.head.appendChild(script);
+  });
+
+  return youtubeApiPromise;
+}
+
+function stopSegmentMonitor(){
+  if(segmentMonitor != null){
+    clearInterval(segmentMonitor);
+    segmentMonitor = null;
+  }
+}
+
+function cueCurrentMediaSegment(statusText="スタート位置に戻りました"){
+  const segment = currentMediaSegment;
+  if(!ytPlayer || !segment?.videoId || segment.start == null) return;
+  stopSegmentMonitor();
+  ytPlayer.cueVideoById({
+    videoId:segment.videoId,
+    startSeconds:segment.start
+  });
+  mediaVideoStatus.textContent = statusText;
+}
+
+function startSegmentMonitor(){
+  stopSegmentMonitor();
+  const segmentKey = currentMediaSegment?.key;
+  if(!segmentKey || currentMediaSegment.end == null) return;
+
+  segmentMonitor = setInterval(()=>{
+    if(!ytPlayer || currentMediaSegment?.key !== segmentKey){
+      stopSegmentMonitor();
+      return;
+    }
+    const currentTime = Number(ytPlayer.getCurrentTime?.());
+    if(Number.isFinite(currentTime) && currentTime >= currentMediaSegment.end - 0.08){
+      cueCurrentMediaSegment("区間再生が終わりました。もう一度見られます");
+    }
+  }, 120);
+}
+
+function handleYouTubeStateChange(event){
+  if(!window.YT || !currentMediaSegment) return;
+  if(event.data === window.YT.PlayerState.PLAYING){
+    startSegmentMonitor();
+  }else if(event.data === window.YT.PlayerState.ENDED){
+    cueCurrentMediaSegment("動画の最後まで再生しました。もう一度見られます");
+  }
+}
+
+async function ensureYouTubePlayer(){
+  await loadYouTubeApi();
+  if(ytPlayerReadyPromise) return ytPlayerReadyPromise;
+
+  ytPlayerReadyPromise = new Promise((resolve, reject)=>{
+    ytPlayer = new window.YT.Player("yt-player", {
+      width:"100%",
+      height:"100%",
+      playerVars:{playsinline:1, rel:0, modestbranding:1, controls:1},
+      events:{
+        onReady:()=>resolve(ytPlayer),
+        onStateChange:handleYouTubeStateChange,
+        onError:(event)=>{
+          mediaVideoStatus.textContent = `動画を読み込めませんでした（エラー ${event.data}）`;
+          reject(new Error(`YouTube player error ${event.data}`));
+        }
+      }
+    });
+  });
+
+  return ytPlayerReadyPromise;
+}
+
+async function showMediaSegment(pt, name){
+  const segment = getMediaSegment(pt, name);
+  segment.key = `${segment.pt}:${segment.name}`;
+  currentMediaSegment = segment;
+  const hasSegment = !!segment.videoId && segment.start != null;
+
+  mediaStart.disabled = true;
+  mediaReplay.disabled = true;
+
+  if(!hasSegment){
+    mediaSegmentRange.textContent = "動画の開始位置が未登録です";
+    mediaVideoStatus.textContent = "この技の動画は準備中です";
+    mediaYouTubeLink.hidden = true;
+    return;
+  }
+
+  const endLabel = segment.end == null ? "動画の最後" : formatVideoTime(segment.end);
+  mediaSegmentRange.textContent = `再生区間 ${formatVideoTime(segment.start)}〜${endLabel}`;
+  mediaVideoStatus.textContent = "動画を準備しています…";
+  mediaYouTubeLink.hidden = false;
+  mediaYouTubeLink.href = `https://youtu.be/${segment.videoId}?t=${segment.start}`;
+
+  try{
+    await ensureYouTubePlayer();
+    if(currentMediaSegment?.key !== segment.key) return;
+    cueCurrentMediaSegment(`${formatVideoTime(segment.start)}から再生できます`);
+    mediaStart.disabled = false;
+    mediaReplay.disabled = false;
+  }catch(error){
+    if(currentMediaSegment?.key !== segment.key) return;
+    mediaVideoStatus.textContent = "動画を読み込めません。YouTubeのリンクからご覧ください";
+  }
+}
+
+async function playMediaSegment(isReplay=false){
+  if(!currentMediaSegment?.videoId || currentMediaSegment.start == null) return;
+  const segment = currentMediaSegment;
+  try{
+    const player = await ensureYouTubePlayer();
+    if(currentMediaSegment?.key !== segment.key) return;
+    stopSegmentMonitor();
+    player.loadVideoById({
+      videoId:segment.videoId,
+      startSeconds:segment.start
+    });
+    startSegmentMonitor();
+  }catch(error){
+    mediaVideoStatus.textContent = "動画を読み込めません。YouTubeのリンクからご覧ください";
+    return;
+  }
+  mediaVideoStatus.textContent = isReplay
+    ? `${formatVideoTime(segment.start)}からもう一度再生します`
+    : `${formatVideoTime(segment.start)}から再生します`;
+}
+
+mediaStart.addEventListener("click",()=>playMediaSegment(false));
+mediaReplay.addEventListener("click",()=>playMediaSegment(true));
+
+/* =========================================================
+   9) 動画＋判定基準モーダル open/close
 ========================================================= */
 let mediaModalTrigger = null;
 
@@ -5559,6 +5807,7 @@ function openMediaModal(pt, name, trigger=null){
   // 判定基準
   const critText = lookupCriteria(name);
   mediaCriteriaWrap.innerHTML = renderCriteria(critText);
+  showMediaSegment(pt, name);
 
   mediaModal.style.display = "flex";
   mediaModal.setAttribute("aria-hidden", "false");
@@ -5569,6 +5818,9 @@ function openMediaModal(pt, name, trigger=null){
 function closeMediaModal(){
   mediaModal.style.display = "none";
   mediaModal.setAttribute("aria-hidden", "true");
+  stopSegmentMonitor();
+  if(ytPlayer?.pauseVideo) ytPlayer.pauseVideo();
+  currentMediaSegment = null;
   document.body.style.overflow = "";
   if(mediaModalTrigger && typeof mediaModalTrigger.focus === "function") mediaModalTrigger.focus();
   mediaModalTrigger = null;
@@ -9852,7 +10104,7 @@ document.getElementById('tour-never').addEventListener('click',tourNever);
 
 if('serviceWorker' in navigator){
   const swCode = `
-  const CACHE='ooruricup2026-v1-108';
+  const CACHE='ooruricup2026-v1-109';
   self.addEventListener('install',e=>{
     e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./data/official_tricks_2026.json'])));
     self.skipWaiting();
