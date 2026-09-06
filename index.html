@@ -4552,8 +4552,8 @@ body{
     </div>
     <div class="total-top-row live-score-breakdown" id="chips" aria-label="点数内訳">
       <div class="total-chip"><span>選択</span><strong id="selected-count">0</strong><small>技</small></div>
-      <div class="total-chip"><span>基礎</span><strong id="base-total">0</strong><small>点</small></div>
-      <div class="total-chip"><span>FMD</span><strong id="fmd-total">0</strong><small>点</small></div>
+      <div class="total-chip"><span>技点</span><strong id="base-total">0</strong><small>点</small></div>
+      <div class="total-chip"><span>決勝</span><strong id="fmd-total">0</strong><small>点</small></div>
       <div class="total-chip"><span>予選</span><strong id="pre-total">0</strong><small>点</small></div>
     </div>
     <div class="total-main">
@@ -4749,7 +4749,7 @@ body{
 <div class="current-mode-box" id="current-mode-box">
   <span class="composition-kicker">技構成メイン</span>
   <strong id="current-mode-title">決勝の技を選んで構成</strong>
-  <span id="current-mode-guide">技名をタップすると編成と点数へすぐ反映されます。</span>
+  <span id="current-mode-guide">決勝点は技点×技点（10点技＝100点）で計算します。</span>
 </div>
 
 <p class="warning" id="warn">⚠ 技は30個までしか選べません</p>
@@ -6082,6 +6082,16 @@ document.addEventListener("keydown",(e)=>{
 /* =========================================================
    11) 計算
 ========================================================= */
+/* 大会の基本得点：予選は技点そのまま、決勝は技点の2乗。 */
+function prelimTechniqueScore(pt){
+  return Number(pt || 0);
+}
+
+function finalTechniqueScore(pt, multi=false){
+  const point = prelimTechniqueScore(pt);
+  return point * point * (multi ? 1.5 : 1);
+}
+
 function calcPrelimListScore(){
   const l1 = document.getElementById("prelims1-list");
   const l2 = document.getElementById("prelims2-list");
@@ -6091,13 +6101,13 @@ function calcPrelimListScore(){
   ];
   return items.reduce((sum,li)=>{
     const data = orderItemToData(li);
-    return sum + Number(data?.pt || 0);
+    return sum + prelimTechniqueScore(data?.pt);
   }, 0);
 }
 
 function calcPrelimCheckedScore(){
   return [...document.querySelectorAll(".pre-chk:checked")]
-    .reduce((sum,chk)=>sum + Number(chk.dataset.pt || 0), 0);
+    .reduce((sum,chk)=>sum + prelimTechniqueScore(chk.dataset.pt), 0);
 }
 
 function getCurrentPrelimScore(){
@@ -6134,13 +6144,13 @@ function getPrelimAutoScore(){
   if(items.length){
     return items.reduce((sum,li)=>{
       const data = orderItemToData(li);
-      return sum + Number(data?.pt || 0);
+      return sum + prelimTechniqueScore(data?.pt);
     }, 0);
   }
 
   const checked = [...document.querySelectorAll(".pre-chk:checked")];
   if(checked.length){
-    return checked.reduce((sum,chk)=>sum + Number(chk.dataset.pt || 0), 0);
+    return checked.reduce((sum,chk)=>sum + prelimTechniqueScore(chk.dataset.pt), 0);
   }
   return null;
 }
@@ -6205,9 +6215,8 @@ function calcTotal(){
       const chk=it.querySelector(".chk");
       const multi=it.querySelector(".multi");
       if(chk && chk.checked){
-        const b=Number(chk.dataset.pt);
-        let val=b*b;
-        if(multi && multi.checked) val*=1.5;
+        const b=prelimTechniqueScore(chk.dataset.pt);
+        const val=finalTechniqueScore(b, multi && multi.checked);
         fmd+=val; base+=b;
       }
     });
@@ -6217,7 +6226,8 @@ function calcTotal(){
 
   const pre=getPreScore();
   syncPrelimScoreDisplays(pre);
-  const total=fmd+base+pre;
+  // 元の技点は参考表示のみ。大会得点は「決勝点＋予選点」。
+  const total=fmd+pre;
 
   selectedSpan.textContent=displayCount;
   fmdSpan.textContent=formatScore(fmd);
@@ -6756,11 +6766,10 @@ function safeJsonParse(s, fallback=null){
   try{return JSON.parse(s);}catch{return fallback;}
 }
 function singleSquareScore(d){
-  const p = Number(d?.pt || 0);
-  return p * p * (d?.multi ? 1.5 : 1);
+  return finalTechniqueScore(d?.pt, d?.multi);
 }
 function singleBaseScore(d){
-  return Number(d?.pt || 0);
+  return prelimTechniqueScore(d?.pt);
 }
 function normalizeComboData(data){
   if(!data || typeof data !== "object") return null;
@@ -7958,9 +7967,9 @@ function updateCurrentModeBox(mode){
   const el = document.getElementById("current-mode-box");
   if(!el) return;
   const content = {
-    score:{title:"決勝の技を選んで構成", guide:"技名をタップすると決勝編成と点数へすぐ反映されます。"},
-    finals:{title:"決勝の技を選んで構成", guide:"技名をタップすると決勝編成と点数へすぐ反映されます。"},
-    prelims:{title:"予選12技を選んでラウンド構成", guide:"選んだ技は第1R・第2Rへ入り、予選点へすぐ反映されます。"}
+    score:{title:"決勝の技を選んで構成", guide:"決勝点は技点×技点（10点技＝100点）。1.5倍も決勝点へ反映します。"},
+    finals:{title:"決勝の技を選んで構成", guide:"決勝点は技点×技点（10点技＝100点）。1.5倍も決勝点へ反映します。"},
+    prelims:{title:"予選12技を選んでラウンド構成", guide:"予選点は技点そのまま（10点技＝10点）。選んだ技を各ラウンドへ振り分けます。"}
   };
   const current = content[mode] || content.score;
   const title = document.getElementById("current-mode-title");
@@ -9256,8 +9265,8 @@ function buildExportSheet(kind="all"){
       <div class="export-score-row">
         <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
-        <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
-        <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
+        <div class="export-score-chip">決勝技の元点：${formatScore(baseScore)}点</div>
+        <div class="export-score-chip">予選点：${escapeHtml(preInput)}点</div>
         ${practiceTimerOutputChipsHtml()}
       </div>
       <div class="export-grid">
@@ -9287,8 +9296,8 @@ function buildExportSheet(kind="all"){
       <div class="export-score-row">
         <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
-        <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
-        <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
+        <div class="export-score-chip">決勝技の元点：${formatScore(baseScore)}点</div>
+        <div class="export-score-chip">予選点：${escapeHtml(preInput)}点</div>
         ${practiceTimerOutputChipsHtml()}
       </div>
       <div class="export-grid">
@@ -9314,8 +9323,8 @@ function buildExportSheet(kind="all"){
       <div class="export-score-row">
         <div class="export-score-chip">総合計：${escapeHtml(overallTotal)}点</div>
         <div class="export-score-chip">決勝構成：${formatScore(finalScore)}点</div>
-        <div class="export-score-chip">基礎点：${formatScore(baseScore)}点</div>
-        <div class="export-score-chip">予選点数入力：${escapeHtml(preInput)}点</div>
+        <div class="export-score-chip">決勝技の元点：${formatScore(baseScore)}点</div>
+        <div class="export-score-chip">予選点：${escapeHtml(preInput)}点</div>
         ${practiceTimerOutputChipsHtml()}
       </div>
       <div class="export-grid">
@@ -9543,7 +9552,6 @@ document.getElementById("image-save-share-again").addEventListener("click", asyn
 
 function presetScoreSuffix(pack, kind){
   if(!pack) return "";
-  if(pack.score != null) return `（${formatScore(pack.score)}点）`;
   if(kind === "finals"){
     const data = Array.isArray(pack.data) ? pack.data : (pack.data?.main || []);
     if(data.length){
@@ -9560,18 +9568,16 @@ function presetScoreSuffix(pack, kind){
   if(kind === "overall" && pack.data){
     const checks = pack.data.checks || [];
     const pre = Number(pack.data.pre || 0);
-    let fmd=0, base=0;
+    let fmd=0;
     checks.forEach(c=>{
       if(c.u){
         const p=Number(c.p||0);
-        let v=p*p;
-        if(c.m) v*=1.5;
-        fmd+=v;
-        base+=p;
+        fmd+=finalTechniqueScore(p, c.m);
       }
     });
-    return `（${formatScore(fmd+base+pre)}点）`;
+    return `（${formatScore(fmd+pre)}点）`;
   }
+  if(pack.score != null) return `（${formatScore(pack.score)}点）`;
   return "";
 }
 
@@ -10328,7 +10334,7 @@ document.getElementById('tour-never').addEventListener('click',tourNever);
 
 if('serviceWorker' in navigator){
   const swCode = `
-  const CACHE='ooruricup2026-v1-111';
+  const CACHE='ooruricup2026-v1-112';
   self.addEventListener('install',e=>{
     e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./data/official_tricks_2026.json'])));
     self.skipWaiting();
@@ -10789,7 +10795,7 @@ function uxUpdateTray(){
   if(!summary) return;
   if(mode === "score"){
     const count = finalsList?.querySelectorAll(".order-item").length || 0;
-    summary.textContent = `決勝 ${count}/30技・総合${finalSpan?.textContent || 0}点`;
+    summary.textContent = `決勝 ${count}/30技・${fmdSpan?.textContent || 0}点`;
   }else if(mode === "prelims"){
     const count = (list1?.querySelectorAll(".order-item").length || 0) + (list2?.querySelectorAll(".order-item").length || 0);
     summary.textContent = `予選 ${count}/12技・${preSum?.textContent || 0}点`;
